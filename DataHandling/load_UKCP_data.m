@@ -93,7 +93,7 @@ curdir = pwd;
 
 %% Run locally
 if strcmp(curdir(1:14),'/Users/ak0920/')
-    disp(['load_UKCP_data.m: ',model])
+%     disp(['load_UKCP_data.m: ',model])
     
     % Find data directory
     if strcmp(reg,'global')
@@ -192,7 +192,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
 %% Run on Anthropocene
 else
     if srtcmp(curdir(1:14),'/home/bridge/a')
-        disp(['load_UKCP_data.m: ',model])
+%         disp(['load_UKCP_data.m: ',model])
         
         % Find data directory:
         % Some variables are stored in my directory, others in Eunice's.

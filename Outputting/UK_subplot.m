@@ -1,5 +1,5 @@
-function [] = UK_subplot(data,collim,figname)
-% [] = UK_subplot(data,collim,figname)
+function [] = UK_subplot(data,figname,collim)
+% [] = UK_subplot(data,figname,collim)
 %
 % Do a plot of the UK region in transmercator projection
 %
