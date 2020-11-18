@@ -137,7 +137,8 @@ for d = 1:length(inputs1.DataType)
                     disp(['No existing derived data file in ',Deriveddir])
                     
                     % Load the raw data
-                    [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
+%                     [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
+                    [data,xyz] = load_data(DataType,Simulation,Variable);
                     
                     % Save the derived variable if requested
                     % (Note, Tmean, Tmin and Tmax are not saved as the
@@ -158,7 +159,8 @@ for d = 1:length(inputs1.DataType)
                         delete([Deriveddir,fname])
                         
                         % Load the raw data
-                        [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
+%                         [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
+                        [data,xyz] = load_data(DataType,Simulation,Variable);
                         
                         % Save the derived variable if requested
                         if inputs1.SaveDerivedOutput == 1

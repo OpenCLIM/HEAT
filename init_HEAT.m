@@ -19,6 +19,7 @@ if strcmp(root_dir(1:14),'/Users/ak0920/')
     addpath('DataHandling/')
     addpath('Processing/')
     addpath('Outputting/')
+    addpath('PreProcessedData/')
     
     % Running on Anthropocene
 else
