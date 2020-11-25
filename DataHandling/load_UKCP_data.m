@@ -1,11 +1,13 @@
-function [data] = load_UKCP_data(model,var,summer,tempfreq,reg,CPM_period)
-% [data] = load_UKCP_data(model,var,tempfreq,reg,CPM_period,mon_mean)
+function [data,yyyymmdd] = load_UKCP_data(model,var,reg,CPM_period)
+% [data] = load_UKCP_data(model,var,reg,CPM_period)
 %
 % This function loads UKCP18 data, specified by simulation, variable,
 % temporal frequency and spatial coverage.
 %
 % Outputs:
 %   data = the desired dataset
+%   yyyymmdd = date information to allow correction of some missing date
+%       values in UKCP18 CMIP5 member 16
 %
 % Inputs:
 %   model = string, 'gcm...', 'rcm...' or 'cpm...' where '...' is the scenario (e.g.
@@ -13,31 +15,26 @@ function [data] = load_UKCP_data(model,var,summer,tempfreq,reg,CPM_period)
 %       for RCMs), e.g. 'gcm8501'
 %   var = string, variable to be loaded in original naming convention:
 %       T = 'tasmax', q = 'huss', p = 'psl', time step date = 'yyyymmdd'
-%   summer = for CPM data (which is too big to load whole year), which
-%       summer is to be used ('MO' [default], 'JJAS' used for calculating
-%       monthly mean values) - value only affects loading CPM data
-%   tempfreq = use daily or monthly data ('day' [default] or 'mon')
-%   reg = the region to load ('uk' [default] or 'global'), note: 'global'
-%       only available for GCM runs
+%   reg = spatial domaing: 'uk' [default] or 'global'
 %   CPM_period = the start of the time period of CPM data to load
 %       (1981 [1981-2000], 2021 [2012-2040], 2061 [2061-20-80])
 
 
 
 %% Set some defaults
-% Load monthly or daily data?
-if ~exist('tempfreq','var')
-    tempfreq = 'day';
+%  CPM time period
+if ~exist('CPM_period','var')
+    CPM_period = 1981';
 end
 
-% Load global or UK data?
+% Domain to load
 if ~exist('reg','var')
     reg = 'uk';
 end
 
-% Which CPM time period?
-if ~exist('CPM_period','var')
-    CPM_period = 1981';
+% Temporal frequency to load (currently always daily)
+if ~exist('tempfreq','var')
+    tempfreq = 'day';
 end
 
 % Convert resolution description for file directory description
@@ -51,11 +48,6 @@ else
     end
 end
 
-
-% Which summer to load for CPM data
-if ~exist('summer','var')
-    summer = 'MO';
-end
 
 %% Corrections for loading time step/date info
 % If reading 'yyyymmdd' or 'time', it should be taken from a netCDF file
@@ -104,19 +96,16 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
     
     % Days to load from cpm data as loading whole year makes file too big
     if strcmp(var,var1)
-        starts = [1 1 181 1];
-        % If loading monthly means, need all of September to be loaded
-        if strcmp(summer,'MO')
-            ends = [Inf Inf 105 Inf];
-        else
-            if strcmp(summer,'JJAS')
-                ends = [Inf Inf 120 Inf];
-            end
-        end
-        
+        starts = [1 1 121 1]; % April to September
+        ends = [Inf Inf 180 Inf];
     else
-        starts = 1;
-        ends = Inf;
+        if strcmp(var,'yyyymmdd')
+            starts = [1 121];
+            ends = [Inf 180];
+        else
+            starts = 121;
+            ends = 180;
+        end
     end
     
     % Load CPM data
@@ -126,7 +115,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
         % Load each time slice
         for i = 1:length(time_starts)
             
-            disp(['Year: ',num2str(time_starts(i)+1)])
+%             disp(['Year: ',num2str(time_starts(i)+1)])
             
             filename = [data_dir,var1,'_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
                 '_',tempfreq,'_',num2str(time_starts(i)),'1201-',num2str(time_starts(i)+1),'1130.nc'];
@@ -134,8 +123,10 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
             % Load data and concatenate into one array
             if i == 1
                 data = ncread(filename,var,starts,ends);
+                yyyymmdd = ncread(filename,'yyyymmdd',[1 121],[Inf 180]);
             else
                 data = cat(catdim,data,ncread(filename,var,starts,ends));
+                yyyymmdd = cat(2,data,ncread(filename,'yyyymmdd',[1 121],[Inf 180]));
             end
         end
     else
@@ -156,8 +147,10 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
                 % Load data and concatenate into one array
                 if i == 1
                     data = ncread(filename,var);
+                    yyyymmdd = ncread(filename,'yyyymmdd');
                 else
                     data = cat(catdim,data,ncread(filename,var));
+                    yyyymmdd = cat(2,yyyymmdd,ncread(filename,'yyyymmdd'));
                 end
             end
             
@@ -174,8 +167,10 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
                     % Load data and concatenate into one array
                     if i == 1
                         data = ncread(filename,var);
+                        yyyymmdd = ncread(filename,'yyyymmdd');
                     else
                         data = cat(catdim,data,ncread(filename,var));
+                        yyyymmdd = cat(2,yyyymmdd,ncread(filename,'yyyymmdd'));
                     end
                 end
             else % Monthly data is all in one file

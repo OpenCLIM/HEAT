@@ -1,8 +1,6 @@
-function [data,xyz] = load_data(DataType,Simulation,Variable,Years,AnnSummer,TempRes)
+function [data,xyz,template] = load_data(DataType,Simulation,Variable)
 
 
-% Domain_cell = inputs1.Domain;
-% Domain_string = sprintf('%s',Domain_cell{:});
 
 disp('Loading data')
 
@@ -25,24 +23,32 @@ if strcmp(DataType,'model')
     if strcmp(Simulation(1:2),'RC')
         model = ['rcm85',Simulation(5:6)];
         ht = ht_RCM;
+        template = [UKCP18dir,'12km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-rcm_uk_12km_',model(6:7),...
+                '_day_19801201-19901130.nc'];
 %         xyz.proj_x = load_UKCP_data(model,'projection_x_coordinate');
 %         xyz.proj_y = load_UKCP_data(model,'projection_y_coordinate');
     else
         if strcmp(Simulation(1:2),'CP')
             model = ['cpm85',Simulation(5:6)];
             ht = ht_CPM;
+            template = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
+                '_day_19801201-19811130.nc'];
 %             xyz.proj_x = load_UKCP_data(model,'grid_latitude');
 %             xyz.proj_y = load_UKCP_data(model,'grid_longitude');
         else
             if strcmp(Simulation(1:2),'GC')
                 model = ['gcm85',Simulation(5:6)];
                 ht = ht_GCM;
+                template = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
+                '_day_19791201-19891130.nc'];
 %                 xyz.proj_x = load_UKCP_data(model,'projection_x_coordinate');
 %                 xyz.proj_y = load_UKCP_data(model,'projection_y_coordinate');
             else
                 if strcmp(Simulation(1:2),'CM')
                     model = ['gcm85',Simulation(7:8)];
                     ht = ht_GCM;
+                    template = [UKCP18dir,'60km/tasmax/run',Simulation(7:8),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
+                '_day_19791201-19891130.nc'];
 %                     xyz.proj_x = load_UKCP_data(model,'projection_x_coordinate');
 %                     xyz.proj_y = load_UKCP_data(model,'projection_y_coordinate');
                 end
@@ -73,30 +79,36 @@ if strcmp(DataType,'model')
             else % All other variables will require Vapour Pressure
                 
                 var = 'tas';
-                [data1] = load_UKCP_data(model,var);
+                [data1,ymd1] = load_UKCP_data(model,var);
                 var = 'psl';
-                [data2] = load_UKCP_data(model,var);
+                [data2,ymd2] = load_UKCP_data(model,var);
+                
+                [data1,ymd1,data2,ymd2] = check_consistent_timestep(data1,ymd1,data2,ymd2);
                 data3 = p_surf(data2,data1,ht);
                 
                 var = 'huss';
-                [data4] = load_UKCP_data(model,var);
+                [data4,ymd4] = load_UKCP_data(model,var);
+                [data3,ymd3,data4,ymd4] = check_consistent_timestep(data3,ymd1,data4,ymd4);
                 [data] = VapourPressure(data4,data3);
                 
                 
                 if strcmp(Variable,'sWBGT')
                     var = 'tasmax';
-                    [data5] = load_UKCP_data(model,var);
+                    [data5,ymd5] = load_UKCP_data(model,var);
+                    [data,ymd,data5,ymd5] = check_consistent_timestep(data,ymd3,data5,ymd5);
                     data = SWBGTVP(data5,data);
                     
                 else
                     if strcmp(Variable,'HD')
                         var = 'tasmax';
-                        [data5] = load_UKCP_data(model,var);
+                        [data5,ymd5] = load_UKCP_data(model,var);
+                        [data,ymd,data5,ymd5] = check_consistent_timestep(data,ymd3,data5,ymd5);
                         data = HumidexVP(data5,data);
                         
                     else
                         var = 'tasmax';
-                        [data5] = load_UKCP_data(model,var);
+                        [data5,ymd5] = load_UKCP_data(model,var);
+                        [data,ymd,data5,ymd5] = check_consistent_timestep(data,ymd3,data5,ymd5);
                         data = AppTempVP(data5,data);
                         
                     end
@@ -107,57 +119,18 @@ if strcmp(DataType,'model')
             end
         end
     end
-    
-%     figure
-%     imagesc(mean(data,3))
-    
+     
     % Load dates
     xyz.dates = load_UKCP_data(model,'yyyymmdd');
-%     xyz.long = load_UKCP_data(model,'longitude');
-%     xyz.lat = load_UKCP_data(model,'latitude');
-    
-    
+    xyz.time = load_UKCP_data(model,'time');
+
+    % If variables are of inconsistent lengths, correct this
+    [d1,t1,d2,t2] = check_consistent_timestep_2d(xyz.time',xyz.dates,ymd,ymd);
+    xyz.dates = t1;
+    xyz.time = d1;
     
     
 end
-
-
-% % Load obs data if required
-% if strcmp(DataType,'obs')
-%     
-%     % Load each required simulation
-%     for s = 1:length(inputs1.Resolution)
-%         
-%         % Convert cells into useable string
-%         Resolution_cell = inputs1.Resolution(s);
-%         Resolution_string = sprintf('%s',Resolution_cell{:});
-%         
-%         if ismember(inputs1.Resolution(s),'025deg')
-%             disp('Error: 0.25° resolution is unavailable as an option for HadUK-Grid')
-%         else
-%             disp(['-> ',Resolution_string])
-%         end
-%     end
-% end
-% 
-% 
-% % Load obs data if required
-% if ismember(inputs1.DataType(d),'reanal')
-%     
-%     % Load each required simulation
-%     for s = 1:length(inputs1.Resolution)
-%         
-%         % Convert cells into useable string
-%         Resolution_cell = inputs1.Resolution(s);
-%         Resolution_string = sprintf('%s',Resolution_cell{:});
-%         
-%         if ismember(inputs1.Resolution(s),'1km')
-%             disp('Error: 1km resolution is unavailable as an option for ERA5')
-%         else
-%             disp(['-> ',Resolution_string])
-%         end
-%     end
-% end
 
 
 

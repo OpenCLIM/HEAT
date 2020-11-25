@@ -31,12 +31,12 @@
 
 
 
-inputs1.ExptName = 'TestExpt'; % Give the experiment a name (no spaces)
+inputs1.ExptName = 'CMIP'; % Give the experiment a name (no spaces)
 inputs1.Domain = 'UK'; % OR inputs1.Domain = 'global';
 inputs1.DataType = {'model'};
-inputs1.Resolution = {'60km', '12km'};
-inputs1.Variable = {'Tmean','Tmax','Tmin','sWBGT'};
-inputs1.Simulation = {'GCM-01','GCM-02','GCM-03','GCM-04','GCM-05','GCM-06','GCM-07','GCM-08','GCM-09','GCM-10','GCM-11','GCM-12','GCM-13','GCM-14','GCM-15'};
+inputs1.Resolution = {'2km'};
+inputs1.Variable = {'sWBGT'};
+inputs1.Simulation = {'CMIP5-16'};
 inputs1.TempRes = 'daily'; % OR inputs1.TempRes = 'monthly';
 inputs1.BiasCorr = 0; % OR inputs1.BiasCorr = 0; 
 inputs1.SaveDerivedOutput = 1; % OR inputs1.SaveDerivedOutput = 0;

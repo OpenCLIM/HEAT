@@ -21,7 +21,7 @@ function [] = HEAT(inputs1,varargin)
 % Coded by A.T. Kennedy-Asser, University of Bristol, 2020.
 % 
 
-%% Initialise
+%% Initialise %%
 disp('Running HEAT v.1.0')
 disp('-----')
 
@@ -32,7 +32,7 @@ init_HEAT
 startt = now;
 
 
-%% Check inputs
+%% Check inputs %%
 % Check inputs1 is correct (it is essential to run)
 if ~isstruct(inputs1)
     disp('Error: inputs1 must be a structure');
@@ -45,6 +45,7 @@ end
 
 % Go through other input variables to find if running further steps:
 % Set switch to not run additional steps as default
+csvout = 0;
 runstep2 = 0;
 runstep3 = 0;
 
@@ -64,19 +65,6 @@ for i = 1:length(varargin)
             end
         end
     end
-    
-%     % Set step 2 and/or 3 to interactive if required
-%     if strcmpi(varargin{i},'Interactive')
-%         if i > 1
-%             disp('Running HEAT output steps interactively');
-%             runstep3 = 1;
-%             step3i = 1;
-%         else
-%             disp('Running HEAT extremes analysis and output steps interactively');
-%             step2i = 1; step3i = 1;
-%             runstep2 = 1;runstep3 = 1;
-%         end
-%     end
 end
 
 
@@ -111,7 +99,7 @@ if exist('inputs3','var')
 end
 
 
-%% Load each required dataset/simulation/variable
+%% Load each required dataset/simulation/variable %%
 for d = 1:length(inputs1.DataType)
     DataType = char(inputs1.DataType(d));
     
@@ -131,22 +119,18 @@ for d = 1:length(inputs1.DataType)
                 disp('Checking if this data/variable combination has been loaded before:')
                 
                 % Check if this file has already been derived:
-                
                 % If not, then load and process accordingly, then save
                 if ~exist([Deriveddir,fname],'file')
                     disp(['No existing derived data file in ',Deriveddir])
                     
                     % Load the raw data
-%                     [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
-                    [data,xyz] = load_data(DataType,Simulation,Variable);
+                    [data,xyz,template] = load_data(DataType,Simulation,Variable);
                     
                     % Save the derived variable if requested
-                    % (Note, Tmean, Tmin and Tmax are not saved as the
-                    % derived variable is no quicker to load than the raw
-                    % data)
+                    % (Note, Tmean, Tmin and Tmax are not saved as the derived variable is no quicker to load than the raw data)
                     if inputs1.SaveDerivedOutput == 1
                         if ~strcmp(Variable(1:2),'Tm')
-                            save_derived_nc(fname,data,xyz,Variable)
+                            save_derived_nc(fname,data,xyz,Variable,template)
                         end
                     end
                     
@@ -159,13 +143,12 @@ for d = 1:length(inputs1.DataType)
                         delete([Deriveddir,fname])
                         
                         % Load the raw data
-%                         [data,xyz] = load_data(DataType,Simulation,Variable,inputs1.Years,inputs1.AnnSummer,inputs1.TempRes);
-                        [data,xyz] = load_data(DataType,Simulation,Variable);
+                        [data,xyz,template] = load_data(DataType,Simulation,Variable);
                         
                         % Save the derived variable if requested
                         if inputs1.SaveDerivedOutput == 1
                             if ~strcmp(Variable(1:2),'Tm')
-                                save_derived_nc(fname,data,xyz,Variable)
+                                save_derived_nc(fname,data,xyz,Variable,template)
                             end
                         end
 
@@ -297,6 +280,4 @@ endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))
 disp('-----')
 
-
-% assess_files_to_load(inputs1);
 
