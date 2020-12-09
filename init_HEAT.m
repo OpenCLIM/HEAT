@@ -14,7 +14,8 @@ if strcmp(root_dir(1:14),'/Users/ak0920/')
     UKCP18dir = '/Volumes/DataDrive/UKCP18/';
     ERA5dir = '/Volumes/DataDrive/ERA5/';
     HadUKdir = '/Volumes/DataDrive/HadUK-Grid/';
-    Deriveddir = '/Volumes/DataDrive/HEAToutput/';
+    Deriveddir = '/Volumes/DataDrive/HEAToutput/DerivedData/';
+    Outputdir = '/Volumes/DataDrive/HEAToutput/';
     addpath('PhysicalCalculations/')
     addpath('DataHandling/')
     addpath('Processing/')

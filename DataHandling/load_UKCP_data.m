@@ -1,5 +1,5 @@
-function [data,yyyymmdd] = load_UKCP_data(model,var,reg,CPM_period)
-% [data] = load_UKCP_data(model,var,reg,CPM_period)
+function [data,yyyymmdd] = load_UKCP_data(model,var,CPM_period,reg)
+% [data] = load_UKCP_data(model,var,CPM_period,reg)
 %
 % This function loads UKCP18 data, specified by simulation, variable,
 % temporal frequency and spatial coverage.
@@ -115,7 +115,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
         % Load each time slice
         for i = 1:length(time_starts)
             
-%             disp(['Year: ',num2str(time_starts(i)+1)])
+            disp(['Year: ',num2str(time_starts(i)+1)])
             
             filename = [data_dir,var1,'_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
                 '_',tempfreq,'_',num2str(time_starts(i)),'1201-',num2str(time_starts(i)+1),'1130.nc'];
@@ -126,7 +126,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
                 yyyymmdd = ncread(filename,'yyyymmdd',[1 121],[Inf 180]);
             else
                 data = cat(catdim,data,ncread(filename,var,starts,ends));
-                yyyymmdd = cat(2,data,ncread(filename,'yyyymmdd',[1 121],[Inf 180]));
+                yyyymmdd = cat(2,yyyymmdd,ncread(filename,'yyyymmdd',[1 121],[Inf 180]));
             end
         end
     else

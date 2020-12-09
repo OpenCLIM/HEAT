@@ -6,24 +6,24 @@
 
 %% 'Standard' datamasks (i.e. on native HadUK grids)
 % Load if already calculated
-if exist('preprocessed/datamask1.mat','file')
-    load('preprocessed/datamask1.mat')
-    load('preprocessed/datamask12.mat')
-    load('preprocessed/datamask60.mat')
+if exist('PreProcessedData/datamask1.mat','file')
+    load('PreProcessedData/datamask1.mat')
+    load('PreProcessedData/datamask12.mat')
+    load('PreProcessedData/datamask60.mat')
     
 % Otherwise generate    
 else
     % 1km resolution
-    [datamask1] = load_HadUK_data('tasmax','1km','JJA',1);
+    [datamask1] = load_HadUK_data('tasmax','1km','JJA');
     datamask1 = double(~isnan(datamask1(:,:,1)));
     
     % 12km resolution
-    [datamask12] = load_HadUK_data('tasmax','12km','JJA',1);
+    [datamask12] = load_HadUK_data('tasmax','12km','JJA');
     datamask12 = ~isnan(datamask12(:,:,1));
     datamask12 = HadUK2UKCP18(datamask12); % Correct the grid
     
     % 60km resolution
-    [datamask60] = load_HadUK_data('tasmax','60km','JJA',1);
+    [datamask60] = load_HadUK_data('tasmax','60km','JJA');
     datamask60 = double(~isnan(datamask60(:,:,1)));
     
     % Make sure values are NaN or 1
@@ -32,17 +32,17 @@ else
     datamask60(datamask60 == 0) = nan;
 
     % Save
-    save('preprocessed/datamask1.mat','datamask1')
-    save('preprocessed/datamask12.mat','datamask12')
-    save('preprocessed/datamask60.mat','datamask60')
+    save('PreProcessedData/datamask1.mat','datamask1')
+    save('PreProcessedData/datamask12.mat','datamask12')
+    save('PreProcessedData/datamask60.mat','datamask60')
 
 end
 
 %% Interpolated datamasks for other resolutions
 % Load if already calculated
-if exist('preprocessed/datamask2.mat','file')
-    load('preprocessed/datamask2.mat')
-    load('preprocessed/datamaskERA5.mat')
+if exist('PreProcessedData/datamask2.mat','file')
+    load('PreProcessedData/datamask2.mat')
+    load('PreProcessedData/datamaskERA5.mat')
     
 % Otherwise generate    
 else
@@ -67,8 +67,8 @@ else
     datamaskERA5(datamaskERA5 == 0) = nan;
     
     % Save
-    save('preprocessed/datamask2.mat','datamask2')
-    save('preprocessed/datamaskERA5.mat','datamaskERA5')
+    save('PreProcessedData/datamask2.mat','datamask2')
+    save('PreProcessedData/datamaskERA5.mat','datamaskERA5')
     
 end
 

@@ -1,14 +1,18 @@
-function [] = HEAT(inputs1,varargin)
+function [] = HEAT(inputs,varargin)
 % HEAT v.1.0
 % 
-% Run the OpenCLIM Heat Extremes Analysis Toolbox (HEAT) for selected input
-% data. 
+% Run the OpenCLIM Heat Extremes Analysis Toolbox (HEAT). This function
+% does an inital setup and check of file directories, then goes through
+% each required dataset, loading (step 1), processing and generating output
+% (step 2) accordingly.
 % 
 % Input files, in the form of structures, can be created using the format
 % provided in launch_file_TEMPLATE.m or interactively using
-% generate_launch_file.m.
+% generate_launch_file.m. Alternatively the inputs can be defined directly
+% from a script (e.g. launch_file_TEMPLATE.m) if running HEAT app
+% standalone.
 % 
-% inputs1 = information regarding data which is to be loaded, including
+% inputs = information regarding data which is to be loaded, including
 % variables, dataset to use, temporal and spatial domain, experiment name
 % and whether to save derived variables.
 % 
@@ -19,9 +23,10 @@ function [] = HEAT(inputs1,varargin)
 % socio-economic data, adaptation, agriculture etc. (NOT YET INCLUDED).
 % 
 % Coded by A.T. Kennedy-Asser, University of Bristol, 2020.
+% Contact: alan.kennedy@bristol.ac.uk
 % 
 
-%% Initialise %%
+%% Initialise
 disp('Running HEAT v.1.0')
 disp('-----')
 
@@ -32,23 +37,45 @@ init_HEAT
 startt = now;
 
 
-%% Check inputs %%
-% Check inputs1 is correct (it is essential to run)
-if ~isstruct(inputs1)
-    disp('Error: inputs1 must be a structure');
-    return
-end
-if ~isfield(inputs1,'Domain')
-    disp('Error: inputs1 appears to be the wrong structure');
-    return
+%% Check inputs
+% If running HEAT as standalone app, inputs should be included in a
+% seperate inputs script, which can be adapted from input_files_TEMPLATE.m.
+% If running HEAT through the MATLAB GUI, thne it is possible to have run
+% input_files_TEMPLATE.m first, in which case the structures this script
+% creates can be input.
+
+% Check if inputs is a script, in which case run it
+if isstr(inputs)
+    if exist(inputs) == 2
+        run(inputs)
+        
+    else
+        disp('Error: input script not found');
+        return
+    end
+    
+% Otherwise if inputs is a structure, then adjust the name ready to run HEAT
+else
+    if ~isstruct(inputs)
+        disp('Error: inputs1 must be a structure');
+        return
+    end
+    if ~isfield(inputs,'Domain')
+        disp('Error: inputs1 appears to be the wrong structure');
+        return
+    else
+        inputs1 = inputs;
+    end
 end
 
-% Go through other input variables to find if running further steps:
-% Set switch to not run additional steps as default
-csvout = 0;
+%% Find which steps of HEAT to run
+% Note: Step 1 is essential and is always run.
+
+% Set default to not run extra steps
 runstep2 = 0;
 runstep3 = 0;
 
+% If multiple inputs are provided, go through to find if running further steps:
 for i = 1:length(varargin)
     
     % Set inputs2 and inputs3 if they are provided
@@ -63,18 +90,40 @@ for i = 1:length(varargin)
                 % Switch on step
                 runstep3 = 1;
             end
+            
+            % Can add further steps here in the future as necessary.
         end
     end
 end
 
+% If inputs were provided as a script, structures inputs2, inputs3 etc. may
+% exist, in which case these steps need run:
+if exist('inputs2','var')
+    if isstruct(inputs2)
+        runstep2 = 1;
+    end
+end
 
-%% Set up output directory %%
-% First, check if output directory already exists
-if exist([Deriveddir,'/',inputs1.ExptName],'dir')
+if exist('inputs3','var')
+    if isstruct(inputs3)
+        runstep3 = 1;
+    end
+end
+
+
+%% Set up output directory 
+% First check the experiment name won't overwrite the DerivedData directory
+if strcmp(inputs1.ExptName,'DerivedData')
+    disp('Cannot call experiment "DerivedData": CANCELLING')
+    return
+end
+
+% Next, check if output directory already exists
+if exist([Outputdir,'/',inputs1.ExptName],'dir')
     
     % If it does, check whether or not to overwrite
     disp('Warning: existing experiment exists with this name.')
-    if inputs1.OverwriteDerivedOutput == 1
+    if inputs1.OverwriteExpt == 1
         disp('Overwriting enabled in input file')
         disp('-----')
 
@@ -86,20 +135,20 @@ if exist([Deriveddir,'/',inputs1.ExptName],'dir')
     end
     
 else % Create output directory
-    mkdir([Deriveddir,'/',inputs1.ExptName])
+    mkdir([Outputdir,'/',inputs1.ExptName])
 end
 
 % Save input files for future reference
-save([Deriveddir,'/',inputs1.ExptName,'/inputs1.mat'],'inputs1')
+save([Outputdir,'/',inputs1.ExptName,'/inputs1.mat'],'inputs1')
 if exist('inputs2','var')
-    save([Deriveddir,'/',inputs1.ExptName,'/inputs2.mat'],'inputs2')
+    save([Outputdir,'/',inputs1.ExptName,'/inputs2.mat'],'inputs2')
 end
 if exist('inputs3','var')
-    save([Deriveddir,'/',inputs1.ExptName,'/inputs3.mat'],'inputs3')
+    save([Outputdir,'/',inputs1.ExptName,'/inputs3.mat'],'inputs3')
 end
 
 
-%% Load each required dataset/simulation/variable %%
+%% Go through each required dataset/simulation/variable
 for d = 1:length(inputs1.DataType)
     DataType = char(inputs1.DataType(d));
     
@@ -107,171 +156,53 @@ for d = 1:length(inputs1.DataType)
     if ismember(inputs1.DataType(d),'model')
         
         % Load each required simulation
-        for s = 1:length(inputs1.Simulation)
-            Simulation = char(inputs1.Simulation(s));
+        for s = 1:length(inputs1.Dataset)
+            Dataset = char(inputs1.Dataset(s));
             
             % Load each required variable
             for v = 1:length(inputs1.Variable)
                 Variable = char(inputs1.Variable(v));
                 
-                % Set file name for derived variable based on inputs
-                fname = ['HEAT_v1.0-',char(inputs1.Domain),'-',Simulation,'-',Variable,'.nc'];
-                disp('Checking if this data/variable combination has been loaded before:')
-                
-                % Check if this file has already been derived:
-                % If not, then load and process accordingly, then save
-                if ~exist([Deriveddir,fname],'file')
-                    disp(['No existing derived data file in ',Deriveddir])
-                    
-                    % Load the raw data
-                    [data,xyz,template] = load_data(DataType,Simulation,Variable);
-                    
-                    % Save the derived variable if requested
-                    % (Note, Tmean, Tmin and Tmax are not saved as the derived variable is no quicker to load than the raw data)
-                    if inputs1.SaveDerivedOutput == 1
-                        if ~strcmp(Variable(1:2),'Tm')
-                            save_derived_nc(fname,data,xyz,Variable,template)
-                        end
-                    end
-                    
-                    
-                else % If variable has been derived previously, see if overwriting is required
-                    if inputs1.OverwriteDerivedOutput == 1
-                        
-                        % Remove existing file in this case
-                        disp('Overwriting existing derived data file')
-                        delete([Deriveddir,fname])
-                        
-                        % Load the raw data
-                        [data,xyz,template] = load_data(DataType,Simulation,Variable);
-                        
-                        % Save the derived variable if requested
-                        if inputs1.SaveDerivedOutput == 1
-                            if ~strcmp(Variable(1:2),'Tm')
-                                save_derived_nc(fname,data,xyz,Variable,template)
-                            end
-                        end
-
-                        
-                    else % If the derived data exists and it is okay to use, load it
-                        disp('Derived variable has already been calculated: Loading')
-                        data = ncread([Deriveddir,fname],Variable);
-                        xyz.dates = ncread([Deriveddir,fname],'yyyymmdd');
-                        
-
-                    end
-                end
+                %% Run Step 1: Load data
+                [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
                 
                 
-                
-                %% Run Step 2: Extremes analysis %%
+                %% Run Step 2: Extremes analysis
                 if runstep2 == 1
-                    disp('Running extremes analysis')
-                    
-                    % Temporally subset data as required
-                    [data,xyz.dates] = subset_temporal(data,xyz.dates,inputs2.Years,inputs2.AnnSummer);
-                    
-                    % Spatially subset data as required
-                    
-                    
-                    % Calculate percentile if required
-                    if isfield(inputs2,'Pctile')
-                        % Create empty array for output
-                        data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.Pctile));
-                        
-                        for p = 1:length(inputs2.Pctile)
-                            data_pctiles(:,:,p) = prctile(data,inputs2.Pctile(p),3);
-                        end
-                    end
-                    
-                    % Calculate extreme mean if required
-                    if isfield(inputs2,'ExtremeMeanPctile')
-                        % Create empty array for output
-                        data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.ExtremeMeanPctile));
-                        
-                        for p = 1:length(inputs2.ExtremeMeanPctile)
-                            
-                            Txx_temp = data >= prctile(data,inputs2.ExtremeMeanPctile(p),3);
-                            Txx = nan(size(Txx_temp));
-                            Txx(Txx_temp == 1) = 1;
-                            data_Txx = data .* Txx;
-                            data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
-                        end
-                    end
-                    
-                    
-                    % Generate requested output
-                    disp('Producing output')
-                    for o = 1:length(inputs2.OutputType)
-                        OutputType = string(inputs2.OutputType(o));
-                        
-                        % Generate map if requested
-                        if strcmp(OutputType,'map')
-                            figure
-                            UK_subplot(data_ExMean,[Simulation,' ',Variable, ' extreme mean >95th percentile'])
-%                             figure
-%                             UK_subplot(data_pctiles,[Simulation,' ',Variable, ' 95th percentile'])
-                        end
-                        
-                        
-                        % Generate ARCADIA input csv if requested
-%                         csvout = 0;
-                        if strcmp(OutputType,'ARCADIA')
-                            csvout = 1;
-                            
-                            if ~exist('data_csv','var')
-                                data_csv.(Variable) = data;
-                            else
-                                if isfield(data_csv,Variable)
-                                    
-                                    data_csv.(Variable) = cat(4,data_csv.(Variable),data);
-                                else
-                                    data_csv.(Variable) = data;
-                                end
-                            end
-                            
-                            
-                            
-                        end
-                        
-                    end
-                    disp('-----')
-                    
+                    HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
                 end
                 
-                %% Run Step 3: Produce output %%
+                %% Run Step 3: e.g. Adaptation modelling?
                 if runstep3 == 1
                     
-                    
-                    
                 end
                 
-                
+                % Further steps can be added as the toolbox is developed
                 
                 
             end
         end
         
-        % Save csv if required
-        if csvout == 1
-            
-            for v = 1:length(inputs1.Variable)
-                Variable = char(inputs1.Variable(v));
-                
-                for i = 1:length(data_csv.(Variable)(:,1,1,1))
-                    for j = 1:length(data_csv.(Variable)(1,:,1,1))
-                        %                 for k = 1:length(data_csv.sWBGT(1,1,1,:))
-                        
-                        data_csv_temp = squeeze(data_csv.(Variable)(i,j,:,:))';
-                        
-                        csv_name = [Deriveddir,'/',inputs1.ExptName,'/',num2str(i),num2str(j),'_test_',Variable,'.csv'];
-                        %                     writematrix(data_csv_temp,csv_name)
-                        csvwrite(csv_name,data_csv_temp)
-                        %                 end
-                    end
-                end
-            end
-        end
+%         % Save csv if required after all models loaded
+%         if csvout == 1
+%             
+%             for v = 1:length(inputs1.Variable)
+%                 Variable = char(inputs1.Variable(v));
+%                 
+%                 for i = 1:length(data_csv.(Variable)(:,1,1,1))
+%                     for j = 1:length(data_csv.(Variable)(1,:,1,1))
+%                         %                 for k = 1:length(data_csv.sWBGT(1,1,1,:))
+%                         
+%                         data_csv_temp = squeeze(data_csv.(Variable)(i,j,:,:))';
+%                         
+%                         csv_name = [Outputdir,'/',inputs1.ExptName,'/',num2str(i),num2str(j),'_test_',Variable,'.csv'];
+%                         %                     writematrix(data_csv_temp,csv_name)
+%                         csvwrite(csv_name,data_csv_temp)
+%                         %                 end
+%                     end
+%                 end
+%             end
+%         end
     end
 end
 
