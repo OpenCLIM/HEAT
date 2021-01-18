@@ -13,7 +13,7 @@ load('PreProcessedData/UKregions60.mat')
 generate_UK_latlon_area
 
 % Regions for reference:
-regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Mann'};
+regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'};
 
 % Create blank array to fill
 areas_ERA5_abs_regions = zeros(length(areas_ERA5_abs(:,1)),length(areas_ERA5_abs(1,:)),12);

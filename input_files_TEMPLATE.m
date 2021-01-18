@@ -31,12 +31,12 @@
 
 
 
-inputs1.ExptName = 'GCMtesting'; % Give the experiment a name (no spaces)
+inputs1.ExptName = 'GCM_map_test'; % Give the experiment a name (no spaces)
 inputs1.Domain = 'UK'; % OR inputs1.Domain = 'global';
 inputs1.DataType = {'model'};
-inputs1.Resolution = {'2km'};
-inputs1.Variable = {'sWBGT'};
-inputs1.Dataset = {'GCM-01','GCM-06','GCM-07'};
+% inputs1.Resolution = {'2km'};
+inputs1.Variable = {'Tmax'};
+inputs1.Dataset = {'GCM-01'};
 % inputs1.CPM_period = 2061; % 1981 OR 2021 OR 2061
 inputs1.TempRes = 'daily'; % OR inputs1.TempRes = 'monthly';
 inputs1.BiasCorr = 0; % OR inputs1.BiasCorr = 0; 
@@ -47,10 +47,11 @@ inputs1.OverwriteExpt = 1; % OR inputs1.OverwriteExpt = 1;
 
 inputs2.Years = [1990 2019];
 inputs2.AnnSummer = 'Ann'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
-inputs2.ExtremeMeanPctile = 95;
-% inputs2.Pctile = 95;
+inputs2.ExtremeMeanPctile = [95 99];
+inputs2.Pctile = [95 99];
 % inputs2.DDx = 66;
-inputs2.OutputType = {'ARCADIA','map'};
-inputs2.Region = 'Wales';
+inputs2.OutputType = {'map'};
+% inputs2.
+inputs2.Region = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
 
 

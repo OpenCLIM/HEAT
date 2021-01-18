@@ -1,9 +1,15 @@
 function [] = HEAT_step2(inputs2,data,xyz,Dataset,Variable,ExptName)
+% HEAT_step2(inputs2,data,xyz,Dataset,Variable,ExptName)
+% 
+% Run the second step of HEAT to produce the main outputs as requested in
+% inputs2 structure. 
+% 
+
+%% Setup
+disp('Running extremes analysis')
 
 % Set directory paths
 init_HEAT
-
-disp('Running extremes analysis')
 
 % Temporally subset data as required
 [data,xyz.dates] = subset_temporal(data,xyz.dates,inputs2.Years,inputs2.AnnSummer);
@@ -11,28 +17,72 @@ disp('Running extremes analysis')
 % Spatially subset data as required
 
 
+
+%% Calculate and produce analysis outputs
 % Calculate percentile if required
 if isfield(inputs2,'Pctile')
+    
     % Create empty array for output
     data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.Pctile));
     
     for p = 1:length(inputs2.Pctile)
+        disp(['Calculating ',num2str(inputs2.Pctile(p)),'th percentile over time period'])
+        
         data_pctiles(:,:,p) = prctile(data,inputs2.Pctile(p),3);
+        
+        % Plot as required
+        for o = 1:length(inputs2.OutputType)
+            OutputType = string(inputs2.OutputType(o));
+            
+            % Generate map if requested
+            if strcmp(OutputType,'map')
+                figure
+                UK_subplot(data_pctiles(:,:,p),[Dataset,' ',Variable, ' ',num2str(inputs2.Pctile(p)),'th percentile'])
+                colorbar()
+                % Save as required
+
+            end
+            
+        end
+        
+        
+        
     end
 end
 
 % Calculate extreme mean if required
 if isfield(inputs2,'ExtremeMeanPctile')
+    
     % Create empty array for output
     data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.ExtremeMeanPctile));
     
     for p = 1:length(inputs2.ExtremeMeanPctile)
+        disp(['Calculating extreme mean above ',num2str(inputs2.ExtremeMeanPctile(p)),'th percentile over time period'])
+        
         
         Txx_temp = data >= prctile(data,inputs2.ExtremeMeanPctile(p),3);
         Txx = nan(size(Txx_temp));
         Txx(Txx_temp == 1) = 1;
         data_Txx = data .* Txx;
         data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
+        
+        % Plot as required
+        for o = 1:length(inputs2.OutputType)
+            OutputType = string(inputs2.OutputType(o));
+            
+            % Generate map if requested
+            if strcmp(OutputType,'map')
+                figure
+                UK_subplot(data_ExMean(:,:,p),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs2.Pctile(p)),'th percentile'])
+                colorbar()
+                % Save as required
+
+            end
+            
+        end
+        
+        % Save as required
+        
     end
 end
 
@@ -42,16 +92,16 @@ disp('Producing output')
 for o = 1:length(inputs2.OutputType)
     OutputType = string(inputs2.OutputType(o));
     
-    % Generate map if requested
-    if strcmp(OutputType,'map')
-        figure
-        UK_subplot(data_ExMean,[Dataset,' ',Variable, ' extreme mean >95th percentile'])
-        %                             figure
-        %                             UK_subplot(data_pctiles,[Dataset,' ',Variable, ' 95th percentile'])
-    end
+%     % Generate map if requested
+%     if strcmp(OutputType,'map')
+%         figure
+%         UK_subplot(data_ExMean,[Dataset,' ',Variable, ' extreme mean >95th percentile'])
+%         %                             figure
+%         %                             UK_subplot(data_pctiles,[Dataset,' ',Variable, ' 95th percentile'])
+%     end
     
     
-    % Generate ARCADIA input csv if requested
+    %% Generate ARCADIA-ready csv if requested
     if strcmp(OutputType,'ARCADIA')
         
         % If interested in every single grid cell
@@ -62,7 +112,7 @@ for o = 1:length(inputs2.OutputType)
                 for j = 1:length(data(1,:,1))
                     
                     % Set csv output file name
-                    csv_name = [Outputdir,'/',ExptName,'/',num2str(i),num2str(j),'_',ExptName,'_',Variable,'.csv'];
+                    csv_name = [Outputdir,'/',ExptName,'/',num2str(i),'_',num2str(j),'_',ExptName,'_',Variable,'.csv'];
                     
                     % If csv has been created already
                     if exist(csv_name,'file')

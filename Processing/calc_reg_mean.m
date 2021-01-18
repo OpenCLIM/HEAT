@@ -4,7 +4,7 @@ function [regmean] = calc_reg_mean(data,reg)
 
 
 % Regions for reference:
-regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Mann'};
+regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'};
 
 % Load the regional area data
 generate_region_latlon_area

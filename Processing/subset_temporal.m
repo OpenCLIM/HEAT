@@ -3,7 +3,7 @@ function [data,dates] = subset_temporal(data,dates,Years,AnnSummer)
 
 %% Subset the correct temporal period
 % Subset the correct years
-[data,dates] = extract_years(data,dates',Years(1),Years(2));
+[data,dates] = extract_years(data,dates,Years(1),Years(2));
 
 % Subset summers if necessary
 if strcmp(AnnSummer,'Summer')
