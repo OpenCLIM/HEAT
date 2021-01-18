@@ -8,7 +8,7 @@ root_dir = pwd;
 
 % Running locally on AKA's machine
 if strcmp(root_dir(1:14),'/Users/ak0920/')
-%     disp('Initialising HEAT on local machine')
+    %     disp('Initialising HEAT on local machine')
     
     % Set data directories
     UKCP18dir = '/Volumes/DataDrive/UKCP18/';
@@ -25,15 +25,24 @@ if strcmp(root_dir(1:14),'/Users/ak0920/')
     % Running on Anthropocene
 else
     if strcmp(root_dir(1:14),'/home/bridge/a')
-%         disp('Initialising HEAT on Anthropocene')
+        %         disp('Initialising HEAT on Anthropocene')
         
-        % Set data directory
-        data_dir = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
+        % Set data directories
+        UKCP18dir = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
+        ERA5dir = '/export/anthropocene/array-01/ak0920/ERA5/';
+        HadUKdir = '/export/anthropocene/array-01/ak0920/HadUKGrid/';
+        Deriveddir = '/export/anthropocene/array-01/ak0920/HEAToutput/DerivedData/';
+        Outputdir = '/export/anthropocene/array-01/ak0920/HEAToutput/';
+        addpath('PhysicalCalculations/')
+        addpath('DataHandling/')
+        addpath('Processing/')
+        addpath('Outputting/')
+        addpath('PreProcessedData/')
         
         % Running on DAFNI
     else
         if strcmp(root_dir(1:14),'/DAFNI/dir/TBC/')
-%             disp('Initialising HEAT on DAFNI')
+            %             disp('Initialising HEAT on DAFNI')
             
             % Set data directory
             data_dir = '/DAFNI/data/dir/TBC/';
