@@ -186,7 +186,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
     
 %% Run on Anthropocene
 else
-    if srtcmp(curdir(1:14),'/home/bridge/a')
+    if strcmp(curdir(1:14),'/home/bridge/a')
 %         disp(['load_UKCP_data.m: ',model])
         
         % Find data directory:

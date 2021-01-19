@@ -17,7 +17,7 @@ else
     if strcmp(curdir(1:14),'/home/bridge/a')
         HadUKdir = '/export/anthropocene/array-01/ak0920/HadUKGrid/tas';
         ncdatadir1 = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
-        ncdatadir2 = '/huss/day/run01/';
+        ncdatadir2 = '/huss/run01/';
     end
 end
 
@@ -94,13 +94,13 @@ ys_GCM = rot90(ys_GCM);
 % 
 % % %% Check everything is orientated correctly
 % % disp('All data should start in the southwest of the domain:')
-% % disp(['GCM: ',num2str(lat_UK_GCM(1,1)),'°N, ',num2str(long_UK_GCM(1,1)),'°W'])
-% % disp(['RCM: ',num2str(lat_UK_RCM(1,1)),'°N, ',num2str(long_UK_RCM(1,1)),'°W'])
-% % disp(['CPM: ',num2str(lat_UK_CPM(1,1)),'°N, ',num2str(long_UK_CPM(1,1)),'°W'])
-% % disp(['HadUK1: ',num2str(lat_UK_HadUK1(1,1)),'°N, ',num2str(long_UK_HadUK1(1,1)),'°W'])
-% % disp(['HadUK12: ',num2str(lat_UK_HadUK12(1,1)),'°N, ',num2str(long_UK_HadUK12(1,1)),'°W'])
-% % disp(['HadUK60: ',num2str(lat_UK_HadUK60(1,1)),'°N, ',num2str(long_UK_HadUK60(1,1)),'°W'])
-% % disp(['ERA5: ',num2str(lat_UK_ERA5(1,1)),'°N, ',num2str(long_UK_ERA5(1,1)),'°W'])
+% % disp(['GCM: ',num2str(lat_UK_GCM(1,1)),'ï¿½N, ',num2str(long_UK_GCM(1,1)),'ï¿½W'])
+% % disp(['RCM: ',num2str(lat_UK_RCM(1,1)),'ï¿½N, ',num2str(long_UK_RCM(1,1)),'ï¿½W'])
+% % disp(['CPM: ',num2str(lat_UK_CPM(1,1)),'ï¿½N, ',num2str(long_UK_CPM(1,1)),'ï¿½W'])
+% % disp(['HadUK1: ',num2str(lat_UK_HadUK1(1,1)),'ï¿½N, ',num2str(long_UK_HadUK1(1,1)),'ï¿½W'])
+% % disp(['HadUK12: ',num2str(lat_UK_HadUK12(1,1)),'ï¿½N, ',num2str(long_UK_HadUK12(1,1)),'ï¿½W'])
+% % disp(['HadUK60: ',num2str(lat_UK_HadUK60(1,1)),'ï¿½N, ',num2str(long_UK_HadUK60(1,1)),'ï¿½W'])
+% % disp(['ERA5: ',num2str(lat_UK_ERA5(1,1)),'ï¿½N, ',num2str(long_UK_ERA5(1,1)),'ï¿½W'])
 
 %% Tidy up
 clear x_UK_RCM y_UK_RCM x_UK_GCM y_UK_GCM x_UK_HadUK12 y_UK_HadUK12 x_UK_HadUK60 y_UK_HadUK60 xs ys
