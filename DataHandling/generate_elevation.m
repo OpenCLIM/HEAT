@@ -14,7 +14,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/') || strcmp(curdir(1:14),'/Volumes/DataD'
     topodatadir = '/Users/ak0920/Data/IMPRES/OtherData/topo/';
 else
     if strcmp(curdir(1:14),'/home/bridge/a')
-        topodatadir = '/PreProcessedData/'; 
+        topodatadir = 'PreProcessedData/'; 
     end
 end
 

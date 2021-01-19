@@ -15,7 +15,7 @@ if strcmp(curdir(1:14),'/Users/ak0920/')
     ncdatadir1 = '/Users/ak0920/Data/IMPRES/';
     ncdatadir2 = '/huss/run01/';
 else
-    if srtcmp(curdir(1:14),'/home/bridge/a')
+    if strcmp(curdir(1:14),'/home/bridge/a')
         ncdatadir1 = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
         ncdatadir2 = '/huss/day/run01/';
     end
