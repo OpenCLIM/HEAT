@@ -45,8 +45,8 @@ startt = now;
 % creates can be input.
 
 % Check if inputs is a script, in which case run it
-if isstr(inputs)
-    if exist(inputs) == 2
+if ischar(inputs)
+    if exist(inputs,'file')
         run(inputs)
         
     else
@@ -60,7 +60,7 @@ else
         disp('Error: inputs1 must be a structure');
         return
     end
-    if ~isfield(inputs,'Domain')
+    if ~isfield(inputs,'ExptName')
         disp('Error: inputs1 appears to be the wrong structure');
         return
     else
@@ -149,11 +149,14 @@ end
 
 
 %% Go through each required dataset/simulation/variable
+% Data hierarchy: 
+% DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution) 
+
 for d = 1:length(inputs1.DataType)
     DataType = char(inputs1.DataType(d));
     
     % Load model data if required
-    if ismember(inputs1.DataType(d),'model')
+    if ismember(inputs1.DataType(d),'UKCP18')
         
         % Load each required simulation
         for s = 1:length(inputs1.Dataset)
@@ -204,6 +207,41 @@ for d = 1:length(inputs1.DataType)
 %             end
 %         end
     end
+    
+    
+    % Load model data if required
+    if ismember(inputs1.DataType(d),'HadUKGrid')
+        
+        % Load each required simulation
+        for s = 1:length(inputs1.Dataset)
+            Dataset = char(inputs1.Dataset(s));
+            
+            % Load each required variable
+            for v = 1:length(inputs1.Variable)
+                Variable = char(inputs1.Variable(v));
+                
+                %% Run Step 1: Load data
+                [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
+                
+                
+                %% Run Step 2: Extremes analysis
+                if runstep2 == 1
+                    HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
+                end
+                
+                %% Run Step 3: e.g. Adaptation modelling?
+                if runstep3 == 1
+                    
+                end
+                
+                % Further steps can be added as the toolbox is developed
+                
+                
+            end
+        end
+        
+    end
+    
 end
 
 disp(['HEAT run "',inputs1.ExptName,'" complete',])

@@ -52,7 +52,7 @@ else % If variable has been derived previously, see if overwriting is required
         % Load the raw data
         [data,xyz,template] = load_data(DataType,Dataset,Variable,CPM_period);
         
-        % Save the derived variable if requested
+        % Save the derived variable
         if inputs1.SaveDerivedOutput == 1
             if ~strcmp(Variable(1:2),'Tm')
                 save_derived_nc(fname,data,xyz,Variable,template)
