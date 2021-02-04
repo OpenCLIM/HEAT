@@ -1,7 +1,8 @@
 function [data,xyz,template] = load_data(DataType,Simulation,Variable,CPM_period)
 % [data,xyz,template] = load_data(DataType,Simulation,Variable,CPM_period)
 % 
-% Load the raw data for HEAT. 
+% Load the raw data for HEAT calculation of heat stress metrics and saving
+% derived data.
 % 
 % Inputs:
 %  - DataType = 'model', 'obs' or 'reanal' as defined in the input file
@@ -25,29 +26,31 @@ init_HEAT
 % Load elevation and lat-long data
 load_xyz
         
-% Set defaults
-if ~exist('CPM_period','var')
-    CPM_period = 1981;
-end
 
 %% Load UKCP18 data if required
 if strcmp(DataType,'UKCP18')
     
     % Load  required simulation
     disp(['-> Loading ',Simulation])
-    
+        
     % Change simulation name to UKCP18 file format
     % and select elevation data at correct resolution
     if strcmp(Simulation(1:2),'RC')
+        
+        % Find raw data location
         model = ['rcm85',Simulation(5:6)];
         ht = ht_12km;
+        Rawdir = [UKCP18dir,'12km/tasmax/run',Simulation(5:6),'/'];
+        
         template = [UKCP18dir,'12km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-rcm_uk_12km_',model(6:7),...
-                '_day_19801201-19901130.nc'];
-
+            '_day_19801201-19901130.nc'];
+        
     else
         if strcmp(Simulation(1:2),'CP')
             model = ['cpm85',Simulation(5:6)];
             ht = ht_2km;
+            Rawdir = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/'];
+
             template = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
                 '_day_19801201-19811130.nc'];
 
@@ -55,6 +58,8 @@ if strcmp(DataType,'UKCP18')
             if strcmp(Simulation(1:2),'GC')
                 model = ['gcm85',Simulation(5:6)];
                 ht = ht_60km;
+                Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
+
                 template = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
                 '_day_19791201-19891130.nc'];
 
@@ -62,6 +67,8 @@ if strcmp(DataType,'UKCP18')
                 if strcmp(Simulation(1:2),'CM')
                     model = ['gcm85',Simulation(7:8)];
                     ht = ht_60km;
+                    Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
+                    
                     template = [UKCP18dir,'60km/tasmax/run',Simulation(7:8),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
                 '_day_19791201-19891130.nc'];
 
@@ -69,6 +76,13 @@ if strcmp(DataType,'UKCP18')
             end
         end
     end
+    
+    % Find how many files are to be loaded/produced
+    files = dir([Rawdir '*.nc']);
+    
+    for f = 1:length(files)
+        
+        file = [files(f).folder,'/',files(f).name];
     
     % Load required variable
     disp(['---> ',Variable])
@@ -149,7 +163,7 @@ if strcmp(DataType,'UKCP18')
 end
 
 
-% If loading observational data
+%% If loading observational data
 if strcmp(DataType,'HadUKGrid')
     
     % Load  required simulation

@@ -31,21 +31,22 @@
 
 
 
-inputs1.ExptName = 'HadUKGrid_test'; % Give the experiment a name (no spaces)
+inputs1.ExptName = 'CPM_AT_test'; % Give the experiment a name (no spaces)
+inputs1.OverwriteExpt = 1; % OR inputs1.OverwriteExpt = 1;
+
 inputs1.Domain = 'UK'; % OR inputs1.Domain = 'global';
-inputs1.DataType = {'HadUKGrid'};
+inputs1.DataType = {'UKCP18'};
 % inputs1.Resolution = {'2km'};
-inputs1.Variable = {'Tmax'};
-inputs1.Dataset = {'12km'};
-% inputs1.CPM_period = 2061; % 1981 OR 2021 OR 2061
+inputs1.Variable = {'ATmin'};
+inputs1.Dataset = {'CPM-01'};
+% inputs1.CPM_period = 1981; % 1981 OR 2021 OR 2061
 inputs1.TempRes = 'daily'; % OR inputs1.TempRes = 'monthly';
 inputs1.BiasCorr = 0; % OR inputs1.BiasCorr = 0; 
 inputs1.SaveDerivedOutput = 1; % OR inputs1.SaveDerivedOutput = 0;
-inputs1.OverwriteDerivedOutput = 0; % OR inputs1.OverwriteDerivedOutput = 1;
-inputs1.OverwriteExpt = 1; % OR inputs1.OverwriteExpt = 1;
+inputs1.OverwriteDerivedOutput = 1; % OR inputs1.OverwriteDerivedOutput = 1;
 
 
-inputs2.Years = [1990 2019];
+inputs2.Years = [1981 2000];
 inputs2.AnnSummer = 'JJA'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
 inputs2.ExtremeMeanPctile = [95 99];
 inputs2.Pctile = [95 99];

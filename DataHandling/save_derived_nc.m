@@ -10,13 +10,16 @@ function [] = save_derived_nc(fname,data,xyz,Variable,template)
 % 
 % 
 
-%% Set some basic details
+%% Start by loading the required data
+
+
+%% Set some basic details for saving
 % Load the directory paths to know where to save derived data
 init_HEAT
 
 % Find the start and end of the record
-period_start = xyz.dates(1:4,1);
-period_end = xyz.dates(1:4,length(xyz.dates(1,:)));
+period_start = xyz.dates(1:8,1);
+period_end = xyz.dates(1:8,length(xyz.dates(1,:)));
 
 % Use the start/end info to create the file name for the derived variable
 fname = [fname,'-',period_start','-',period_end','.nc'];
@@ -26,7 +29,7 @@ fname_long = [Deriveddir,fname,''];
 if strcmp(Variable,'VP')
     units = 'mb';
     standard_name = 'vapour_pressure';
-    long_name = 'Vapour pressure';
+    long_name = 'Vapour pressure daily mean';
     description = 'Vapour Pressure';
     label_units = 'mb';
     plot_label = 'Vapour pressure at 1.5m (mb)';
@@ -35,7 +38,7 @@ end
 if strcmp(Variable,'AT')
     units = '°C';
     standard_name = 'apparent_temperature';
-    long_name = 'Apparent temperature';
+    long_name = 'Apparent temperature daily mean';
     description = 'Apparent temperature';
     label_units = '°C';
     plot_label = 'Apparent temperature at 1.5m (°C)';
@@ -44,7 +47,7 @@ end
 if strcmp(Variable,'HD')
     units = 'N/A';
     standard_name = 'humidex';
-    long_name = 'Humidex';
+    long_name = 'Humidex daily mean';
     description = 'Humidex';
     label_units = 'N/A';
     plot_label = 'Humidex at 1.5m (dimensionless)';
@@ -53,7 +56,81 @@ end
 if strcmp(Variable,'sWBGT')
     units = '°C';
     standard_name = 'sWBGT';
-    long_name = 'Simplified Wet Buld Globe Temperature';
+    long_name = 'Simplified Wet Buld Globe Temperature daily mean';
+    description = 'Simplified Wet Buld Globe Temperature';
+    label_units = '°C';
+    plot_label = 'sWBGT at 1.5m (mb)';
+end
+
+% Set some basic meta data for key derived variables
+if strcmp(Variable,'VPmax')
+    units = 'mb';
+    standard_name = 'vapour_pressure_max';
+    long_name = 'Vapour pressure daily maximum';
+    description = 'Vapour Pressure';
+    label_units = 'mb';
+    plot_label = 'Vapour pressure at 1.5m (mb)';
+end
+
+if strcmp(Variable,'ATmax')
+    units = '°C';
+    standard_name = 'apparent_temperature_max';
+    long_name = 'Apparent temperature daily maximum';
+    description = 'Apparent temperature';
+    label_units = '°C';
+    plot_label = 'Apparent temperature at 1.5m (°C)';
+end
+
+if strcmp(Variable,'HDmax')
+    units = 'N/A';
+    standard_name = 'humidex_max';
+    long_name = 'Humidex daily maximum';
+    description = 'Humidex';
+    label_units = 'N/A';
+    plot_label = 'Humidex at 1.5m (dimensionless)';
+end
+
+if strcmp(Variable,'sWBGTmax')
+    units = '°C';
+    standard_name = 'sWBGT_max';
+    long_name = 'Simplified Wet Buld Globe Temperature daily maximum';
+    description = 'Simplified Wet Buld Globe Temperature';
+    label_units = '°C';
+    plot_label = 'sWBGT at 1.5m (mb)';
+end
+
+% Set some basic meta data for key derived variables
+if strcmp(Variable,'VPmin')
+    units = 'mb';
+    standard_name = 'vapour_pressure_min';
+    long_name = 'Vapour pressure daily minimum';
+    description = 'Vapour Pressure';
+    label_units = 'mb';
+    plot_label = 'Vapour pressure at 1.5m (mb)';
+end
+
+if strcmp(Variable,'ATmin')
+    units = '°C';
+    standard_name = 'apparent_temperature_min';
+    long_name = 'Apparent temperature daily minimum';
+    description = 'Apparent temperature';
+    label_units = '°C';
+    plot_label = 'Apparent temperature at 1.5m (°C)';
+end
+
+if strcmp(Variable,'HDmin')
+    units = 'N/A';
+    standard_name = 'humidex_min';
+    long_name = 'Humidex daily minimum';
+    description = 'Humidex';
+    label_units = 'N/A';
+    plot_label = 'Humidex at 1.5m (dimensionless)';
+end
+
+if strcmp(Variable,'sWBGTmin')
+    units = '°C';
+    standard_name = 'sWBGT_min';
+    long_name = 'Simplified Wet Buld Globe Temperature daily minimum';
     description = 'Simplified Wet Buld Globe Temperature';
     label_units = '°C';
     plot_label = 'sWBGT at 1.5m (mb)';
@@ -76,9 +153,7 @@ if length(data(:,1,1)) == 484
     x = ncread(template,'grid_longitude');
     yy = ncread(template,'latitude');
     xx = ncread(template,'longitude');
-    
-    Variable = 'Tmax'; % for testing - remove later!
-    
+        
     % Create netCDF and derived variable
     nccreate(fname_long,Variable,'Dimensions',{'grid_longitude',length(x),'grid_latitude',length(y),'time',length(data(1,1,:))},'Datatype','double','Format','netcdf4_classic','DeflateLevel',2)
     ncwrite(fname_long,Variable,data);

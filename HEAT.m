@@ -1,30 +1,24 @@
 function [] = HEAT(inputs,varargin)
 % HEAT v.1.0
-% 
+%
 % Run the OpenCLIM Heat Extremes Analysis Toolbox (HEAT). This function
 % does an inital setup and check of file directories, then goes through
-% each required dataset, loading (step 1), processing and generating output
-% (step 2) accordingly.
-% 
+% each required dataset, loading, processing and generating output
+% accordingly.
+%
 % Input files, in the form of structures, can be created using the format
 % provided in launch_file_TEMPLATE.m or interactively using
 % generate_launch_file.m. Alternatively the inputs can be defined directly
 % from a script (e.g. launch_file_TEMPLATE.m) if running HEAT app
 % standalone.
-% 
+%
 % inputs = information regarding data which is to be loaded, including
 % variables, dataset to use, temporal and spatial domain, experiment name
 % and whether to save derived variables.
-% 
-% inputs2 = specific output for analysis, including thresholds for extremes
-% analysis, plotting information.
-% 
-% inputs3,...,x = options for additional modules accounting for
-% socio-economic data, adaptation, agriculture etc. (NOT YET INCLUDED).
-% 
+%
 % Coded by A.T. Kennedy-Asser, University of Bristol, 2020.
 % Contact: alan.kennedy@bristol.ac.uk
-% 
+%
 
 %% Initialise
 disp('Running HEAT v.1.0')
@@ -54,14 +48,14 @@ if ischar(inputs)
         return
     end
     
-% Otherwise if inputs is a structure, then adjust the name ready to run HEAT
+    % Otherwise if inputs is a structure, then adjust the name ready to run HEAT
 else
     if ~isstruct(inputs)
         disp('Error: inputs1 must be a structure');
         return
     end
     if ~isfield(inputs,'ExptName')
-        disp('Error: inputs1 appears to be the wrong structure');
+        disp('Error: inputs appears to be the wrong structure');
         return
     else
         inputs1 = inputs;
@@ -69,181 +63,265 @@ else
 end
 
 %% Find which steps of HEAT to run
-% Note: Step 1 is essential and is always run.
-
-% Set default to not run extra steps
+% Set default to not run steps
+runstep1 = 0;
 runstep2 = 0;
 runstep3 = 0;
 
-% If multiple inputs are provided, go through to find if running further steps:
-for i = 1:length(varargin)
-    
-    % Set inputs2 and inputs3 if they are provided
-    if isstruct(varargin{i})
-        if isfield(varargin{i},'OutputType')
-            inputs2 = varargin{i};
-            % Switch on step
-            runstep2 = 1;
-        else
-            if isfield(varargin{i},'ExampleAdaptationParameter')
-                inputs3 = varargin{i};
-                % Switch on step
-                runstep3 = 1;
-            end
-            
-            % Can add further steps here in the future as necessary.
-        end
+% Run steps if necessary
+if isfield(inputs,'SaveDerivedOutput')
+    if inputs.SaveDerivedOutput == 1
+        runstep1 = 1;
     end
 end
 
-% If inputs were provided as a script, structures inputs2, inputs3 etc. may
-% exist, in which case these steps need run:
-if exist('inputs2','var')
-    if isstruct(inputs2)
-        runstep2 = 1;
-    end
+if isfield(inputs,'OutputType')
+    runstep2 = 1;
 end
 
-if exist('inputs3','var')
-    if isstruct(inputs3)
-        runstep3 = 1;
-    end
+if isfield(inputs,'TargetModel')
+    runstep3 = 1;
 end
 
 
-%% Set up output directory 
+
+% % If multiple inputs are provided, go through to find if running further steps:
+% for i = 1:length(varargin)
+%
+%     % Set inputs2 and inputs3 if they are provided
+%     if isstruct(varargin{i})
+%         if isfield(varargin{i},'OutputType')
+%             inputs2 = varargin{i};
+%             % Switch on step
+%             runstep2 = 1;
+%         else
+%             if isfield(varargin{i},'ExampleAdaptationParameter')
+%                 inputs3 = varargin{i};
+%                 % Switch on step
+%                 runstep3 = 1;
+%             end
+%
+%             % Can add further steps here in the future as necessary.
+%         end
+%     end
+% end
+
+% % If inputs were provided as a script, structures inputs2, inputs3 etc. may
+% % exist, in which case these steps need run:
+% if exist('inputs2','var')
+%     if isstruct(inputs2)
+%         runstep2 = 1;
+%     end
+% end
+%
+% if exist('inputs3','var')
+%     if isstruct(inputs3)
+%         runstep3 = 1;
+%     end
+% end
+
+
+%% Set up output directory
 % First check the experiment name won't overwrite the DerivedData directory
-if strcmp(inputs1.ExptName,'DerivedData')
+if strcmp(inputs.ExptName,'DerivedData')
     disp('Cannot call experiment "DerivedData": CANCELLING')
     return
 end
 
 % Next, check if output directory already exists
-if exist([Outputdir,'/',inputs1.ExptName],'dir')
+if exist([Outputdir,'/',inputs.ExptName],'dir')
     
-    % If it does, check whether or not to overwrite
-    disp('Warning: existing experiment exists with this name.')
-    if inputs1.OverwriteExpt == 1
-        disp('Overwriting enabled in input file')
+    % Check if overwriting has been authorised in input file
+    if ~isfield(inputs,'OverwriteExpt')
+        disp('Permission to overwrite unclear in input file: CANCELLING')
         disp('-----')
-
-    else
-        disp('Overwriting disabled in input file: CANCELLING')
-        disp('-----')
-        % If not overwriting, cancel the run
+        % Cancel the run
         return
+    else
+        
+        % If it does, check whether or not to overwrite
+        disp('Warning: existing experiment exists with this name')
+        if inputs.OverwriteExpt == 1
+            disp('Overwriting enabled in input file')
+            disp('-----')
+            
+        else
+            disp('Overwriting disabled in input file: CANCELLING')
+            disp('-----')
+            % If not overwriting, cancel the run
+            return
+        end
+        
     end
     
-else % Create output directory
-    mkdir([Outputdir,'/',inputs1.ExptName])
+else
+    % Create output directory
+    mkdir([Outputdir,'/',inputs.ExptName])
 end
+
 
 % Save input files for future reference
-save([Outputdir,'/',inputs1.ExptName,'/inputs1.mat'],'inputs1')
-if exist('inputs2','var')
-    save([Outputdir,'/',inputs1.ExptName,'/inputs2.mat'],'inputs2')
-end
-if exist('inputs3','var')
-    save([Outputdir,'/',inputs1.ExptName,'/inputs3.mat'],'inputs3')
-end
+save([Outputdir,'/',inputs.ExptName,'/inputs.mat'],'inputs')
 
 
-%% Go through each required dataset/simulation/variable
-% Data hierarchy: 
-% DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution) 
-
-for d = 1:length(inputs1.DataType)
-    DataType = char(inputs1.DataType(d));
+%% Produce derived data if required (step 1)
+if runstep1 == 1
     
-    % Load model data if required
-    if ismember(inputs1.DataType(d),'UKCP18')
+    % Go through each required dataset/simulation/variable
+    % Data hierarchy:
+    % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
+    
+    for d = 1:length(inputs.DataType)
+        DataType = char(inputs.DataType(d));
         
-        % Load each required simulation
-        for s = 1:length(inputs1.Dataset)
-            Dataset = char(inputs1.Dataset(s));
+        % Load model data if required
+        if ismember(inputs.DataType(d),'UKCP18')
             
-            % Load each required variable
-            for v = 1:length(inputs1.Variable)
-                Variable = char(inputs1.Variable(v));
+            % Load each required simulation
+            for s = 1:length(inputs.Dataset)
+                Dataset = char(inputs.Dataset(s));
                 
-                %% Run Step 1: Load data
-                [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
-                
-                
-                %% Run Step 2: Extremes analysis
-                if runstep2 == 1
-                    HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
-                end
-                
-                %% Run Step 3: e.g. Adaptation modelling?
-                if runstep3 == 1
+                % Load each required variable
+                for v = 1:length(inputs.Variable)
+                    Variable = char(inputs.Variable(v));
                     
+                    if strcmp(Variable,'T')
+                        disp('No benefit in saving derived data: simply use raw temperature data')
+                        disp('-----')
+                    else
+                        % Run Step 1: Produce derived data
+                        HEAT_step1(inputs,DataType,Dataset,Variable);
+                    end
                 end
-                
-                % Further steps can be added as the toolbox is developed
-                
-                
             end
+
         end
         
-%         % Save csv if required after all models loaded
-%         if csvout == 1
-%             
-%             for v = 1:length(inputs1.Variable)
-%                 Variable = char(inputs1.Variable(v));
-%                 
-%                 for i = 1:length(data_csv.(Variable)(:,1,1,1))
-%                     for j = 1:length(data_csv.(Variable)(1,:,1,1))
-%                         %                 for k = 1:length(data_csv.sWBGT(1,1,1,:))
-%                         
-%                         data_csv_temp = squeeze(data_csv.(Variable)(i,j,:,:))';
-%                         
-%                         csv_name = [Outputdir,'/',inputs1.ExptName,'/',num2str(i),num2str(j),'_test_',Variable,'.csv'];
-%                         %                     writematrix(data_csv_temp,csv_name)
-%                         csvwrite(csv_name,data_csv_temp)
-%                         %                 end
-%                     end
-%                 end
-%             end
-%         end
-    end
-    
-    
-    % Load model data if required
-    if ismember(inputs1.DataType(d),'HadUKGrid')
         
-        % Load each required simulation
-        for s = 1:length(inputs1.Dataset)
-            Dataset = char(inputs1.Dataset(s));
+        % Load observational data if required
+        if ismember(inputs1.DataType(d),'HadUKGrid')
             
-            % Load each required variable
-            for v = 1:length(inputs1.Variable)
-                Variable = char(inputs1.Variable(v));
+            % Load each required simulation
+            for s = 1:length(inputs1.Dataset)
+                Dataset = char(inputs1.Dataset(s));
                 
-                %% Run Step 1: Load data
-                [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
-                
-                
-                %% Run Step 2: Extremes analysis
-                if runstep2 == 1
-                    HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
-                end
-                
-                %% Run Step 3: e.g. Adaptation modelling?
-                if runstep3 == 1
+                % Load each required variable
+                for v = 1:length(inputs1.Variable)
+                    Variable = char(inputs1.Variable(v));
                     
+                    %% Run Step 1: Produce derived data
+                    HEAT_step1(inputs1,DataType,Dataset,Variable);
                 end
-                
-                % Further steps can be added as the toolbox is developed
-                
-                
             end
+            
         end
         
     end
-    
 end
 
+
+%% Produce diagnostic or workflow data if required (steps 2 and 3)
+if runstep2 == 1
+    
+    % Go through each required dataset/simulation/variable
+    % Data hierarchy:
+    % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
+    
+    for d = 1:length(inputs1.DataType)
+        DataType = char(inputs1.DataType(d));
+        
+        % Load model data if required
+        if ismember(inputs1.DataType(d),'UKCP18')
+            
+            % Load each required simulation
+            for s = 1:length(inputs1.Dataset)
+                Dataset = char(inputs1.Dataset(s));
+                
+                % Load each required variable
+                for v = 1:length(inputs1.Variable)
+                    Variable = char(inputs1.Variable(v));
+                    
+                    %% Run Step 1: Load data
+                    [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
+                    
+                    
+                    %% Run Step 2: Extremes analysis
+                    if runstep2 == 1
+                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
+                    end
+                    
+                    %% Run Step 3: e.g. Adaptation modelling?
+                    if runstep3 == 1
+                        
+                    end
+                    
+                    % Further steps can be added as the toolbox is developed
+                    
+                    
+                end
+            end
+            
+            %         % Save csv if required after all models loaded
+            %         if csvout == 1
+            %
+            %             for v = 1:length(inputs1.Variable)
+            %                 Variable = char(inputs1.Variable(v));
+            %
+            %                 for i = 1:length(data_csv.(Variable)(:,1,1,1))
+            %                     for j = 1:length(data_csv.(Variable)(1,:,1,1))
+            %                         %                 for k = 1:length(data_csv.sWBGT(1,1,1,:))
+            %
+            %                         data_csv_temp = squeeze(data_csv.(Variable)(i,j,:,:))';
+            %
+            %                         csv_name = [Outputdir,'/',inputs1.ExptName,'/',num2str(i),num2str(j),'_test_',Variable,'.csv'];
+            %                         %                     writematrix(data_csv_temp,csv_name)
+            %                         csvwrite(csv_name,data_csv_temp)
+            %                         %                 end
+            %                     end
+            %                 end
+            %             end
+            %         end
+        end
+        
+        
+        % Load model data if required
+        if ismember(inputs1.DataType(d),'HadUKGrid')
+            
+            % Load each required simulation
+            for s = 1:length(inputs1.Dataset)
+                Dataset = char(inputs1.Dataset(s));
+                
+                % Load each required variable
+                for v = 1:length(inputs1.Variable)
+                    Variable = char(inputs1.Variable(v));
+                    
+                    %% Run Step 1: Load data
+                    [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
+                    
+                    
+                    %% Run Step 2: Extremes analysis
+                    if runstep2 == 1
+                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
+                    end
+                    
+                    %% Run Step 3: e.g. Adaptation modelling?
+                    if runstep3 == 1
+                        
+                    end
+                    
+                    % Further steps can be added as the toolbox is developed
+                    
+                    
+                end
+            end
+            
+        end
+        
+    end
+end
+
+
+%% Finish up
 disp(['HEAT run "',inputs1.ExptName,'" complete',])
 endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))

@@ -23,24 +23,10 @@ function [data80s,data90s,data00s,data10s] = load_HadUK_data(var,res,summer,spec
 %
 
 %% Set defaults
+init_HEAT
+
 if ~exist('summer','var')
     summer = 'MO';
-end
-
-
-%% Find which machine is being used
-curdir = pwd;
-
-% Run locally
-if strcmp(curdir(1:14),'/Users/ak0920/') % Currently just works locally
-    disp('load_HadUK_data.m: Running locally')
-    % Set data dir
-    data_dir = '/Volumes/DataDrive/HadUK-Grid/v1.0.2.1/';
-    
-else % Run on Anthropocene
-    if srtcmp(curdir(1:14),'/home/bridge/a')
-        data_dir = '/export/anthropocene/array-01/ak0920/HadUKGrid/';
-    end
 end
 
 
@@ -58,7 +44,7 @@ end
 filedir = [var2,'/',res,'/'];
 
 % Define the years for each decade
-years = [1981:1990;1991:2000;2001:2010;2011:2019,nan];
+years = [1960:1969;1970:1979;1980:1989;1990:1999;2000:2009;2010:2019];
 
 % If only interested in a specific decade
 if exist('specdecade','var')
@@ -107,10 +93,10 @@ for decade = 1:nargout
                 file_sept = [filedir,var2,'_hadukgrid_uk_',res,'_day_',num2str(year),'0901-',num2str(year),'0930.nc'];
                 
                 % Load data
-                data_june = ncread([data_dir,file_june],var);
-                data_july = ncread([data_dir,file_july],var);
-                data_aug = ncread([data_dir,file_aug],var);
-                data_sept = ncread([data_dir,file_sept],var);
+                data_june = ncread([HadUKdir,file_june],var);
+                data_july = ncread([HadUKdir,file_july],var);
+                data_aug = ncread([HadUKdir,file_aug],var);
+                data_sept = ncread([HadUKdir,file_sept],var);
                 
                 
                 % Time data is only in 1D - select only the 15 days of
@@ -143,7 +129,7 @@ for decade = 1:nargout
             else
                 %% Load any other variable (saved annually)
                 file = [filedir,var2,'_hadukgrid_uk_',res,'_mon_',num2str(year),'01-',num2str(year),'12.nc'];
-                data_ann = ncread([data_dir,file],var2);
+                data_ann = ncread([HadUKdir,file],var2);
                 
                 % Save/concatenate monthly as daily data
                 if strcmp(summer,'MO')
