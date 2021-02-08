@@ -25,34 +25,49 @@
 % inputs1.OverwriteDerivedOutput = 1; % OR inputs1.OverwriteDerivedOutput = 1;
 
 
-% inputs2.Years = [1981 2000];
-% inputs2.AnnSummer = 'Ann'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
+%% Set some basic experiment details
+inputs.ExptName = 'testing'; % Give the experiment a name (no spaces)
+inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
+inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
+inputs.SaveDerivedOutput = 1; % OR inputs.SaveDerivedOutput = 0;
+inputs.OverwriteDerivedOutput = 1; % OR inputs.OverwriteDerivedOutput = 1;
+inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0; 
+
+
+%% Select dataset(s) to use
+inputs.DataType = {'UKCP18'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
+inputs.Variable = {'ATmin'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
+inputs.Dataset = {'GCM-01','GCM-04','GCM-05'};
+inputs.MMM = 1; % OR inputs.MMM = 1; % Calculate multi-model mean of all selected datasets
+inputs.MMP = []; % OR inputs.MMP = 0.1 - 99.9; % Calculate multi-model percentile of all selected datasets
+
+
+%% Subsetting of data for analysis
+inputs.TemporalRange = [19810101, 20001230]; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
+inputs.SpatialRange = [52,57;-5, 0]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
+inputs.Region = []; % 'Scotland','North East','North West','Yorkshire and 
+    % the Humber','East Midlands','West Midlands','East of England','Greater
+    % London','South East','South West','Wales','Northern Ireland','Isle of
+    % Man','RoI','Ireland','GB'
+
+    
+    
+    
+    
+% inputs.TempRes = 'daily'; % OR inputs.TempRes = 'monthly';
+% inputs.Resolution = {'2km'};
+% inputs.CPM_period = 1981; % 1981 OR 2021 OR 2061
 
 
 
-
-inputs1.ExptName = 'CPM_AT_test'; % Give the experiment a name (no spaces)
-inputs1.OverwriteExpt = 1; % OR inputs1.OverwriteExpt = 1;
-
-inputs1.Domain = 'UK'; % OR inputs1.Domain = 'global';
-inputs1.DataType = {'UKCP18'};
-% inputs1.Resolution = {'2km'};
-inputs1.Variable = {'ATmin'};
-inputs1.Dataset = {'CPM-01'};
-% inputs1.CPM_period = 1981; % 1981 OR 2021 OR 2061
-inputs1.TempRes = 'daily'; % OR inputs1.TempRes = 'monthly';
-inputs1.BiasCorr = 0; % OR inputs1.BiasCorr = 0; 
-inputs1.SaveDerivedOutput = 1; % OR inputs1.SaveDerivedOutput = 0;
-inputs1.OverwriteDerivedOutput = 1; % OR inputs1.OverwriteDerivedOutput = 1;
-
-
-inputs2.Years = [1981 2000];
-inputs2.AnnSummer = 'JJA'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
-inputs2.ExtremeMeanPctile = [95 99];
-inputs2.Pctile = [95 99];
+inputs.Years = [1981 2000];
+inputs.AnnSummer = 'JJA'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
+inputs.ExtremeMeanPctile = [95 99];
+inputs.Pctile = [95 99];
 % inputs2.DDx = 66;
-inputs2.OutputType = {'map'};
+inputs.OutputType = {'map'};
 % inputs2.
-inputs2.Region = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
+inputs.Region = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
 
 

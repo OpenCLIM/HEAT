@@ -1,158 +1,278 @@
-function [] = HEAT_step2(inputs2,data,xyz,Dataset,Variable,ExptName)
-% HEAT_step2(inputs2,data,xyz,Dataset,Variable,ExptName)
-% 
-% Run the second step of HEAT to produce the main outputs as requested in
-% inputs2 structure. 
-% 
+function [] = HEAT_step2(inputs,DataType,Variable)
+% HEAT_step2(inputs,Dataset,Variable)
+%
+% Run the second step of HEAT to produce diagnostic outputs for assessing
+% heat extremes.
+%
+% If assessing temperature data, this is loaded from the raw netCDF files.
+% If assessing heat stress variables, these are loaded from the derived
+% data directory.
+%
 
 %% Setup
-disp('Running extremes analysis')
+disp('Running extremes analysis - producing diagnostic outputs')
+disp('-----')
 
 % Set directory paths
 init_HEAT
 
-% Temporally subset data as required
-[data,xyz.dates] = subset_temporal(data,xyz.dates,inputs2.Years,inputs2.AnnSummer);
+% Load xyz data
+load_xyz
 
-% Spatially subset data as required
-
-
-
-%% Calculate and produce analysis outputs
-% Calculate percentile if required
-if isfield(inputs2,'Pctile')
+%% Go through UKCP18 data
+if strcmp(DataType,'UKCP18')
     
-    % Create empty array for output
-    data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.Pctile));
-    
-    for p = 1:length(inputs2.Pctile)
-        disp(['Calculating ',num2str(inputs2.Pctile(p)),'th percentile over time period'])
+    % Go through each simulation
+    for s = 1:length(inputs.Dataset)
+        Dataset = char(inputs.Dataset(s));
         
-        data_pctiles(:,:,p) = prctile(data,inputs2.Pctile(p),3);
-        
-        % Plot as required
-        for o = 1:length(inputs2.OutputType)
-            OutputType = string(inputs2.OutputType(o));
+        % Find resolution
+        if strcmp(Dataset(1:2),'RC')
+            res = '12km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_RCM;
+            lons = long_UK_RCM;
             
-            % Generate map if requested
-            if strcmp(OutputType,'map')
-                figure
-                UK_subplot(data_pctiles(:,:,p),[Dataset,' ',Variable, ' ',num2str(inputs2.Pctile(p)),'th percentile'])
-                colorbar()
-                % Save as required
-
-            end
+        elseif strcmp(Dataset(1:2),'CP')
+            res = '2km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_CPM;
+            lons = long_UK_CPM;
             
+        elseif strcmp(Dataset(1:2),'GC')
+            res = '60km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_GCM;
+            lons = long_UK_GCM;
+            
+        elseif strcmp(Dataset(1:2),'CM')
+            res = '60km/';
+            runn = ['run',Dataset(7:8)];
+            lats = lat_UK_GCM;
+            lons = long_UK_GCM;
         end
         
         
+        %% Find location of netCDF data for the required variable
+        % Set default domain to load as whole of dataset for T vars
+        ncstarts = [1 1 1 1];
+        ncends = [Inf Inf Inf Inf];
+        % Dimension of yyyymmdd var for T vars
+        datedim = 2;
+        
+        if strcmp(Variable,'Tmax')
+            % Find what files are available
+            var = 'tasmax';
+            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,res,var,'/',runn,'/'];
+
+        elseif strcmp(Variable,'T')
+            % Find what files are available
+            var = 'tas';
+            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,res,var,'/',runn,'/'];
+            
+        elseif strcmp(Variable,'Tmin')
+            % Find what files are available
+            var = 'tasmin';
+            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,res,var,'/',runn,'/'];
+            
+        else % All other heat stress variables are found in  Deriveddir
+            var = Variable;
+            vardir = [Deriveddir,var,'-'];
+            % Set default domain to load as whole of dataset for all other vars
+            ncstarts = [1 1 1];
+            ncends = [Inf Inf Inf];
+            % Dimension of yyyymmdd for all other vars
+            datedim = 1;
+        end
+        
+        % Find how many files are to be loaded/produced
+        files = dir([vardir '*.nc']);
+        
+        
+        %% Spatially subset data as required
+        % Find corners of requested domain
+        if isfield(inputs,'SpatialRange')
+            if length(inputs.SpatialRange(1,:)) == 2 % lat-long box specified to load
+                [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+                [lon_id2,lat_id2] = find_location(inputs.SpatialRange(2,2),inputs.SpatialRange(1,2),lons,lats);
+                
+                ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+                ncends(1) = 1+lon_id2-lon_id1; ncends(2) = 1+lat_id2-lat_id1;
+                
+            elseif length(inputs.SpatialRange(1,:)) == 1 % specific grid cell specified
+                [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+                
+                ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+                ncends(1) = 1; ncends(2) = 1;
+                
+            end
+        end
+        
+        
+        %% Load only the files required for the temporal subset
+        % If specific years are required
+        if isfield(inputs,'TemporalRange')
+            % Find which files cover the required start and end dates
+            for i = 1:length(files)
+                % Find when the netCDF files start and end
+                fstart = files(i).name(end-19:end-12);
+                fend = files(i).name(end-10:end-3);
+                
+                % Find netCDF file that contains required start
+                if str2double(fstart) < inputs.TemporalRange(1) && str2double(fend) > inputs.TemporalRange(1)
+                    startload = i;
+                end
+                
+                % Find netCDF file that contains required end
+                if str2double(fstart) < inputs.TemporalRange(2) && str2double(fend) > inputs.TemporalRange(2)
+                    endload = i;
+                end
+            end
+        else
+            startload = 1;
+            endload = length(files);
+        end
+        
+        % Load all of the files between the start and end file
+        for i = startload:endload
+            
+            % File name
+            file = [files(i).folder,'/',files(i).name];
+            
+            % Load temperature for the correct region and concatenate through time if necessary
+            if i == startload
+                data = double(ncread(file,var,ncstarts,ncends));
+                dates = ncread(file,'yyyymmdd');
+            else
+                data = cat(3,data,double(ncread(file,var,ncstarts,ncends)));
+                dates = cat(datedim,dates,ncread(file,'yyyymmdd'));
+            end
+        end
+        
+        if datedim == 1
+            dates = dates';
+        end
+        
+        %% Temporally subset to the specific required dates and summer type
+        % Pull out the required dates and times
+        [data,dates] = subset_temporal(data,dates,inputs.TemporalRange,inputs.AnnSummer);
+        
+        
+        %% Store data for MMM if required
+        if inputs.MMM == 1 || ~isempty(inputs.MMP)
+            if s == 1
+                data_all = data;
+            else
+                data_all = cat(ndims(data)+1,data_all,data);
+            end
+        else
+            data_all = data;
+        end
+        
+        
+    end
+    
+    
+    %% Calculate and produce analysis outputs
+    % Calculate percentile if required
+    if isfield(inputs,'Pctile')
+        
+        % Create empty array for output
+        data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
+        
+        for p = 1:length(inputs.Pctile)
+            disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
+            
+            data_pctiles(:,:,p) = prctile(data,inputs.Pctile(p),3);
+            
+            % Plot as required
+            for o = 1:length(inputs.OutputType)
+                OutputType = string(inputs.OutputType(o));
+                
+                % Generate map if requested
+                if strcmp(OutputType,'map')
+                    figure
+                    UK_subplot(data_pctiles(:,:,p),[Dataset,' ',Variable, ' ',num2str(inputs.Pctile(p)),'th percentile'])
+                    colorbar()
+                    % Save as required
+                    
+                end
+                
+            end
+            
+            
+            
+        end
+    end
+    
+    % Calculate extreme mean if required
+    if isfield(inputs,'ExtremeMeanPctile')
+        
+        % Create empty array for output
+        data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
+        
+        for p = 1:length(inputs.ExtremeMeanPctile)
+            disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
+            
+            
+            Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
+            Txx = nan(size(Txx_temp));
+            Txx(Txx_temp == 1) = 1;
+            data_Txx = data .* Txx;
+            data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
+            
+            % Plot as required
+            for o = 1:length(inputs.OutputType)
+                OutputType = string(inputs.OutputType(o));
+                
+                % Generate map if requested
+                if strcmp(OutputType,'map')
+                    figure
+                    UK_subplot(data_ExMean(:,:,p),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs.Pctile(p)),'th percentile'])
+                    colorbar()
+                    % Save as required
+                    
+                end
+                
+            end
+            
+            % Save as required
+            
+        end
+    end
+
+    
+    
+    %% Calculate the MMM or MMP if required
+    if inputs.MMM == 1
+        data = nanmean(data_all,ndims(data)+1);
+        
+    elseif ~isempty(inputs.MMP)
+        data = prctile(data_all,inputs.MMP,ndims(data)+1);
         
     end
 end
 
-% Calculate extreme mean if required
-if isfield(inputs2,'ExtremeMeanPctile')
-    
-    % Create empty array for output
-    data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs2.ExtremeMeanPctile));
-    
-    for p = 1:length(inputs2.ExtremeMeanPctile)
-        disp(['Calculating extreme mean above ',num2str(inputs2.ExtremeMeanPctile(p)),'th percentile over time period'])
-        
-        
-        Txx_temp = data >= prctile(data,inputs2.ExtremeMeanPctile(p),3);
-        Txx = nan(size(Txx_temp));
-        Txx(Txx_temp == 1) = 1;
-        data_Txx = data .* Txx;
-        data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
-        
-        % Plot as required
-        for o = 1:length(inputs2.OutputType)
-            OutputType = string(inputs2.OutputType(o));
-            
-            % Generate map if requested
-            if strcmp(OutputType,'map')
-                figure
-                UK_subplot(data_ExMean(:,:,p),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs2.Pctile(p)),'th percentile'])
-                colorbar()
-                % Save as required
-
-            end
-            
-        end
-        
-        % Save as required
-        
-    end
-end
 
 
 % Generate requested output
 disp('Producing output')
-for o = 1:length(inputs2.OutputType)
-    OutputType = string(inputs2.OutputType(o));
+for o = 1:length(inputs.OutputType)
+    OutputType = string(inputs.OutputType(o));
     
-%     % Generate map if requested
-%     if strcmp(OutputType,'map')
-%         figure
-%         UK_subplot(data_ExMean,[Dataset,' ',Variable, ' extreme mean >95th percentile'])
-%         %                             figure
-%         %                             UK_subplot(data_pctiles,[Dataset,' ',Variable, ' 95th percentile'])
-%     end
+    %     % Generate map if requested
+    %     if strcmp(OutputType,'map')
+    %         figure
+    %         UK_subplot(data_ExMean,[Dataset,' ',Variable, ' extreme mean >95th percentile'])
+    %         %                             figure
+    %         %                             UK_subplot(data_pctiles,[Dataset,' ',Variable, ' 95th percentile'])
+    %     end
     
     
-    %% Generate ARCADIA-ready csv if requested
-    if strcmp(OutputType,'ARCADIA')
-        
-        % If interested in every single grid cell
-        if strcmp(inputs2.Region,'all')
-            
-            % csv needs saved for every grid box: go through each lat-long
-            for i = 1:length(data(:,1,1))
-                for j = 1:length(data(1,:,1))
-                    
-                    % Set csv output file name
-                    csv_name = [Outputdir,'/',ExptName,'/',num2str(i),'_',num2str(j),'_',ExptName,'_',Variable,'.csv'];
-                    
-                    % If csv has been created already
-                    if exist(csv_name,'file')
-                        % Load existing csv
-                        data_csv = csvread(csv_name);
-                        % Extract individual grid cell for current dataset
-                        data_csv_temp = squeeze(data(i,j,:))';
-                        % Concatenate this with the existing csv and resave
-                        data_csv = cat(1,data_csv,data_csv_temp);
-                        csvwrite(csv_name,data_csv)
-                    else
-                        % Otherwise extract individual grid cell for current
-                        % dataset and create new csv
-                        data_csv = squeeze(data(i,j,:))';
-                        csvwrite(csv_name,data_csv)
-                    end
-                end
-            end
-            
-        else % Otherwise take a regional mean
-            regmean = calc_reg_mean(data,inputs2.Region);
-            
-            % Set csv output file name
-                    csv_name = [Outputdir,'/',ExptName,'/',inputs2.Region,'_',ExptName,'_',Variable,'.csv'];
-                    
-                    % If csv has been created already
-                    if exist(csv_name,'file')
-                        % Load existing csv
-                        data_csv = csvread(csv_name);
-
-                        % Concatenate this with the existing csv and resave
-                        data_csv = cat(1,data_csv,regmean');
-                        csvwrite(csv_name,data_csv)
-                    else
-                        % Otherwise create new csv
-                        csvwrite(csv_name,regmean')
-                    end
-        end
-        
-    end
+    
     
 end
 disp('-----')

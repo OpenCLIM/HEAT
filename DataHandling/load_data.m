@@ -45,36 +45,32 @@ if strcmp(DataType,'UKCP18')
         template = [UKCP18dir,'12km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-rcm_uk_12km_',model(6:7),...
             '_day_19801201-19901130.nc'];
         
-    else
-        if strcmp(Simulation(1:2),'CP')
-            model = ['cpm85',Simulation(5:6)];
-            ht = ht_2km;
-            Rawdir = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/'];
+    elseif strcmp(Simulation(1:2),'CP')
+        model = ['cpm85',Simulation(5:6)];
+        ht = ht_2km;
+        Rawdir = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/'];
+        
+        template = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
+            '_day_19801201-19811130.nc'];
+        
+    elseif strcmp(Simulation(1:2),'GC')
+        model = ['gcm85',Simulation(5:6)];
+        ht = ht_60km;
+        Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
+        
+        template = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
+            '_day_19791201-19891130.nc'];
+        
+    elseif strcmp(Simulation(1:2),'CM')
+        model = ['gcm85',Simulation(7:8)];
+        ht = ht_60km;
+        Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
+        
+        template = [UKCP18dir,'60km/tasmax/run',Simulation(7:8),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
+            '_day_19791201-19891130.nc'];
+        
+    end
 
-            template = [UKCP18dir,'2km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-cpm_uk_2.2km_',model(6:7),...
-                '_day_19801201-19811130.nc'];
-
-        else
-            if strcmp(Simulation(1:2),'GC')
-                model = ['gcm85',Simulation(5:6)];
-                ht = ht_60km;
-                Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
-
-                template = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
-                '_day_19791201-19891130.nc'];
-
-            else
-                if strcmp(Simulation(1:2),'CM')
-                    model = ['gcm85',Simulation(7:8)];
-                    ht = ht_60km;
-                    Rawdir = [UKCP18dir,'60km/tasmax/run',Simulation(5:6),'/'];
-                    
-                    template = [UKCP18dir,'60km/tasmax/run',Simulation(7:8),'/tasmax_rcp',model(4:5),'_land-gcm_uk_60km_',model(6:7),...
-                '_day_19791201-19891130.nc'];
-
-                end
-            end
-        end
     end
     
     % Find how many files are to be loaded/produced

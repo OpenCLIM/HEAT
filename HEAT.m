@@ -58,8 +58,13 @@ else
         disp('Error: inputs appears to be the wrong structure');
         return
     else
-        inputs1 = inputs;
+        inputs = inputs;
     end
+end
+
+% Set default domain to UK if not specified
+if ~isfield(inputs,'Domain')
+    inputs.Domain = 'UK';
 end
 
 %% Find which steps of HEAT to run
@@ -198,23 +203,23 @@ if runstep1 == 1
         end
         
         
-        % Load observational data if required
-        if ismember(inputs1.DataType(d),'HadUKGrid')
-            
-            % Load each required simulation
-            for s = 1:length(inputs1.Dataset)
-                Dataset = char(inputs1.Dataset(s));
-                
-                % Load each required variable
-                for v = 1:length(inputs1.Variable)
-                    Variable = char(inputs1.Variable(v));
-                    
-                    %% Run Step 1: Produce derived data
-                    HEAT_step1(inputs1,DataType,Dataset,Variable);
-                end
-            end
-            
-        end
+%         % Load observational data if required
+%         if ismember(inputs1.DataType(d),'HadUKGrid')
+%             
+%             % Load each required simulation
+%             for s = 1:length(inputs1.Dataset)
+%                 Dataset = char(inputs1.Dataset(s));
+%                 
+%                 % Load each required variable
+%                 for v = 1:length(inputs1.Variable)
+%                     Variable = char(inputs1.Variable(v));
+%                     
+%                     %% Run Step 1: Produce derived data
+%                     HEAT_step1(inputs1,DataType,Dataset,Variable);
+%                 end
+%             end
+%             
+%         end
         
     end
 end
@@ -227,90 +232,48 @@ if runstep2 == 1
     % Data hierarchy:
     % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
     
-    for d = 1:length(inputs1.DataType)
-        DataType = char(inputs1.DataType(d));
+    for d = 1:length(inputs.DataType)
+        DataType = char(inputs.DataType(d));
         
         % Load model data if required
-        if ismember(inputs1.DataType(d),'UKCP18')
+        if ismember(inputs.DataType(d),'UKCP18')
             
-            % Load each required simulation
-            for s = 1:length(inputs1.Dataset)
-                Dataset = char(inputs1.Dataset(s));
+            % Load each required variable
+            for v = 1:length(inputs.Variable)
+                Variable = char(inputs.Variable(v));
                 
-                % Load each required variable
-                for v = 1:length(inputs1.Variable)
-                    Variable = char(inputs1.Variable(v));
-                    
-                    %% Run Step 1: Load data
-                    [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
-                    
-                    
-                    %% Run Step 2: Extremes analysis
-                    if runstep2 == 1
-                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
-                    end
-                    
-                    %% Run Step 3: e.g. Adaptation modelling?
-                    if runstep3 == 1
-                        
-                    end
-                    
-                    % Further steps can be added as the toolbox is developed
-                    
-                    
+                % Run Step 2: Extremes analysis
+                if runstep2 == 1
+                    HEAT_step2(inputs,DataType,Variable)
                 end
+                
+                %                 % Load each required simulation
+                %                 for s = 1:length(inputs.Dataset)
+                %                     Dataset = char(inputs.Dataset(s));
+                %
+                %                 end
             end
             
-            %         % Save csv if required after all models loaded
-            %         if csvout == 1
-            %
-            %             for v = 1:length(inputs1.Variable)
-            %                 Variable = char(inputs1.Variable(v));
-            %
-            %                 for i = 1:length(data_csv.(Variable)(:,1,1,1))
-            %                     for j = 1:length(data_csv.(Variable)(1,:,1,1))
-            %                         %                 for k = 1:length(data_csv.sWBGT(1,1,1,:))
-            %
-            %                         data_csv_temp = squeeze(data_csv.(Variable)(i,j,:,:))';
-            %
-            %                         csv_name = [Outputdir,'/',inputs1.ExptName,'/',num2str(i),num2str(j),'_test_',Variable,'.csv'];
-            %                         %                     writematrix(data_csv_temp,csv_name)
-            %                         csvwrite(csv_name,data_csv_temp)
-            %                         %                 end
-            %                     end
-            %                 end
-            %             end
-            %         end
+
         end
         
         
         % Load model data if required
-        if ismember(inputs1.DataType(d),'HadUKGrid')
+        if ismember(inputs.DataType(d),'HadUKGrid')
             
             % Load each required simulation
-            for s = 1:length(inputs1.Dataset)
-                Dataset = char(inputs1.Dataset(s));
+            for s = 1:length(inputs.Dataset)
+                Dataset = char(inputs.Dataset(s));
                 
                 % Load each required variable
-                for v = 1:length(inputs1.Variable)
-                    Variable = char(inputs1.Variable(v));
+                for v = 1:length(inputs.Variable)
+                    Variable = char(inputs.Variable(v));
                     
-                    %% Run Step 1: Load data
-                    [data,xyz] = HEAT_step1(inputs1,DataType,Dataset,Variable);
-                    
-                    
+  
                     %% Run Step 2: Extremes analysis
                     if runstep2 == 1
-                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs1.ExptName)
+                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs.ExptName)
                     end
-                    
-                    %% Run Step 3: e.g. Adaptation modelling?
-                    if runstep3 == 1
-                        
-                    end
-                    
-                    % Further steps can be added as the toolbox is developed
-                    
                     
                 end
             end
@@ -322,7 +285,7 @@ end
 
 
 %% Finish up
-disp(['HEAT run "',inputs1.ExptName,'" complete',])
+disp(['HEAT run "',inputs.ExptName,'" complete',])
 endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))
 disp('-----')
