@@ -27,6 +27,12 @@ load('PreProcessedData/datamask12.mat')
 load('PreProcessedData/datamask60.mat')
 datamask025dega = datamask025deg(49:88,42:83);
 
+% Load LSM data
+load('PreProcessedData/LSM2.mat')
+load('PreProcessedData/LSM1.mat')
+load('PreProcessedData/LSM12.mat')
+load('PreProcessedData/LSM60.mat')
+
 % Load the lat-long data directly from the data
 generate_UK_latlon
 

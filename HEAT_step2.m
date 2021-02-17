@@ -32,24 +32,28 @@ if strcmp(DataType,'UKCP18')
             runn = ['run',Dataset(5:6)];
             lats = lat_UK_RCM;
             lons = long_UK_RCM;
+            LSM = LSM12;
             
         elseif strcmp(Dataset(1:2),'CP')
             res = '2km/';
             runn = ['run',Dataset(5:6)];
             lats = lat_UK_CPM;
             lons = long_UK_CPM;
+            LSM = LSM2;
             
         elseif strcmp(Dataset(1:2),'GC')
             res = '60km/';
             runn = ['run',Dataset(5:6)];
             lats = lat_UK_GCM;
             lons = long_UK_GCM;
+            LSM = LSM60;
             
         elseif strcmp(Dataset(1:2),'CM')
             res = '60km/';
             runn = ['run',Dataset(7:8)];
             lats = lat_UK_GCM;
             lons = long_UK_GCM;
+            LSM = LSM60;
         end
         
         
@@ -102,11 +106,19 @@ if strcmp(DataType,'UKCP18')
                 ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
                 ncends(1) = 1+lon_id2-lon_id1; ncends(2) = 1+lat_id2-lat_id1;
                 
+                % Create an ID field for subsetting e.g. lat-long, areas etc.
+                grid_idx = lon_id1:lon_id2;
+                grid_idy = lat_id1:lat_id2;
+                
             elseif length(inputs.SpatialRange(1,:)) == 1 % specific grid cell specified
                 [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
                 
                 ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
                 ncends(1) = 1; ncends(2) = 1;
+                
+                % Create an ID field for subsetting e.g. lat-long, areas etc.
+                grid_idx = lon_id1;
+                grid_idy = lat_id1;
                 
             end
         end
@@ -156,93 +168,280 @@ if strcmp(DataType,'UKCP18')
             dates = dates';
         end
         
+        
         %% Temporally subset to the specific required dates and summer type
         % Pull out the required dates and times
         [data,dates] = subset_temporal(data,dates,inputs.TemporalRange,inputs.AnnSummer);
         
         
-        %% Store data for MMM if required
-        if inputs.MMM == 1 || ~isempty(inputs.MMP)
-            if s == 1
-                data_all = data;
-            else
-                data_all = cat(ndims(data)+1,data_all,data);
+        %% Calculate percentile if required
+        if isfield(inputs,'Pctile')
+            
+            % Create empty array for output
+            data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
+            
+            % Calculate given percentile
+            for p = 1:length(inputs.Pctile)
+                disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
+                data_pctiles(:,:,p) = prctile(data,inputs.Pctile(p),3);
+                
+                % Plot as required
+                for o = 1:length(inputs.OutputType)
+                    OutputType = string(inputs.OutputType(o));
+                    
+                    % If calculating MMM or MMP, only plot all ensemble members if requested
+                    if inputs.PlotAll == 1 || inputs.MMM == 0 || ~isempty(inputs.MMP)
+                        
+                        % Generate map if requested
+                        if strcmp(OutputType,'map')
+                            figure
+                            UK_subplot(data_pctiles(:,:,p) .* LSM(grid_idx,grid_idy),[Dataset,' ',Variable, ' ',num2str(inputs.Pctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+                            colorbar()
+                            % Save as required
+                            
+                        end
+                    end
+                    
+                end
+                
             end
-        else
-            data_all = data;
+            
+            % Store data for MMM/MMP if required and calculate
+            if inputs.MMM == 1 || ~isempty(inputs.MMP)
+                % If this is the first simulation loaded, make new array
+                if s == 1
+                    data_all = data_pctiles;
+                    
+                    % Otherwise, add the current simulation to the array
+                elseif s > 1 && s < length(inputs.Dataset)
+                    data_all = cat(ndims(data_pctiles)+1,data_all,data_pctiles);
+                    
+                    % And if this is the final simulation, calculate the MMM or MMP
+                elseif s == length(inputs.Dataset)
+                    data_all = cat(ndims(data_pctiles)+1,data_all,data_pctiles);
+                    
+                    % Calculate MMM or MMP
+                    if inputs.MMM == 1
+                        data_plot = nanmean(data_all,ndims(data_pctiles)+1);
+                    elseif ~isempty(inputs.MMP)
+                        data_plot = prctile(data_all,inputs.MMP,ndims(data_pctiles)+1);
+                    end
+                    
+                    % Go through each precentile to plot
+                    for p = 1:length(inputs.Pctile)
+                        % Plot as required
+                        for o = 1:length(inputs.OutputType)
+                            OutputType = string(inputs.OutputType(o));
+                            
+                            % Generate map if requested
+                            if strcmp(OutputType,'map')
+                                figure
+                                UK_subplot(data_plot(:,:,p) .* LSM(grid_idx,grid_idy),['MMM ',Variable, ' ',num2str(inputs.Pctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+                                colorbar()
+%                                 figure
+%                                 imagesc(data_plot(:,:,p))
+                                % Save as required
+                                
+                            end
+                            
+                        end
+                    end
+                    
+                end
+                
+                
+            end
+            
+            
+            
         end
         
-        
-    end
-    
-    
-    %% Calculate and produce analysis outputs
-    % Calculate percentile if required
-    if isfield(inputs,'Pctile')
-        
-        % Create empty array for output
-        data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
-        
-        for p = 1:length(inputs.Pctile)
-            disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
+        %% Calculate extreme mean if required
+        if isfield(inputs,'ExtremeMeanPctile')
             
-            data_pctiles(:,:,p) = prctile(data,inputs.Pctile(p),3);
+            % Create empty array for output
+            data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
             
-            % Plot as required
-            for o = 1:length(inputs.OutputType)
-                OutputType = string(inputs.OutputType(o));
+            for p = 1:length(inputs.ExtremeMeanPctile)
+                disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
                 
-                % Generate map if requested
-                if strcmp(OutputType,'map')
-                    figure
-                    UK_subplot(data_pctiles(:,:,p),[Dataset,' ',Variable, ' ',num2str(inputs.Pctile(p)),'th percentile'])
-                    colorbar()
-                    % Save as required
+                % Calculate percentile threshold
+                Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
+                Txx = nan(size(Txx_temp));
+                Txx(Txx_temp == 1) = 1;
+                data_Txx = data .* Txx;
+                % Find mean of days exceeding the threshold
+                data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
+                
+                % Plot as required
+                for o = 1:length(inputs.OutputType)
+                    OutputType = string(inputs.OutputType(o));
+                    
+                    % If calculating MMM or MMP, only plot all ensemble members if requested
+                    if inputs.PlotAll == 1 || inputs.MMM == 0 || ~isempty(inputs.MMP)
+                        
+                        % Generate map if requested
+                        if strcmp(OutputType,'map')
+                            figure
+                            UK_subplot(data_ExMean(:,:,p) .* LSM(grid_idx,grid_idy),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs.ExtremeMeanPctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+                            colorbar()
+
+                            % Save as required
+                            
+                        end
+                    end
                     
                 end
                 
             end
             
             
-            
-        end
-    end
-    
-    % Calculate extreme mean if required
-    if isfield(inputs,'ExtremeMeanPctile')
-        
-        % Create empty array for output
-        data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
-        
-        for p = 1:length(inputs.ExtremeMeanPctile)
-            disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
-            
-            
-            Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
-            Txx = nan(size(Txx_temp));
-            Txx(Txx_temp == 1) = 1;
-            data_Txx = data .* Txx;
-            data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
-            
-            % Plot as required
-            for o = 1:length(inputs.OutputType)
-                OutputType = string(inputs.OutputType(o));
-                
-                % Generate map if requested
-                if strcmp(OutputType,'map')
-                    figure
-                    UK_subplot(data_ExMean(:,:,p),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs.Pctile(p)),'th percentile'])
-                    colorbar()
-                    % Save as required
+            % Store data for MMM/MMP if required and calculate
+            if inputs.MMM == 1 || ~isempty(inputs.MMP)
+                % If this is the first simulation loaded, make new array
+                if s == 1
+                    data_all = data_ExMean;
+                    
+                    % Otherwise, add the current simulation to the array
+                elseif s > 1 && s < length(inputs.Dataset)
+                    data_all = cat(ndims(data_ExMean)+1,data_all,data_ExMean);
+                    
+                    % And if this is the final simulation, calculate the MMM or MMP
+                elseif s == length(inputs.Dataset)
+                    data_all = cat(ndims(data_ExMean)+1,data_all,data_ExMean);
+                    
+                    % Calculate MMM or MMP
+                    if inputs.MMM == 1
+                        data_plot = nanmean(data_all,ndims(data_ExMean)+1);
+                    elseif ~isempty(inputs.MMP)
+                        data_plot = prctile(data_all,inputs.MMP,ndims(data_ExMean)+1);
+                    end
+                    
+                    % Go through each precentile to plot
+                    for p = 1:length(inputs.ExtremeMeanPctile)
+                        % Plot as required
+                        for o = 1:length(inputs.OutputType)
+                            OutputType = string(inputs.OutputType(o));
+                            
+                            % Generate map if requested
+                            if strcmp(OutputType,'map')
+                                figure
+                                UK_subplot(data_plot(:,:,p) .* LSM(grid_idx,grid_idy),['MMM ',Variable, ' extreme mean >',num2str(inputs.ExtremeMeanPctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+                                colorbar()
+%                                 figure
+%                                 imagesc(data_plot(:,:,p))
+                                % Save as required
+                                
+                            end
+                            
+                        end
+                    end
                     
                 end
                 
+                
             end
-            
-            % Save as required
-            
         end
+        
+        
+%         %% Store data for MMM if required and calculate
+%         if inputs.MMM == 1 || ~isempty(inputs.MMP)
+%             % If this is the first simulation loaded, make new array
+%             if s == 1
+%                 data_all = data;
+%                 
+%             % If this is the final simulation, calculate the MMM or MMP    
+%             elseif s == length(inputs.Dataset)
+%                 data_all = cat(ndims(data)+1,data_all,data);
+%                 
+%                 % Calculate MMM or MMP
+%                 if inputs.MMM == 1
+%                     data = nanmean(data_all,ndims(data)+1);
+%                     
+%                 elseif ~isempty(inputs.MMP)
+%                     data = prctile(data_all,inputs.MMP,ndims(data)+1);
+%                     
+%                 end
+%                 
+%                 % Otherwise, add the current simulation to the array
+%             else
+%                 data_all = cat(ndims(data)+1,data_all,data);
+%             end
+%         end
+        
+        
+        
+        
     end
+    
+    
+%     %% Calculate and produce analysis outputs
+%     % Calculate percentile if required
+%     if isfield(inputs,'Pctile')
+%         
+%         % Create empty array for output
+%         data_pctiles = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
+%         
+%         for p = 1:length(inputs.Pctile)
+%             disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
+%             
+%             data_pctiles(:,:,p) = prctile(data,inputs.Pctile(p),3);
+%             
+%             % Plot as required
+%             for o = 1:length(inputs.OutputType)
+%                 OutputType = string(inputs.OutputType(o));
+%                 
+%                 % Generate map if requested
+%                 if strcmp(OutputType,'map')
+%                     figure
+%                     UK_subplot(data_pctiles(:,:,p),[Dataset,' ',Variable, ' ',num2str(inputs.Pctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+%                     colorbar()
+%                     % Save as required
+%                     
+%                 end
+%                 
+%             end
+%             
+%             
+%             
+%         end
+%     end
+%     
+%     % Calculate extreme mean if required
+%     if isfield(inputs,'ExtremeMeanPctile')
+%         
+%         % Create empty array for output
+%         data_ExMean = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
+%         
+%         for p = 1:length(inputs.ExtremeMeanPctile)
+%             disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
+%             
+%             
+%             Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
+%             Txx = nan(size(Txx_temp));
+%             Txx(Txx_temp == 1) = 1;
+%             data_Txx = data .* Txx;
+%             data_ExMean(:,:,p) = squeeze(nanmean(data_Txx,3));
+%             
+%             % Plot as required
+%             for o = 1:length(inputs.OutputType)
+%                 OutputType = string(inputs.OutputType(o));
+%                 
+%                 % Generate map if requested
+%                 if strcmp(OutputType,'map')
+%                     figure
+%                     UK_subplot(data_ExMean(:,:,p),[Dataset,' ',Variable, ' extreme mean >',num2str(inputs.Pctile(p)),'th percentile'],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy))
+%                     colorbar()
+%                     % Save as required
+%                     
+%                 end
+%                 
+%             end
+%             
+%             % Save as required
+%             
+%         end
+%     end
 
     
     
