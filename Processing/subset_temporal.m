@@ -11,15 +11,15 @@ dates = dates(:,tsstart:tsend);
 % Subset summers if necessary
 if strcmp(AnnSummer,'Summer')
     summer = 'MO';
-    disp('Subsetting summer (1st June-15th Sept.) days')
-    disp('-----')
+%     disp('Subsetting summer (1st June-15th Sept.) days')
+%     disp('-----')
     data = extract_summers(data,dates,summer);
     dates = extract_summers(dates,dates,summer);
 else
     if strcmp(AnnSummer,'JJA')
         summer = 'JJA';
-        disp('Subsetting JJA days')
-        disp('-----')
+%         disp('Subsetting JJA days')
+%         disp('-----')
         data = extract_summers(data,dates,summer);
         dates = extract_summers(dates,dates,summer);
     end

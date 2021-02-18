@@ -24,6 +24,7 @@ function [] = HEAT(inputs,varargin)
 disp('Running HEAT v.1.0')
 disp('-----')
 
+
 % Set directory paths
 init_HEAT
 
@@ -147,7 +148,7 @@ if exist([Outputdir,'/',inputs.ExptName],'dir')
         % If it does, check whether or not to overwrite
         disp('Warning: existing experiment exists with this name')
         if inputs.OverwriteExpt == 1
-            disp('Overwriting enabled in input file')
+            disp('Overwriting enabled in input file: Re-running experiment')
             disp('-----')
             
         else
@@ -254,8 +255,8 @@ if runstep2 == 1
     for d = 1:length(inputs.DataType)
         DataType = char(inputs.DataType(d));
         
-        % Load model data if required
-        if ismember(inputs.DataType(d),'UKCP18')
+%         % Load model data if required
+%         if ismember(inputs.DataType(d),'UKCP18')
             
             % Load each required variable
             for v = 1:length(inputs.Variable)
@@ -274,30 +275,30 @@ if runstep2 == 1
             end
             
 
-        end
+%         end
         
         
-        % Load model data if required
-        if ismember(inputs.DataType(d),'HadUKGrid')
-            
-            % Load each required simulation
-            for s = 1:length(inputs.Dataset)
-                Dataset = char(inputs.Dataset(s));
-                
-                % Load each required variable
-                for v = 1:length(inputs.Variable)
-                    Variable = char(inputs.Variable(v));
-                    
-  
-                    %% Run Step 2: Extremes analysis
-                    if runstep2 == 1
-                        HEAT_step2(inputs2,data,xyz,Dataset,Variable,inputs.ExptName)
-                    end
-                    
-                end
-            end
-            
-        end
+%         % Load model data if required
+%         if ismember(inputs.DataType(d),'HadUKGrid')
+%             
+%             % Load each required simulation
+%             for s = 1:length(inputs.Dataset)
+%                 Dataset = char(inputs.Dataset(s));
+%                 
+%                 % Load each required variable
+%                 for v = 1:length(inputs.Variable)
+%                     Variable = char(inputs.Variable(v));
+%                     
+%   
+%                     %% Run Step 2: Extremes analysis
+%                     if runstep2 == 1
+%                         HEAT_step2(inputs,data,xyz,Dataset,Variable,inputs.ExptName)
+%                     end
+%                     
+%                 end
+%             end
+%             
+%         end
         
     end
 end
@@ -309,8 +310,8 @@ if runstep3 == 1
     for d = 1:length(inputs.DataType)
         DataType = char(inputs.DataType(d));
         
-        % Load model data if required
-        if ismember(inputs.DataType(d),'UKCP18')
+%         % Load model data if required
+%         if ismember(inputs.DataType(d),'UKCP18')
             
             % Load each required variable
             for v = 1:length(inputs.Variable)
@@ -319,12 +320,13 @@ if runstep3 == 1
                 HEAT_step3(inputs,DataType,Variable);
                 
             end
-        end
+%         end
     end
     
 end
 
 %% Finish up
+disp(' ')
 disp(['HEAT run "',inputs.ExptName,'" complete',])
 endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))

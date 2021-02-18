@@ -13,26 +13,9 @@ function [data,xyz] = HEAT_step1(inputs,DataType,Dataset,Variable)
 % Set directory paths
 init_HEAT
 
-% % For loading CPM data, a time period must be selected. This is 1981-2000
-% % by default, but will not affect the loading of the RCM or GCM
-% % slimulations
-% if isfield(inputs,'CPM_period')
-%     if inputs.CPM_period > 1979 && inputs.CPM_period < 2001
-%         CPM_period = [1981,1991];
-%     else
-%         if inputs.CPM_period > 2019 && inputs.CPM_period < 2041
-%             CPM_period = [2021,2031];
-%         else
-%             if inputs.CPM_period > 2059 && inputs.CPM_period < 2081
-%                 CPM_period = [2061,2071];
-%             end
-%         end
-%     end
-%
-% else
-%     CPM_period = 1981;
-% end
-
+disp(' ')
+disp('Running Step 1: producing derived data')
+disp('-----')
 
 % Find if loading daily mean, min or max
 if strcmp(Variable(end),'x')
@@ -63,6 +46,13 @@ files = dir([froot '*.nc']); % Then check if any files exist with this root
 if isempty(files)
     disp(['No existing derived data file in ',Deriveddir])
     
+    % If permission to overwrite derived data is not clearly requested, skip it
+elseif ~isfield(inputs,'OverwriteDerivedOutput')
+        disp('Permission to overwrite derived data unclear in input file: bypassing')
+        disp('-----')
+        % Bybass the derived data processing
+        skipload = 1;
+
     % If variable has been derived previously, see if overwriting is required
 elseif inputs.OverwriteDerivedOutput == 1
     
@@ -73,9 +63,11 @@ elseif inputs.OverwriteDerivedOutput == 1
         delete(file)
     end
 else
-    disp(['Derived data already exists in ',Deriveddir])
-    disp('-----')
-    skipload = 1;
+    if ~exist('skipload','var')
+        disp(['Derived data already exists in ',Deriveddir])
+        disp('-----')
+        skipload = 1;
+    end
 end
 
 
@@ -258,7 +250,7 @@ if ~exist('skipload','var')
         
         % Check if temporally consistent files are available for all variables
         if length(Tmaxfiles) ~= length(Tminfiles)
-            disp('Different number of HadUK-Grid Tmax and Tmin files')
+%             disp('Different number of HadUK-Grid Tmax and Tmin files')
             
             % If not, find which time steps are
             matchingtimes = nan(length(Tmaxfiles),2);
@@ -291,7 +283,7 @@ if ~exist('skipload','var')
         end
         
         % HadUK-Grid VP cannot be loaded for daily max./min.
-        if strcmp(Variable(1:2),'VP')
+        if strcmp(Variable(1),'V')
             Tvar = 'tas';
         end
         
@@ -321,7 +313,7 @@ if ~exist('skipload','var')
                     files = dir([froot,'-',Tmaxfile(end-19:end)]); % Then check if any files exist with this root
                     
                     % If not, then load and process accordingly, then save
-                    if isempty(files) && ~strcmp(Variable(1:2),'VP')
+                    if isempty(files) && ~strcmp(Variable(1),'V')
                         disp(['No existing Tmean derived data file in ',Deriveddir])
                         
                         % Load daily max and min temperatures
