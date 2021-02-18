@@ -43,9 +43,15 @@ else
     Tvar = 'tas';
 end
 
+% Change the file name slightly for HadUK-Grid data
+if strcmp(DataType,'HadUKGrid')
+    Dataset1 = ['HadUK-Grid-',Dataset];
+else
+    Dataset1 = Dataset;
+end
 
 % Set file name for derived variable based on inputs
-fname = [Variable,'-',char(inputs.Domain),'-',Dataset];
+fname = [Variable,'-',char(inputs.Domain),'-',Dataset1];
 disp('Checking if this data/variable combination has been loaded before:')
 
 
@@ -80,11 +86,11 @@ if ~exist('skipload','var')
     % Load elevation and lat-long data
     load_xyz
     
-    
+    %% UKCP18 data
     if strcmp(DataType,'UKCP18')
         
-        % Load  required simulation
-        disp(['-> ',Dataset])
+        % Load required simulation
+        disp(['-> UKCP18 ',Dataset])
         
         % Change simulation name to UKCP18 file format and select elevation data at correct resolution
         if strcmp(Dataset(1:2),'RC')
@@ -202,6 +208,309 @@ if ~exist('skipload','var')
             
             % Save the derived variable
             save_derived_nc(fname,data,xyz,Variable,template)
+            
+        end
+        
+        %% HadUK-Grid data
+        % The process for deriving HadUK-Grid data is slightly longer as it
+        % also provides a method for deriving a daily mean temperature
+        % netCDF file. This is the mean of the daily max. and daily min.
+        % data, with the monthly mean of the daily values adjusted to that
+        % it is consistent with the HadUK-Grid monthly daily mean
+        % temperature data provided by the UK Met Office. This derived
+        % daily mean temperature needs to be calculated prior to
+        % calculating daily means of any of the heat stress variables.
+        
+    elseif strcmp(DataType,'HadUKGrid')
+        
+        % Load required resolution
+        disp(['-> HadUK-Grid at ',Dataset])
+        
+        % Change simulation name to UKCP18 file format and select elevation data at correct resolution
+        if strcmp(Dataset(1:2),'12')
+            res = '12km';
+            template = [HadUKdir,'tasmax/',res,'/','tasmax_hadukgrid_uk_',res,'_day_19600501-19600531.nc'];
+            interpolate = 0;
+        elseif strcmp(Dataset(1:2),'1k')
+            res = '1km';
+            template = [HadUKdir,'tasmax/1km/','tasmax_hadukgrid_uk_1km_day_19600501-19600531.nc'];
+            interpolate = 0;
+        elseif strcmp(Dataset(1:2),'60')
+            res = '60km';
+            template = [HadUKdir,'tasmax/',res,'/','tasmax_hadukgrid_uk_',res,'_day_19600501-19600531.nc'];
+            interpolate = 0;
+        elseif strcmp(Dataset(1:2),'2k')
+            res = '1km';
+            res2 = '2km';
+            template = [HadUKdir,'tasmax/',res,'/','tasmax_hadukgrid_uk_',res,'_day_19600501-19600531.nc'];
+            interpolate = 1;
+        end
+        
+        % Directory of raw data for each required variable
+        Tmaxdir = [HadUKdir,'tasmax/',res,'/'];
+        Tmindir = [HadUKdir,'tasmin/',res,'/'];
+        Tdir = [HadUKdir,'tas/',res,'/'];
+        VPdir = [HadUKdir,'pv/',res,'/'];
+        
+        % Find how many files are to be loaded/produced
+        Tmaxfiles = dir([Tmaxdir '*.nc']);
+        Tminfiles = dir([Tmindir '*.nc']);
+        
+        % Check if temporally consistent files are available for all variables
+        if length(Tmaxfiles) ~= length(Tminfiles)
+            disp('Different number of HadUK-Grid Tmax and Tmin files')
+            
+            % If not, find which time steps are
+            matchingtimes = nan(length(Tmaxfiles),2);
+            
+            % Go through each file for each variable to see which correspond to
+            % each other
+            for i = 1:length(Tmaxfiles)
+                for j = 1:length(Tminfiles)
+                    if strcmp(Tmaxfiles(i).name(end-19:end),Tminfiles(j).name(end-19:end))
+                        matchingtimes(i,1) = i;
+                        matchingtimes(i,2) = j;
+                    end
+                end
+            end
+            
+            % Keep only the time steps which are there for all variables
+            matchingtimes = matchingtimes(~isnan(matchingtimes(:,1)),:);
+            Tmaxfiles = Tmaxfiles(matchingtimes(:,1));
+            Tminfiles = Tminfiles(matchingtimes(:,2));
+        end
+        
+        
+        % Find if deriving daily mean, min or max
+        if strcmp(Variable(end),'x')
+            Tvar = 'tasmax';
+        elseif strcmp(Variable(end),'n')
+            Tvar = 'tasmin';
+        else
+            Tvar = 'tas';
+        end
+        
+        % HadUK-Grid VP cannot be loaded for daily max./min.
+        if strcmp(Variable(1:2),'VP')
+            Tvar = 'tas';
+        end
+        
+        disp(['---> ',Variable])
+        
+        % If deriving Tmean, use average of daily min. and max., then
+        % adjust monthly mean to match monthly tas data
+        if strcmp(Tvar,'tas')
+            
+            % Go through each file
+            for f = 1:length(Tmaxfiles)
+                
+                % Get the lists of files to load for each variable
+                Tmaxfile = [Tmaxfiles(f).folder,'/',Tmaxfiles(f).name];
+                Tminfile = [Tminfiles(f).folder,'/',Tminfiles(f).name];
+                
+                % Find month and year that has been loaded for daily data
+                month = str2double(Tmaxfile(end-6:end-5));
+                year = Tmaxfile(end-10:end-7);
+                
+                % 1960 is not available for VP, so skip and start at 1961
+                if str2double(year) > 1960
+                    
+                    % Check if Tmean has already been calculated
+                    fname2 = ['T-',char(inputs.Domain),'-',Dataset1];
+                    froot = [Deriveddir,fname2]; % Take the file name...
+                    files = dir([froot,'-',Tmaxfile(end-19:end)]); % Then check if any files exist with this root
+                    
+                    % If not, then load and process accordingly, then save
+                    if isempty(files) && ~strcmp(Variable(1:2),'VP')
+                        disp(['No existing Tmean derived data file in ',Deriveddir])
+                        
+                        % Load daily max and min temperatures
+                        Tmax = ncread(Tmaxfile,'tasmax');
+                        time1 = ncread(Tmaxfile,'time');
+                        ymd1 = char(datetime(time1/24 + datenum(1800,01,01),'ConvertFrom','datenum','Format','yyyyMMdd'))';
+                        Tmin = ncread(Tminfile,'tasmin');
+                        
+                        % Equivalent Tmean and vapour pressure file to load
+                        Tfile = [Tdir,'tas_hadukgrid_uk_',res,'_mon_',year,'01-',year,'12.nc'];
+                        Tmon = ncread(Tfile,'tas');
+                        
+                        % Subset the correct month
+                        Tmon = Tmon(:,:,month);
+                        
+                        % Calculate Tmean as average of Tmax and Tmin
+                        T = (Tmax + Tmin)/2;
+                        
+                        % Adjust monthly mean to equal the monthly data
+                        T = T - (nanmean(T,3)-Tmon);
+                        
+                        % Store date info
+                        xyz.dates = ymd1;
+                        xyz.time = time1;
+                        
+                        % Convert from 1km to 2km resolution if required
+                        if interpolate == 1
+%                             startit = now;
+                            T = change_res(T,res2);
+%                             endit = now;
+%                             fprintf('Total time taken to interpolate: %s\n', datestr(endit-startit,'HH:MM:SS'))
+                        end
+                        
+                        % Save the derived variable
+                        save_derived_nc(fname2,T,xyz,'T',template)
+                        
+                    end
+                    
+                    % Otherwise, if producing a heat stress variable or VP
+                    if ~strcmp(Variable,'T')
+                        
+                        % Load Tmean if required (i.e. if derived data calculated by a previous run)
+                        if ~strcmp(Variable(1:2),'VP') &&  ~exist('T','var')
+                            T = ncread([Deriveddir,fname2,'-',Tmaxfile(end-19:end)],'T');
+                        end
+                        
+                        % Load the appropriate VP file
+                        VPfile = [VPdir,'pv_hadukgrid_uk_',res,'_mon_',year,'01-',year,'12.nc'];
+                        VP = ncread(VPfile,'pv');
+                        
+                        % Subset the correct month
+                        VP = VP(:,:,month);
+                        
+                        % Assume the same daily VP as the monthly mean
+                        VP = repmat(VP,1,1,str2double(Tmaxfile(end-4:end-3)));
+                        
+                        % Get date and time info
+                        time1 = ncread(Tmaxfile,'time');
+                        ymd1 = char(datetime(time1/24 + datenum(1800,01,01),'ConvertFrom','datenum','Format','yyyyMMdd'))';
+                        xyz.dates = ymd1;
+                        xyz.time = time1;
+                        
+                        % Calculate the correct heat stress metric
+                        if strcmp(Variable(1:2),'sW')
+                            data = SWBGTVP(T,VP);
+                            
+                        elseif strcmp(Variable(1:2),'HD')
+                            data = HumidexVP(T,VP);
+                            
+                        elseif strcmp(Variable(1:2),'AT')
+                            data = AppTempVP(T,VP);
+                            
+                        elseif strcmp(Variable(1:2),'VP')
+                            data = VP;
+                        end
+                        
+                        % Convert from 1km to 2km resolution if required
+                        if interpolate == 1
+                            data = change_res(data,res2);
+                        end
+                        
+                        % Save the derived variable
+                        save_derived_nc(fname,data,xyz,Variable,template)
+                    end
+                end
+            end
+            
+%         % Derived data of VP is simply the monthly mean value repeated at a
+%         % daily time step for the given month, saved so that calculation of
+%         % heat stress metrics in Steps 2 and 3 is more straightforward.
+%         elseif strcmp(Variable,'VP')
+%             % Go through each file
+%             for f = 1:length(Tmaxfiles)
+%                 
+%                 % Get the lists of files to load for each variable
+%                 Tmaxfile = [Tmaxfiles(f).folder,'/',Tmaxfiles(f).name];
+%                 
+%                 % Find month and year that has been loaded for daily data
+%                 month = str2double(Tmaxfile(end-6:end-5));
+%                 year = Tmaxfile(end-10:end-7);
+%                 
+%                 % 1960 is not available for VP, so skip and start at 1961
+%                 if str2double(year) > 1960
+%                     
+%                     % Load the appropriate VP file
+%                         VPfile = [VPdir,'pv_hadukgrid_uk_',res,'_mon_',year,'01-',year,'12.nc'];
+%                         VP = ncread(VPfile,'pv');
+%                         
+%                         % Subset the correct month
+%                         VP = VP(:,:,month);
+%                         
+%                         % Assume the same daily VP as the monthly mean
+%                         data = repmat(VP,1,1,str2double(Tmaxfile(end-4:end-3)));
+%                         
+%                         % Get date and time info
+%                         time1 = ncread(Tmaxfile,'time');
+%                         ymd1 = char(datetime(time1/24 + datenum(1800,01,01),'ConvertFrom','datenum','Format','yyyyMMdd'))';
+%                         xyz.dates = ymd1;
+%                         xyz.time = time1;
+%                     
+%                         % Convert from 1km to 2km resolution if required
+%                         if interpolate == 1
+%                             data = change_res(data,res2);
+%                         end
+%                         
+%                         % Save the derived variable
+%                         save_derived_nc(fname,data,xyz,Variable,template)
+%                 end
+%             end
+            
+            % Otherwise, if loading a daily min. or max. heat stress variable
+        else
+            if strcmp(Tvar,'tasmax')
+                Tfiles = Tmaxfiles;
+            elseif strcmp(Tvar,'tasmin')
+                Tfiles = Tminfiles;
+            end
+            
+            % Go through each file
+            for f = 1:length(Tfiles)
+                
+                % Get the lists of files to load for each variable
+                Tfile = [Tfiles(f).folder,'/',Tfiles(f).name];
+                
+                % Find month and year that has been loaded for daily data
+                month = str2double(Tfile(end-6:end-5));
+                year = Tfile(end-10:end-7);
+                
+                % 1960 is not available for VP, so skip and start at 1961
+                if str2double(year) > 1960
+                    
+                    % Load daily max and min temperatures
+                    T = ncread(Tfile,Tvar);
+                    time1 = ncread(Tfile,'time');
+                    ymd1 = char(datetime(time1/24 + datenum(1800,01,01),'ConvertFrom','datenum','Format','yyyyMMdd'))';
+                    
+                    % Load the appropriate VP file
+                    VPfile = [VPdir,'pv_hadukgrid_uk_',res,'_mon_',year,'01-',year,'12.nc'];
+                    VP = ncread(VPfile,'pv');
+                    
+                    % Subset the correct month
+                    VP = VP(:,:,month);
+                    
+                    % Assume the same daily VP as the monthly mean
+                    VP = repmat(VP,1,1,length(T(1,1,:)));
+                    
+                    % Get date and time info
+                    xyz.dates = ymd1;
+                    xyz.time = time1;
+                    
+                    % Calculate the correct heat stress metric
+                    if strcmp(Variable(1:2),'sW')
+                        data = SWBGTVP(T,VP);
+                        
+                    elseif strcmp(Variable(1:2),'HD')
+                        data = HumidexVP(T,VP);
+                        
+                    elseif strcmp(Variable(1:2),'AT')
+                        data = AppTempVP(T,VP);
+                        
+                    elseif strcmp(Variable(1:2),'VP')
+                        data = VP;
+                    end
+                    
+                    % Save the derived variable
+                    save_derived_nc(fname,data,xyz,Variable,template)
+                end
+            end
+            
             
         end
     end

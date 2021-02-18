@@ -26,6 +26,15 @@ fname = [fname,'-',period_start','-',period_end','.nc'];
 fname_long = [Deriveddir,fname,''];
 
 % Set some basic meta data for key derived variables
+if strcmp(Variable,'T')
+    units = '°C';
+    standard_name = 'Tmean';
+    long_name = 'Daily mean temperature';
+    description = 'Daily mean temperature derived from daily max. and min.';
+    label_units = '°C';
+    plot_label = 'Temperature at 1.5m (°C)';
+end
+
 if strcmp(Variable,'VP')
     units = 'mb';
     standard_name = 'vapour_pressure';
@@ -148,11 +157,12 @@ disp(['Saving derived variable: ',fname])
 % If data is CPM:
 if length(data(:,1,1)) == 484
     
+    template2 = [UKCP18dir,'2km/tasmax/run01/tasmax_rcp85_land-cpm_uk_2.2km_01_day_19801201-19811130.nc'];
     % Load lat, long and time info for saving
-    y = ncread(template,'grid_latitude');
-    x = ncread(template,'grid_longitude');
-    yy = ncread(template,'latitude');
-    xx = ncread(template,'longitude');
+    y = ncread(template2,'grid_latitude');
+    x = ncread(template2,'grid_longitude');
+    yy = ncread(template2,'latitude');
+    xx = ncread(template2,'longitude');
         
     % Create netCDF and derived variable
     nccreate(fname_long,Variable,'Dimensions',{'grid_longitude',length(x),'grid_latitude',length(y),'time',length(data(1,1,:))},'Datatype','double','Format','netcdf4_classic','DeflateLevel',2)
@@ -223,7 +233,7 @@ if length(data(:,1,1)) == 484
     ncwriteatt(fname_long,'/','collection','HEAT derived variable')
     ncwriteatt(fname_long,'/','creation_date',datestr(now))
 %     ncwriteatt(fname_long,'/','domain',fname(11:12))
-    ncwriteatt(fname_long,'/','title','Vairable derived from UKCP18')
+    ncwriteatt(fname_long,'/','title','Variable derived from UKCP18')
     ncwriteatt(fname_long,'/','version','HEAT v1.0')
     
     
@@ -287,12 +297,12 @@ else
     ncwriteatt(fname_long,'/','collection','HEAT derived variable')
     ncwriteatt(fname_long,'/','creation_date',datestr(now))
 %     ncwriteatt(fname_long,'/','domain',fname(11:12))
-    ncwriteatt(fname_long,'/','title','Vairable derived from UKCP18')
+    ncwriteatt(fname_long,'/','title','Variable derived from UKCP18')
     ncwriteatt(fname_long,'/','version','HEAT v1.0')
     
 
 end
 
 
-disp(['Loading, processing and saving of ',Variable,' complete'])
+disp(['Loading, processing and saving of ',fname,' complete'])
 disp('-----')

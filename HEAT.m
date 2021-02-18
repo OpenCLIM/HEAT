@@ -84,7 +84,7 @@ if isfield(inputs,'OutputType')
     runstep2 = 1;
 end
 
-if isfield(inputs,'TargetModel')
+if isfield(inputs,'WorkflowOutput')
     runstep3 = 1;
 end
 
@@ -190,7 +190,7 @@ if runstep1 == 1
                 for v = 1:length(inputs.Variable)
                     Variable = char(inputs.Variable(v));
                     
-                    if strcmp(Variable,'T')
+                    if strcmp(Variable(1),'T') % Any temperature variable might as well be loaded from raw data for UKCP18 models
                         disp('No benefit in saving derived data: simply use raw temperature data')
                         disp('-----')
                     else
@@ -203,23 +203,42 @@ if runstep1 == 1
         end
         
         
-%         % Load observational data if required
-%         if ismember(inputs1.DataType(d),'HadUKGrid')
-%             
-%             % Load each required simulation
-%             for s = 1:length(inputs1.Dataset)
-%                 Dataset = char(inputs1.Dataset(s));
-%                 
-%                 % Load each required variable
-%                 for v = 1:length(inputs1.Variable)
-%                     Variable = char(inputs1.Variable(v));
-%                     
-%                     %% Run Step 1: Produce derived data
-%                     HEAT_step1(inputs1,DataType,Dataset,Variable);
-%                 end
-%             end
-%             
-%         end
+        % Load observational data if required
+        if ismember(inputs.DataType(d),'HadUKGrid')
+            
+            % Load each required simulation
+            for s = 1:length(inputs.Dataset)
+                Dataset = char(inputs.Dataset(s));
+                
+                % Load each required variable
+                for v = 1:length(inputs.Variable)
+                    Variable = char(inputs.Variable(v));
+                    
+                    % If using 1km, 12km or 60km there is no benefit in
+                    % deriving anything for Tmax or Tmin
+                    if ~strcmp(Dataset,'2km')
+                        if strcmp(Variable,'Tmin') || strcmp(Variable,'Tmax') % Tmax and Tmin might as well be loaded from raw data for UKCP18 models, however Tmean could be derived at daily resolution
+                            disp('No benefit in saving derived data: simply use raw max./min. temperature data')
+                            disp('-----')
+                        elseif strcmp(Variable,'VPmax') || strcmp(Variable,'VPmin')
+                            disp('No benefit in saving derived data: all VP data is daily mean')
+                            disp('-----')
+                        else
+                            % Run Step 1: Produce derived data
+                            HEAT_step1(inputs,DataType,Dataset,Variable);
+                        end
+                        
+                    % HadUK-Grid is not available at 2km resolution so can
+                    % be regridded as derived data for any variable
+                    else
+                        % Run Step 1: Produce derived data
+                        HEAT_step1(inputs,DataType,Dataset,Variable);
+                    end
+                    
+                end
+            end
+            
+        end
         
     end
 end
@@ -283,6 +302,27 @@ if runstep2 == 1
     end
 end
 
+
+%% Generate output for other models in workflows
+if runstep3 == 1
+    
+    for d = 1:length(inputs.DataType)
+        DataType = char(inputs.DataType(d));
+        
+        % Load model data if required
+        if ismember(inputs.DataType(d),'UKCP18')
+            
+            % Load each required variable
+            for v = 1:length(inputs.Variable)
+                Variable = char(inputs.Variable(v));
+                
+                HEAT_step3(inputs,DataType,Variable);
+                
+            end
+        end
+    end
+    
+end
 
 %% Finish up
 disp(['HEAT run "',inputs.ExptName,'" complete',])

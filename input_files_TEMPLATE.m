@@ -26,51 +26,38 @@
 
 
 %% Set some basic experiment details
-inputs.ExptName = 'CPM_MMM_test'; % Give the experiment a name (no spaces)
+inputs.ExptName = 'HadUK_test'; % Give the experiment a name (no spaces)
 inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
 inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
 inputs.SaveDerivedOutput = 1; % OR inputs.SaveDerivedOutput = 0;
-inputs.OverwriteDerivedOutput = 0; % OR inputs.OverwriteDerivedOutput = 1;
-inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0; 
+inputs.OverwriteDerivedOutput = 1; % OR inputs.OverwriteDerivedOutput = 1;
+% inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0; 
 
 
 %% Select dataset(s) to use
-inputs.DataType = {'UKCP18'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
-inputs.Variable = {'sWBGTmax'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
-inputs.Dataset = {'CPM-01'};
+inputs.DataType = {'HadUKGrid'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
+inputs.Variable = {'VP'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
+inputs.Dataset = {'2km'};
 inputs.MMM = 1; % OR inputs.MMM = 1; % Calculate multi-model mean of all selected datasets
 inputs.MMP = []; % OR inputs.MMP = 0.1 - 99.9; % Calculate multi-model percentile of all selected datasets
 
 
-% %% Subsetting of data for analysis
-% inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start and end dates
-% inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
-% inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
+%% Subsetting of data for analysis
+inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
+inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = []; % 'Scotland','North East','North West','Yorkshire and 
 %     % the Humber','East Midlands','West Midlands','East of England','Greater
 %     % London','South East','South West','Wales','Northern Ireland','Isle of
 %     % Man','RoI','Ireland','GB'
-% inputs.AnnSummer = 'JJA'; % OR inputs1.AnnSummer = 'Summer'; 'JJA'; 'MJJAS'; % Summer = 1st June-15th Sept.
-% 
-% 
-% %% Output types
+
+
+%% Output types
 % inputs.ExtremeMeanPctile = [95 99];
 % % inputs.Pctile = [95 99];
 % % inputs2.DDx = 66;
 % inputs.OutputType = {'map'};
 % inputs.PlotAll = 0;
-% inputs.Region = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
+% inputs.OutputRegion = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
+inputs.WorkflowOutput = 'ARCADIA';
 
-
-
-
-
-
-    
-    
-    
-    
-% inputs.TempRes = 'daily'; % OR inputs.TempRes = 'monthly';
-% inputs.Resolution = {'2km'};
-% inputs.CPM_period = 1981; % 1981 OR 2021 OR 2061
-% inputs.Years = [1990 2019];
