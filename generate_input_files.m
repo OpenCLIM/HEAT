@@ -2,6 +2,57 @@
 % Using a series of GUI inputs, create a file containing all of the
 % necessary data to launch HEAT.
 
+%% Select whether to run test
+setup_list = {'Setup test','Simulation'};
+ind_setup = listdlg('PromptString','0. Run setup test or simulation?','ListString',setup_list,'SelectionMode','single','ListSize',[240 60],'Name','HEAT basic setup guide');
+setup = setup_list(ind_setup);
+
+if ind_setup == 1
+    % Set some basic experiment details
+    inputs.ExptName = 'setup_test';
+    inputs.OverwriteExpt = 1;
+    inputs.Domain = 'UK';
+    inputs.SaveDerivedOutput = 1;
+    inputs.OverwriteDerivedOutput = 1;
+    
+    % Select dataset(s) to use
+    inputs.DataType = {'UKCP18','HadUKGrid'};
+    inputs.Variable = {'sWBGT'};
+    inputs.Dataset = {'GCM-01','GCM-04','60km'};
+    inputs.MMM = 1;
+    
+    % Subsetting of data for analysis
+    inputs.TemporalRange = [19900101, 20191230];
+    inputs.AnnSummer = 'JJA';
+    inputs.SpatialRange = [51,55.5;-11, -5];
+    % inputs.Region = []; % 'Scotland','North East','North West','Yorkshire and
+    %     % the Humber','East Midlands','West Midlands','East of England','Greater
+    %     % London','South East','South West','Wales','Northern Ireland','Isle of
+    %     % Man','RoI','Ireland','GB'
+    
+    % Output types
+    inputs.ExtremeMeanPctile = [95 99];
+    inputs.PlotAll = 0;
+    inputs.OutputType = {'map'};
+    inputs.SaveFigures = 1;
+    inputs.WorkflowOutput = 'ARCADIA';
+    clear setup setup_list ind_setup
+    
+    disp('Created input file to run a setup test of HEAT.')
+    disp('Run setup test by typing:')
+    disp('>> HEAT(inputs)')
+    disp(' ')
+    disp('Setup test should take ~ 1 minute and produce:')
+    disp('1. 22 derived netCDF files of sWBGT for UKCP18 GCMs 01 and 04 in the derived data folder')
+    disp('2. Two map figures of sWBGT data over Ireland in the output folder, setup_test')
+    disp('3. 144 ARCADIA-ready .csv files in the output folder, setup_test')
+    disp(' ')
+    
+    
+    return
+end
+
+
 %% Select global or UK
 dom_list = {'Global','UK'};
 ind_dom = listdlg('PromptString','1. Load global or UK data?','ListString',dom_list,'SelectionMode','single','ListSize',[240 60],'Name','HEAT basic setup guide');

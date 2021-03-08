@@ -26,7 +26,7 @@
 
 
 %% Set some basic experiment details
-inputs.ExptName = 'HadUK_test'; % Give the experiment a name (no spaces)
+inputs.ExptName = 'UKCP18_HadUK_test'; % Give the experiment a name (no spaces)
 inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
 inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
 inputs.SaveDerivedOutput = 1; % OR inputs.SaveDerivedOutput = 0;
@@ -35,15 +35,15 @@ inputs.OverwriteDerivedOutput = 0; % OR inputs.OverwriteDerivedOutput = 1;
 
 
 %% Select dataset(s) to use
-inputs.DataType = {'HadUKGrid'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
-inputs.Variable = {'T'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
-inputs.Dataset = {'12km'};
+inputs.DataType = {'UKCP18','HadUKGrid'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
+inputs.Variable = {'sWBGT'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
+inputs.Dataset = {'GCM-01','GCM-04','60km'};
 inputs.MMM = 1; % OR inputs.MMM = 1; % Calculate multi-model mean of all selected datasets
 inputs.MMP = []; % OR inputs.MMP = 0.1 - 99.9; % Calculate multi-model percentile of all selected datasets
 
 
 %% Subsetting of data for analysis
-inputs.TemporalRange = [19900101, 20191231]; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start and end dates
 inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
 inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = []; % 'Scotland','North East','North West','Yorkshire and 
@@ -57,7 +57,8 @@ inputs.ExtremeMeanPctile = [95 99];
 % % inputs.Pctile = [95 99];
 % % inputs2.DDx = 66;
 inputs.OutputType = {'map'};
-% inputs.PlotAll = 0;
+inputs.SaveFigures = 0;
+inputs.PlotAll = 1;
 % inputs.OutputRegion = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
 inputs.WorkflowOutput = 'ARCADIA';
 

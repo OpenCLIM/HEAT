@@ -1,4 +1,4 @@
-function [] = UK_subplot(data,figname,collim,lat,lon)
+function [] = UK_subplot(data,figname,collim,lat,lon,inputs)
 % [] = UK_subplot(data,figname,collim)
 %
 % Do a plot of the UK region in transmercator projection
@@ -13,16 +13,8 @@ function [] = UK_subplot(data,figname,collim,lat,lon)
 
 
 %% Find which machine is being used
-curdir = pwd;
-if strcmp(curdir(1:14),'/Users/ak0920/')
-    ncdatadir1 = '/Users/ak0920/Data/IMPRES/';
-    ncdatadir2 = '/huss/run01/';
-else
-    if strcmp(curdir(1:14),'/home/bridge/a')
-        ncdatadir1 = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
-        ncdatadir2 = '/huss/day/run01/';
-    end
-end
+init_HEAT 
+
 
 %% Load lat-long and coast data for plotting
 if ~exist('lat','var')
@@ -122,3 +114,18 @@ geoshow([S.Lat], [S.Lon],'Color','black');
 if exist('figname','var')
     title(figname)
 end
+
+% Tidy figure
+set(gca,'Fontsize',14)
+set(gcf, 'color', 'w');
+colorbar()
+
+% Save output figure
+if inputs.SaveFigures == 1
+    filename = [Outputdir,inputs.ExptName,'/',figname,'.png'];
+    warning('off','all')
+    export_fig(sprintf(filename),  '-png', '-nocrop', '-m5', '-zbuffer');
+    warning('on','all')
+end
+
+

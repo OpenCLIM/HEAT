@@ -7,20 +7,21 @@ function [regmean] = calc_reg_mean(data,reg)
 regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'};
 
 % Load the regional area data
-generate_region_latlon_area
+% generate_region_latlon_area
+load_regions
 
 % Find what resolution of data is being used
 if length(data(:,1,1)) == 17
-    area = areas_GCM_frac_regions;
+    area = areas_60km_frac_regions;
 else
     if length(data(:,1,1)) == 82
-        area = areas_RCM_frac_regions;
+        area = areas_12km_frac_regions;
     else
         if length(data(:,1,1)) == 484
-            area = areas_CPM_frac_regions;
+            area = areas_2km_frac_regions;
         else
             if length(data(:,1,1)) == 121
-                area = areas_ERA5_frac_regions;
+                area = areas_025deg_frac_regions;
             end
         end
     end

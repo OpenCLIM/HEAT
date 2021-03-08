@@ -24,19 +24,19 @@ regs = {'Scotland','North East','North West','Yorkshire and the Humber','East Mi
 
 %% Calculate the absolute and fractional areas for each region
 % Create blank array to fill
-areas_ERA5_abs_regions = zeros(length(areas_ERA5_abs(:,1)),length(areas_ERA5_abs(1,:)),12);
-areas_ERA5_frac_regions = zeros(length(areas_ERA5_abs(:,1)),length(areas_ERA5_abs(1,:)),12);
-areas_RCM_abs_regions = zeros(length(areas_RCM_abs(:,1)),length(areas_RCM_abs(1,:)),12);
-areas_RCM_frac_regions = zeros(length(areas_RCM_abs(:,1)),length(areas_RCM_abs(1,:)),12);
-areas_GCM_abs_regions = zeros(length(areas_GCM_abs(:,1)),length(areas_GCM_abs(1,:)),12);
-areas_GCM_frac_regions = zeros(length(areas_GCM_abs(:,1)),length(areas_GCM_abs(1,:)),12);
+areas_025deg_abs_regions = zeros(length(areas_025deg_abs(:,1)),length(areas_025deg_abs(1,:)),12);
+areas_025deg_frac_regions = zeros(length(areas_025deg_abs(:,1)),length(areas_025deg_abs(1,:)),12);
+areas_12km_abs_regions = zeros(length(areas_12km_abs(:,1)),length(areas_12km_abs(1,:)),12);
+areas_12km_frac_regions = zeros(length(areas_12km_abs(:,1)),length(areas_12km_abs(1,:)),12);
+areas_60km_abs_regions = zeros(length(areas_60km_abs(:,1)),length(areas_60km_abs(1,:)),12);
+areas_60km_frac_regions = zeros(length(areas_60km_abs(:,1)),length(areas_60km_abs(1,:)),12);
 
 % Go through each region
 for r=1:12
-    areas_ERA5_abs_regions(:,:,r) = areas_ERA5_abs.*(UKregionsERA5 == r);
-    areas_ERA5_frac_regions(:,:,r) = areas_ERA5_abs_regions(:,:,r)./nansum(nansum(areas_ERA5_abs_regions(:,:,r)));
-    areas_RCM_abs_regions(:,:,r) = areas_RCM_abs.*(UKregions12 == r);
-    areas_RCM_frac_regions(:,:,r) = areas_RCM_abs_regions(:,:,r)./nansum(nansum(areas_RCM_abs_regions(:,:,r)));
-    areas_GCM_abs_regions(:,:,r) = areas_GCM_abs.*(UKregions60 == r);
-    areas_GCM_frac_regions(:,:,r) = areas_GCM_abs_regions(:,:,r)./nansum(nansum(areas_GCM_abs_regions(:,:,r)));
+    areas_025deg_abs_regions(:,:,r) = areas_025deg_abs.*(UKregions025deg == r);
+    areas_025deg_frac_regions(:,:,r) = areas_025deg_abs_regions(:,:,r)./nansum(nansum(areas_025deg_abs_regions(:,:,r)));
+    areas_12km_abs_regions(:,:,r) = areas_12km_abs.*(UKregions12 == r);
+    areas_12km_frac_regions(:,:,r) = areas_12km_abs_regions(:,:,r)./nansum(nansum(areas_12km_abs_regions(:,:,r)));
+    areas_60km_abs_regions(:,:,r) = areas_60km_abs.*(UKregions60 == r);
+    areas_60km_frac_regions(:,:,r) = areas_60km_abs_regions(:,:,r)./nansum(nansum(areas_60km_abs_regions(:,:,r)));
 end

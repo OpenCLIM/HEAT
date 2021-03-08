@@ -19,6 +19,7 @@ if strcmp(root_dir(1:14),'/Users/ak0920/')
     addpath('Processing/')
     addpath('Outputting/')
     addpath('PreProcessedData/')
+    addpath('Dependencies/')
     
     
     % Running on Anthropocene
@@ -34,6 +35,7 @@ elseif strcmp(root_dir(1:14),'/home/bridge/a')
     addpath('Processing/')
     addpath('Outputting/')
     addpath('PreProcessedData/')
+    addpath('Dependencies/')
     
     
     % Running on BluePebble
@@ -49,6 +51,7 @@ elseif strcmp(root_dir(1:14),'/home/ak0920/h')
     addpath('Processing/')
     addpath('Outputting/')
     addpath('PreProcessedData/')
+    addpath('Dependencies/')
     
     
     % Running on DAFNI
@@ -78,5 +81,6 @@ else
     addpath('Processing/')
     addpath('Outputting/')
     addpath('PreProcessedData/')
+    addpath('Dependencies/')
     
 end

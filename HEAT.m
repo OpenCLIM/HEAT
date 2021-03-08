@@ -187,20 +187,24 @@ if runstep1 == 1
             for s = 1:length(inputs.Dataset)
                 Dataset = char(inputs.Dataset(s));
                 
-                % Load each required variable
-                for v = 1:length(inputs.Variable)
-                    Variable = char(inputs.Variable(v));
+                % Only attempt to load UKCP18-related data
+                if strcmp(Dataset(1),'G') || strcmp(Dataset(1),'R') || strcmp(Dataset(1),'C')
                     
-                    if strcmp(Variable(1),'T') % Any temperature variable might as well be loaded from raw data for UKCP18 models
-                        disp('No benefit in saving derived data: simply use raw temperature data')
-                        disp('-----')
-                    else
-                        % Run Step 1: Produce derived data
-                        HEAT_step1(inputs,DataType,Dataset,Variable);
+                    % Load each required variable
+                    for v = 1:length(inputs.Variable)
+                        Variable = char(inputs.Variable(v));
+                        
+                        if strcmp(Variable(1),'T') % Any temperature variable might as well be loaded from raw data for UKCP18 models
+                            disp('No benefit in saving derived data: simply use raw temperature data')
+                            disp('-----')
+                        else
+                            % Run Step 1: Produce derived data
+                            HEAT_step1(inputs,DataType,Dataset,Variable);
+                        end
                     end
                 end
             end
-
+            
         end
         
         
@@ -211,31 +215,35 @@ if runstep1 == 1
             for s = 1:length(inputs.Dataset)
                 Dataset = char(inputs.Dataset(s));
                 
-                % Load each required variable
-                for v = 1:length(inputs.Variable)
-                    Variable = char(inputs.Variable(v));
+                % Only attempt to load UKCP18-related data
+                if strcmp(Dataset(1),'1') || strcmp(Dataset(1),'2') || strcmp(Dataset(1),'6')
                     
-                    % If using 1km, 12km or 60km there is no benefit in
-                    % deriving anything for Tmax or Tmin
-                    if ~strcmp(Dataset,'2km')
-                        if strcmp(Variable,'Tmin') || strcmp(Variable,'Tmax') % Tmax and Tmin might as well be loaded from raw data for UKCP18 models, however Tmean could be derived at daily resolution
-                            disp('No benefit in saving derived data: simply use raw max./min. temperature data')
-                            disp('-----')
-                        elseif strcmp(Variable,'VPmax') || strcmp(Variable,'VPmin')
-                            disp('No benefit in saving derived data: all VP data is daily mean')
-                            disp('-----')
+                    % Load each required variable
+                    for v = 1:length(inputs.Variable)
+                        Variable = char(inputs.Variable(v));
+                        
+                        % If using 1km, 12km or 60km there is no benefit in
+                        % deriving anything for Tmax or Tmin
+                        if ~strcmp(Dataset,'2km')
+                            if strcmp(Variable,'Tmin') || strcmp(Variable,'Tmax') % Tmax and Tmin might as well be loaded from raw data for UKCP18 models, however Tmean could be derived at daily resolution
+                                disp('No benefit in saving derived data: simply use raw max./min. temperature data')
+                                disp('-----')
+                            elseif strcmp(Variable,'VPmax') || strcmp(Variable,'VPmin')
+                                disp('No benefit in saving derived data: all VP data is daily mean')
+                                disp('-----')
+                            else
+                                % Run Step 1: Produce derived data
+                                HEAT_step1(inputs,DataType,Dataset,Variable);
+                            end
+                            
+                            % HadUK-Grid is not available at 2km resolution so can
+                            % be regridded as derived data for any variable
                         else
                             % Run Step 1: Produce derived data
                             HEAT_step1(inputs,DataType,Dataset,Variable);
                         end
                         
-                    % HadUK-Grid is not available at 2km resolution so can
-                    % be regridded as derived data for any variable
-                    else
-                        % Run Step 1: Produce derived data
-                        HEAT_step1(inputs,DataType,Dataset,Variable);
                     end
-                    
                 end
             end
             
@@ -252,8 +260,8 @@ if runstep2 == 1
     % Data hierarchy:
     % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
     
-    for d = 1:length(inputs.DataType)
-        DataType = char(inputs.DataType(d));
+%     for d = 1:length(inputs.DataType)
+%         DataType = char(inputs.DataType(d));
         
 %         % Load model data if required
 %         if ismember(inputs.DataType(d),'UKCP18')
@@ -300,12 +308,24 @@ if runstep2 == 1
 %             
 %         end
         
-    end
+%     end
 end
 
 
 %% Generate output for other models in workflows
 if runstep3 == 1
+    
+    % Check if this file has already been derived:
+    froot = [Outputdir,'/',inputs.ExptName,'/']; % Take the file name...
+    files = dir([froot '*',Variable,'.csv']); % Then check if any files exist with this root
+    
+    % If so, delete
+    if ~isempty(files)
+        for f = 1:length(files)
+            file = [files(f).folder,'/',files(f).name];
+            delete(file)
+        end
+    end
     
     for d = 1:length(inputs.DataType)
         DataType = char(inputs.DataType(d));
