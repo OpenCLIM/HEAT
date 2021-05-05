@@ -35,10 +35,10 @@ end
 
 % Set file name for derived variable based on inputs
 fname = [Variable,'-',char(inputs.Domain),'-',Dataset1];
-disp('Checking if this data/variable combination has been loaded before:')
 
 
 %% Check if this file has already been derived:
+disp('Checking if this data/variable combination has been loaded before:')
 froot = [Deriveddir,fname]; % Take the file name...
 files = dir([froot '*.nc']); % Then check if any files exist with this root
 
@@ -48,7 +48,7 @@ if isempty(files)
     
     % If permission to overwrite derived data is not clearly requested, skip it
 elseif ~isfield(inputs,'OverwriteDerivedOutput')
-        disp('Permission to overwrite derived data unclear in input file: bypassing')
+        disp('Permission to overwrite derived data unclear in input file: skipping')
         disp('-----')
         % Bybass the derived data processing
         skipload = 1;
@@ -64,7 +64,7 @@ elseif inputs.OverwriteDerivedOutput == 1
     end
 else
     if ~exist('skipload','var')
-        disp(['Derived data already exists in ',Deriveddir])
+        disp(['Derived data already exists in ',Deriveddir,': skipping'])
         disp('-----')
         skipload = 1;
     end
@@ -115,6 +115,9 @@ if ~exist('skipload','var')
         PSLdir = [UKCP18dir,res,'psl','/run',Dataset(5:6),'/'];
         SHdir = [UKCP18dir,res,'huss','/run',Dataset(5:6),'/'];
         
+        % Check each variable for missing data files ? this was an issue
+        % with some early UKCP18 products, although may be corrected in
+        % future:
         % Find how many files are to be loaded/produced
         Tfiles = dir([Tdir '*.nc']);
         PSLfiles = dir([PSLdir '*.nc']);

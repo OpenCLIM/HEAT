@@ -83,4 +83,8 @@ else
     addpath('PreProcessedData/')
     addpath('Dependencies/')
     
+    % Note: This needs updated so that the entered directories become
+    % global and do not need re-entered everytime init_HEAT.m is called
+    % (which is quite often). 
+    
 end

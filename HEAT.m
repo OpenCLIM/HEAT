@@ -16,7 +16,7 @@ function [] = HEAT(inputs,varargin)
 % variables, dataset to use, temporal and spatial domain, experiment name
 % and whether to save derived variables.
 %
-% Coded by A.T. Kennedy-Asser, University of Bristol, 2020.
+% Coded by A.T. Kennedy-Asser, University of Bristol, 2021.
 % Contact: alan.kennedy@bristol.ac.uk
 %
 
