@@ -1,5 +1,5 @@
-function [] = HEAT_step2(inputs,DataType,Variable)
-% HEAT_step2(inputs,Dataset,Variable)
+function [] = HEAT_step2(inputs,Variable)
+% HEAT_step2(inputs,Variable)
 %
 % Run the second step of HEAT to produce diagnostic outputs for assessing
 % heat extremes.
@@ -35,7 +35,11 @@ if ~isfield(inputs,'PlotAll')
     inputs.PlotAll = 1;
 end
 
+
 %% Go through each simulation
+% Set IDs for MMM (if required)
+MM_id  = zeros(1,length(inputs.Dataset));
+
 for s = 1:length(inputs.Dataset)
     Dataset = char(inputs.Dataset(s));
     
@@ -50,6 +54,7 @@ for s = 1:length(inputs.Dataset)
                 lats = lat_UK_RCM;
                 lons = long_UK_RCM;
                 LSM = LSM12;
+                MM_id(s) = 2;
                 
             elseif strcmp(Dataset(1:2),'CP')
                 res = '2km/';
@@ -57,6 +62,7 @@ for s = 1:length(inputs.Dataset)
                 lats = lat_UK_CPM;
                 lons = long_UK_CPM;
                 LSM = LSM2;
+                MM_id(s) = 3;
                 
             elseif strcmp(Dataset(1:2),'GC')
                 res = '60km/';
@@ -64,6 +70,7 @@ for s = 1:length(inputs.Dataset)
                 lats = lat_UK_GCM;
                 lons = long_UK_GCM;
                 LSM = LSM60;
+                MM_id(s) = 1;
                 
             elseif strcmp(Dataset(1:2),'CM')
                 res = '60km/';
@@ -71,6 +78,7 @@ for s = 1:length(inputs.Dataset)
                 lats = lat_UK_GCM;
                 lons = long_UK_GCM;
                 LSM = LSM60;
+                MM_id(s) = 1;
             end
             
             % Find location of netCDF data for the required variable
@@ -277,49 +285,62 @@ for s = 1:length(inputs.Dataset)
             %% Generate map output if required
             if strcmp(inputs.OutputType,'map')
                 
-                % Now go through each of the extreme analysis types
-                n_outputs = isfield(inputs,'Pctile')*1 + isfield(inputs,'ExtremeMeanPctile')*1 + ...
-                    isfield(inputs,'AbsThresh')*1 + isfield(inputs,'DDa')*1 + isfield(inputs,'DDp')*1;
+                % Count number of extreme analysis types
+                n_outputs = 0;
+                EA_type = 0;
+                if isfield(inputs,'Pctile')
+                    n_outputs = n_outputs + length(inputs.Pctile);
+                    EA_type = cat(2,EA_type,ones(1,length(inputs.Pctile)));
+                    EA_1 = 1;
+                end
+                if isfield(inputs,'ExtremeMeanPctile')
+                    n_outputs = n_outputs + 1:length(inputs.ExtremeMeanPctile);
+                    EA_type = cat(2,EA_type,ones(1,length(inputs.ExtremeMeanPctile))*2);
+                    EA_2 = 1;
+                end
+                if isfield(inputs,'AbsThresh')
+                    n_outputs = n_outputs + length(inputs.AbsThresh);
+                    EA_type = cat(2,EA_type,ones(1,length(inputs.AbsThresh))*3);
+                    EA_3 = 1;
+                end
+                
+                EA_type = EA_type(EA_type>0);
+                
+                % Create output array for all required variables:
+                % 4D: lat x long x model simulation x extremes metric
+                data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Dataset),n_outputs);
+                
+                % Go through each of the extremes analysis types
+                n_output = 1;
                 for n = 1:n_outputs
                     
                     %% Calculate percentile if required
-                    if isfield(inputs,'Pctile')
-                        
-                        % Create empty array for output
-                        data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
-                        
-                        % Calculate given percentile
-                        for p = 1:length(inputs.Pctile)
-                            disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
-                            data_calc(:,:,p) = prctile(data,inputs.Pctile(p),3);
-                            titles2(p) = {[Variable, ' ',num2str(inputs.Pctile(p)),'th percentile']};
-                            titles1(p) = {Dataset};
-                        end
+                    if EA_type(n) == 1
+                        disp(['Calculating ',num2str(inputs.Pctile(EA_1)),'th percentile over time period'])
+                        data_calc(:,:,s,n_output) = prctile(data,inputs.Pctile(EA_1),3);
+                        titles2(n_output) = {[Variable, ' ',num2str(inputs.Pctile(EA_1)),'th percentile']};
+                        titles1(n_output) = {Dataset};
+                        EA_1 = EA_1 + 1;
                     end
-                            
+                    
                     %% Calculate extreme mean if required
-                    if isfield(inputs,'ExtremeMeanPctile')
+                    if EA_type(n) == 2
+                        disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(EA_2)),'th percentile over time period'])
                         
-                        % Create empty array for output
-                        data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
-                        
-                        for p = 1:length(inputs.ExtremeMeanPctile)
-                            disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
-                            
-                            % Calculate percentile threshold
-                            Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
-                            Txx = nan(size(Txx_temp));
-                            Txx(Txx_temp == 1) = 1;
-                            data_Txx = data .* Txx;
-                            % Find mean of days exceeding the threshold
-                            data_calc(:,:,p) = squeeze(nanmean(data_Txx,3));
-                            titles2(p) = {[Variable, ' extreme mean >',num2str(inputs.ExtremeMeanPctile(p)),'th percentile']};
-                            titles1(p) = {Dataset};
-                        end
+                        % Calculate percentile threshold
+                        Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(EA_2),3);
+                        Txx = nan(size(Txx_temp));
+                        Txx(Txx_temp == 1) = 1;
+                        data_Txx = data .* Txx;
+                        % Find mean of days exceeding the threshold
+                        data_calc(:,:,s,n_output) = squeeze(nanmean(data_Txx,3));
+                        titles2(n_output) = {[Variable, ' extreme mean >',num2str(inputs.ExtremeMeanPctile(EA_2)),'th percentile']};
+                        titles1(n_output) = {Dataset};
+                        EA_2 = EA_2 + 1;
                     end
                     
                     %% Calculate no. of days exceeding threshold if required
-                    if isfield(inputs,'AbsThresh')
+                    if EA_type(n) == 3
                         
                         % Find length of loaded time series (assuming whole summers
                         % have been taken in inputs.TemporalRange)
@@ -339,88 +360,207 @@ for s = 1:length(inputs.Dataset)
                         
                         tslength = endyr-startyr;
                         
-                        % Create empty array for output
-                        data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.AbsThresh));
+                        %                         % Create empty array for output
+                        %                         data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.AbsThresh));
                         
-                        % Calculate given percentile
-                        for p = 1:length(inputs.AbsThresh)
-                            disp(['Calculating number of days when ',Variable,' exceeds ',num2str(inputs.AbsThresh(p))])
-                            data_calc(:,:,p) = nansum(data>inputs.AbsThresh(p),3)/tslength;
-                            titles2(p) = {[Variable, '>',num2str(inputs.AbsThresh(p))]};
-                            titles1(p) = {Dataset};
-                        end
+                        % Calculate number of days exceeding threshold
+                        disp(['Calculating number of days when ',Variable,' exceeds ',num2str(inputs.AbsThresh(EA_3))])
+                        data_calc(:,:,s,n_output) = nansum(data>inputs.AbsThresh(EA_3),3)/tslength;
+                        titles2(n_output) = {[Variable, '>',num2str(inputs.AbsThresh(EA_3))]};
+                        titles1(n_output) = {Dataset};
+                        EA_3 = EA_3 + 1;
                     end
+                            
+                            
+                    
+%                     %% Calculate extreme mean if required
+%                     if isfield(inputs,'Pctile')
+%                         
+% %                         % Create empty array for output
+% %                         data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.Pctile));
+%                         
+%                         % Calculate given percentile
+%                         for p = 1:length(inputs.Pctile)
+%                             disp(['Calculating ',num2str(inputs.Pctile(p)),'th percentile over time period'])
+%                             data_calc(:,:,s,n_output) = prctile(data,inputs.Pctile(p),3);
+%                             titles2(p) = {[Variable, ' ',num2str(inputs.Pctile(p)),'th percentile']};
+%                             titles1(p) = {Dataset};
+%                             n_output = n_output + 1;
+%                         end
+%                     end
+                            
+%                     %% Calculate extreme mean if required
+%                     if isfield(inputs,'ExtremeMeanPctile')
+%                         
+% %                         % Create empty array for output
+% %                         data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.ExtremeMeanPctile));
+%                         
+%                         for p = 1:length(inputs.ExtremeMeanPctile)
+%                             disp(['Calculating extreme mean above ',num2str(inputs.ExtremeMeanPctile(p)),'th percentile over time period'])
+%                             
+%                             % Calculate percentile threshold
+%                             Txx_temp = data >= prctile(data,inputs.ExtremeMeanPctile(p),3);
+%                             Txx = nan(size(Txx_temp));
+%                             Txx(Txx_temp == 1) = 1;
+%                             data_Txx = data .* Txx;
+%                             % Find mean of days exceeding the threshold
+%                             data_calc(:,:,s,n_output) = squeeze(nanmean(data_Txx,3));
+%                             titles2(p) = {[Variable, ' extreme mean >',num2str(inputs.ExtremeMeanPctile(p)),'th percentile']};
+%                             titles1(p) = {Dataset};
+%                             n_output = n_output + 1;
+%                         end
+%                     end
+                    
+%                     %% Calculate no. of days exceeding threshold if required
+%                     if isfield(inputs,'AbsThresh')
+%                         
+%                         % Find length of loaded time series (assuming whole summers
+%                         % have been taken in inputs.TemporalRange)
+%                         startyr = num2str(inputs.TemporalRange(1));
+%                         if str2double(startyr(5:6))<=6
+%                             startyr = str2double(startyr(1:4))-1;
+%                         else
+%                             startyr = str2double(startyr(1:4));
+%                         end
+%                         
+%                         endyr = num2str(inputs.TemporalRange(2));
+%                         if str2double(endyr(5:6))>=7
+%                             endyr = str2double(endyr(1:4));
+%                         else
+%                             endyr = str2double(endyr(1:4))-1;
+%                         end
+%                         
+%                         tslength = endyr-startyr;
+%                         
+% %                         % Create empty array for output
+% %                         data_calc = nan(length(data(:,1,1)),length(data(1,:,1)),length(inputs.AbsThresh));
+%                         
+%                         % Calculate number of days exceeding threshold
+%                         for p = 1:length(inputs.AbsThresh)
+%                             disp(['Calculating number of days when ',Variable,' exceeds ',num2str(inputs.AbsThresh(p))])
+%                             data_calc(:,:,s,n_output) = nansum(data>inputs.AbsThresh(p),3)/tslength;
+%                             titles2(p) = {[Variable, '>',num2str(inputs.AbsThresh(p))]};
+%                             titles1(p) = {Dataset};
+%                             n_output = n_output + 1;
+%                         end
+%                     end
                     
                     
                     %% Plotting
                     % If calculating MMM or MMP, only plot all ensemble members if requested
                     if inputs.PlotAll ~= 0
-                        for p = 1:length(data_calc(1,1,:))
+%                         for p = 1:length(data_calc(1,1,:))
                             figure
-                            UK_subplot(data_calc(:,:,p) .* LSM(grid_idx,grid_idy),[titles1(p),titles2(p)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
-                        end
+                            UK_subplot(data_calc(:,:,s,n_output) .* LSM(grid_idx,grid_idy),[titles1(n_output),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
+%                         end
                     end
                     
                     
-                    % Store data for MMM/MMP if required and calculate
-                    if inputs.MMM == 1 || ~isempty(inputs.MMP)
-                        % Only want to mean model simulations, not obs. etc.
-                        if strcmp(Dataset(1),'G') || strcmp(Dataset(1),'R') || strcmp(Dataset(1),'C')
-                            data_mod = data_calc;
-                        else
-                            data_mod = nan(size(data_calc));
+                    % Calculate MMM or MMP
+                    % Only do this once all data has been loaded
+                    if s == length(inputs.Dataset)
+                        
+                        if inputs.MMM == 1
+                            % Only want to mean model simulations, not obs. etc.
+                            if sum(MM_id == 1)>1
+                                data_plot = nanmean(data_calc(:,:,MM_id == 1,n_output),3);
+                            elseif sum(MM_id == 2)>1
+                                data_plot = nanmean(data_calc(:,:,MM_id == 2,n_output),3);                                
+                            elseif sum(MM_id == 3)>1
+                                data_plot = nanmean(data_calc(:,:,MM_id == 3,n_output),3);
+                            end
+                            
+                            title1 = {'MMM'};
+                            
+                            % Plot
+                            figure
+                            UK_subplot(data_plot .* LSM(grid_idx,grid_idy),[title1(1),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
+                            
                         end
-                        
-                        
-                        % If this is the first simulation loaded, make new array
-                        if s == 1
-                            data_all = data_mod;
                             
-                            % Otherwise, add the current simulation to the array
-                        elseif s > 1 && s < length(inputs.Dataset)
-                            data_all = cat(ndims(data_calc)+1,data_all,data_mod);
+                        if ~isempty(inputs.MMP)
                             
-                            % And if this is the final simulation, calculate the MMM or MMP
-                        elseif s == length(inputs.Dataset)
-                            data_all = cat(ndims(data_calc)+1,data_all,data_mod);
-                            
-                            % Calculate MMM if required
-                            if inputs.MMM == 1
-                                data_plot = nanmean(data_all,ndims(data_calc)+1);
-                                title1 = {'MMM'};
-                            end
-                                
-                            % Calculate MMP if required    
-                            if ~isempty(inputs.MMP)
-                                
-                                % Create empty array for each MMP, if MMM not already calculated
-                                if ~exist('data_plot','var')
-                                    data_plot = nan([size(data_calc),length(inputs.MMP)]);
-                                % If MMM is already calculcated, add this to the end of the final plotting array    
-                                else
-                                    data_plot_temp = nan([size(data_calc),length(inputs.MMP)+1]);
-                                    data_plot_temp(:,:,:,length(inputs.MMP)+1) = data_plot;
-                                    data_plot = data_plot_temp;
-                                    title1 = cell(1,length(inputs.MMP)+1);
-                                    title1(length(inputs.MMP)+1) = {'MMM'};
+                            % Calculate MMP
+                            for P = 1:length(inputs.MMP)
+                                % Only want to mean model simulations, not obs. etc.
+                                if sum(MM_id == 1)>1
+                                    data_plot = prctile(data_calc(:,:,MM_id == 1,n_output),inputs.MMP(P),3);
+                                elseif sum(MM_id == 2)>1
+                                    data_plot = prctile(data_calc(:,:,MM_id == 2,n_output),inputs.MMP(P),3);
+                                elseif sum(MM_id == 3)>1
+                                    data_plot = prctile(data_calc(:,:,MM_id == 3,n_output),inputs.MMP(P),3);
                                 end
                                 
-                                % Calculate MMP
-                                for P = 1:length(inputs.MMP)
-                                    data_plot(:,:,:,P) = prctile(data_all,inputs.MMP(P),ndims(data_calc)+1);
-                                    title1(P) = {['MM ',num2str(inputs.MMP(P)),'th percentile']};
-                                end
-                            end
+                                title1 = {['MM ',num2str(inputs.MMP(P)),'th percentile']};
+                                
+                                % Plot
+                                figure
+                                UK_subplot(data_plot .* LSM(grid_idx,grid_idy),[title1(1),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
                             
-                            % Go through each precentile to plot MMM/MMP
-                            for p = 1:length(data_calc(1,1,:))
-                                for P = 1:length(data_plot(1,1,1,:))
-                                    figure
-                                    UK_subplot(data_plot(:,:,p,P) .* LSM(grid_idx,grid_idy),[title1(P),titles2(p)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
-                                end
                             end
                         end
+
                     end
+                        
+                        
+                        
+                            
+                            
+%                             data_mod = data_calc;
+%                         else
+%                             data_mod = nan(size(data_calc));
+%                         end
+%                         
+%                         
+%                         % If this is the first simulation loaded, make new array
+%                         if s == 1
+%                             data_all = data_mod;
+%                             
+%                             % Otherwise, add the current simulation to the array
+%                         elseif s > 1 && s < length(inputs.Dataset)
+%                             data_all = cat(ndims(data_calc)+1,data_all,data_mod);
+%                             
+%                             % And if this is the final simulation, calculate the MMM or MMP
+%                         elseif s == length(inputs.Dataset)
+%                             data_all = cat(ndims(data_calc)+1,data_all,data_mod);
+%                             
+%                             % Calculate MMM if required
+%                             if inputs.MMM == 1
+%                                 data_plot = nanmean(data_all,ndims(data_calc)+1);
+%                                 title1 = {'MMM'};
+%                             end
+%                                 
+%                             % Calculate MMP if required    
+%                             if ~isempty(inputs.MMP)
+%                                 
+%                                 % Create empty array for each MMP, if MMM not already calculated
+%                                 if ~exist('data_plot','var')
+%                                     data_plot = nan([size(data_calc),length(inputs.MMP)]);
+%                                 % If MMM is already calculcated, add this to the end of the final plotting array    
+%                                 else
+%                                     data_plot_temp = nan([size(data_calc),length(inputs.MMP)+1]);
+%                                     data_plot_temp(:,:,:,length(inputs.MMP)+1) = data_plot;
+%                                     data_plot = data_plot_temp;
+%                                     title1 = cell(1,length(inputs.MMP)+1);
+%                                     title1(length(inputs.MMP)+1) = {'MMM'};
+%                                 end
+%                                 
+%                                 % Calculate MMP
+%                                 for P = 1:length(inputs.MMP)
+%                                     data_plot(:,:,:,P) = prctile(data_all,inputs.MMP(P),ndims(data_calc)+1);
+%                                     title1(P) = {['MM ',num2str(inputs.MMP(P)),'th percentile']};
+%                                 end
+%                             end
+%                             
+%                             % Go through each precentile to plot MMM/MMP
+%                             for p = 1:length(data_calc(1,1,:))
+%                                 for P = 1:length(data_plot(1,1,1,:))
+%                                     figure
+%                                     UK_subplot(data_plot(:,:,p,P) .* LSM(grid_idx,grid_idy),[title1(P),titles2(p)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
+%                                 end
+%                             end
+%                         end
+%                     end
                 end
             end
         end

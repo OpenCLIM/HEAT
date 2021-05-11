@@ -44,6 +44,7 @@ inputs.MMP = [5 95]; % OR inputs.MMP = 0.1 - 99.9; % Calculate multi-model perce
 
 %% Subsetting of data for analysis
 inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start and end dates
+% inputs.Scenario = {'past', '1.5','2.0','2.5','3.0','4.0'}; % THIS NEEDS TO BE ADDED
 inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
 inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = []; % 'Scotland','North East','North West','Yorkshire and 
@@ -53,9 +54,9 @@ inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed regio
 
 
 %% Output types
-% inputs.AbsThresh = [25];
+inputs.AbsThresh = [25];
 % inputs.ExtremeMeanPctile = [95 99];
-inputs.Pctile = [95];
+inputs.Pctile = [95 99];
 % inputs2.DDp = 66;
 % inputs2.DDa = 18;
 

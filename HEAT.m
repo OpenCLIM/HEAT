@@ -272,7 +272,7 @@ if runstep2 == 1
                 
                 % Run Step 2: Extremes analysis
                 if runstep2 == 1
-                    HEAT_step2(inputs,DataType,Variable)
+                    HEAT_step2(inputs,Variable)
                 end
                 
                 %                 % Load each required simulation
