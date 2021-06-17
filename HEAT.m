@@ -260,31 +260,17 @@ if runstep2 == 1
     % Data hierarchy:
     % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
     
-%     for d = 1:length(inputs.DataType)
-%         DataType = char(inputs.DataType(d));
+    % Load each required variable
+    for v = 1:length(inputs.Variable)
+        Variable = char(inputs.Variable(v));
         
-%         % Load model data if required
-%         if ismember(inputs.DataType(d),'UKCP18')
-            
-            % Load each required variable
-            for v = 1:length(inputs.Variable)
-                Variable = char(inputs.Variable(v));
-                
-                % Run Step 2: Extremes analysis
-                if runstep2 == 1
-                    HEAT_step2(inputs,Variable)
-                end
-                
-                %                 % Load each required simulation
-                %                 for s = 1:length(inputs.Dataset)
-                %                     Dataset = char(inputs.Dataset(s));
-                %
-                %                 end
-            end
-            
-
-%         end
+        % Run Step 2: Extremes analysis
+        if runstep2 == 1
+            HEAT_step2(inputs,Variable)
+        end
         
+    end
+  
         
 %         % Load model data if required
 %         if ismember(inputs.DataType(d),'HadUKGrid')
@@ -330,20 +316,17 @@ if runstep3 == 1
     for d = 1:length(inputs.DataType)
         DataType = char(inputs.DataType(d));
         
-%         % Load model data if required
-%         if ismember(inputs.DataType(d),'UKCP18')
+        % Load each required variable
+        for v = 1:length(inputs.Variable)
+            Variable = char(inputs.Variable(v));
             
-            % Load each required variable
-            for v = 1:length(inputs.Variable)
-                Variable = char(inputs.Variable(v));
-                
-                HEAT_step3(inputs,DataType,Variable);
-                
-            end
-%         end
+            HEAT_step3(inputs,DataType,Variable);
+            
+        end
     end
     
 end
+
 
 %% Finish up
 disp(' ')

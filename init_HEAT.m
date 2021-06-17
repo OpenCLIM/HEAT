@@ -53,28 +53,28 @@ elseif strcmp(root_dir(1:14),'/home/ak0920/h')
     addpath('PreProcessedData/')
     addpath('Dependencies/')
     
+elseif strcmp(root_dir(1:14),'/home/alanka/H')
+    UKCP18dir = '/data/ukcp18_data/';
+    ERA5dir = '/data/ERA5/';
+    HadUKdir = '/data/HadUK-Grid/';
+    Deriveddir = '/data/HEAToutput/DerivedData/';
+    Outputdir = '/data/HEAToutput/';
+    addpath('PhysicalCalculations/')
+    addpath('DataHandling/')
+    addpath('Processing/')
+    addpath('Outputting/')
+    addpath('PreProcessedData/')
+    addpath('Dependencies/')
     
-    % Running on DAFNI
-elseif strcmp(root_dir(1:14),'/DAFNI/dir/TBC/')
+    
+    % Otherwise, assume running on DAFNI
+else 
     % Set data directory
-    data_dir = '/DAFNI/data/dir/TBC/';
+    data_dir = '/data/';
     
     
     % Running on another machine
-else
-    
-    disp('Initialising HEAT on unknown machine')
-    
-    prompt = 'Please enter UKCP18 root data directory: ';
-    UKCP18dir = input(prompt,'s');
-    prompt = 'Please enter ERA5 root data directory: ';
-    ERA5dir = input(prompt,'s');
-    prompt = 'Please enter HadUK-Grid root data directory: ';
-    HadUKdir = input(prompt,'s');
-    prompt = 'Please enter Derived data directory: ';
-    Deriveddir = input(prompt,'s');
-    prompt = 'Please enter Output data directory: ';
-    Outputdir = input(prompt,'s');
+
     
     addpath('PhysicalCalculations/')
     addpath('DataHandling/')

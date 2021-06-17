@@ -267,6 +267,10 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
             
             
             %% Temporally subset to the specific required dates and summer type
+            if isfield(inputs,'AnnSummer')
+                inputs.AnnSummer = 'Annual';
+            end
+            
             % Pull out the required dates and times
             [data,dates] = subset_temporal(data,dates,inputs.TemporalRange,inputs.AnnSummer);
             
