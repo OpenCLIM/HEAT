@@ -40,6 +40,10 @@ startt = now;
 % creates can be input.
 
 % Check if inputs is a script, in which case run it
+if ~exist('inputs','var')
+    run('input_files_DAFNI.m')
+end
+
 if ischar(inputs)
     if exist(inputs,'file')
         run(inputs)
