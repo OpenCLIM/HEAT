@@ -72,6 +72,11 @@ elseif strcmp(root_dir(1:14),'/home/alanka/H')
 else 
     % Set data directory
     data_dir = '/data/';
+    UKCP18dir = '/data/UKCP18dir/'; 
+    HEAToutput = '/data/HEAToutput/';
+    
+    % ATK-A I hope that these directories can be mounted to using:
+%     docker run -v /Path/to/UKCP18/on/DAFNI/:/data/UKCP18dir/ -v /Path/to/output/storage/on/DAFNI/:/data/HEAToutput/ heat
     
     
     % Running on another machine

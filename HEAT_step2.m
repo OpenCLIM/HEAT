@@ -401,6 +401,8 @@ for s = 1:length(inputs.Dataset)
                         if inputs.PlotAll == 1
                             figure
                             UK_subplot(data_calc(:,:,s,n_output) .* LSM(grid_idx,grid_idy),[titles1(n_output),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
+                            figname = ['map_',num2str(n_output)];
+                            saveas(gcf,figname,'png')
                         end
                         
                         
@@ -421,7 +423,8 @@ for s = 1:length(inputs.Dataset)
                                             figure
                                             title1 = {'MMM'};
                                             UK_subplot(data_plot .* LSM(grid_idx,grid_idy),[title1(1),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
-                                            
+                                            figname = ['map_MMM_',num2str(id)];
+                                            saveas(gcf,figname,'png')
                                         end
                                     end
                                 end
@@ -442,6 +445,8 @@ for s = 1:length(inputs.Dataset)
                                         figure
                                         title1 = {['MM ',num2str(inputs.MMP(P)),'th percentile']};
                                         UK_subplot(data_plot .* LSM(grid_idx,grid_idy),[title1(1),titles2(n_output)],[],lats(grid_idx,grid_idy),lons(grid_idx,grid_idy),inputs)
+                                        figname = ['map_MMP_',num2str(id)];
+                                        saveas(gcf,figname,'png')
                                     end
                                 end
                             end
