@@ -25,6 +25,8 @@ disp('Running HEAT v.1.0')
 disp('-----')
 pwd
 ls
+disp('-----')
+ls data/
 
 % Set directory paths
 init_HEAT
