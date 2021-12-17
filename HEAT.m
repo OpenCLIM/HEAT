@@ -23,15 +23,17 @@ function [] = HEAT(inputs,varargin)
 %% Initialise
 disp('Running HEAT v.1.0')
 disp('-----')
-pwd
-ls
-disp('-----')
+
 ls data/
 disp('-----')
 ls data/inputs/
 
 % Set directory paths
 init_HEAT
+
+disp('-----')
+pwd
+ls
 
 % Record start time
 startt = now;
