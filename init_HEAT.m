@@ -83,12 +83,12 @@ else
     % Running on another machine
     
     
-    addpath('PhysicalCalculations/')
-    addpath('DataHandling/')
-    addpath('Processing/')
-    addpath('Outputting/')
-    addpath('PreProcessedData/')
-    addpath('Dependencies/')
+%     addpath('PhysicalCalculations/')
+%     addpath('DataHandling/')
+%     addpath('Processing/')
+%     addpath('Outputting/')
+%     addpath('PreProcessedData/')
+%     addpath('Dependencies/')
     
     % Note: This needs updated so that the entered directories become
     % global and do not need re-entered everytime init_HEAT.m is called
