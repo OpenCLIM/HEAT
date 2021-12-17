@@ -292,21 +292,25 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                         end
                         
                         
-                        % If csv has been created already
-                        if exist(csv_name,'file')
-                            % Load existing csv
-                            data_csv = csvread(csv_name);
-                            % Extract individual grid cell for current dataset
-                            data_csv_temp = squeeze(data(i,j,:))';
-                            % Concatenate this with the existing csv and resave
-                            data_csv = cat(1,data_csv,data_csv_temp);
-                            csvwrite(csv_name,data_csv)
-                        else
-                            % Otherwise extract individual grid cell for current
-                            % dataset and create new csv
-                            data_csv = squeeze(data(i,j,:))';
-                            csvwrite(csv_name,data_csv)
-                        end
+%                         % If csv has been created already
+%                         if exist(csv_name,'file')
+%                             % Load existing csv
+%                             data_csv = csvread(csv_name);
+%                             % Extract individual grid cell for current dataset
+%                             data_csv_temp = squeeze(data(i,j,:))';
+%                             % Concatenate this with the existing csv and resave
+%                             data_csv = cat(1,data_csv,data_csv_temp);
+%                             csvwrite(csv_name,data_csv)
+%                         else
+%                             % Otherwise extract individual grid cell for current
+%                             % dataset and create new csv
+%                             data_csv = squeeze(data(i,j,:))';
+%                             csvwrite(csv_name,data_csv)
+%                         end
+
+                        % Save the data as a .csv file
+                        dlmwrite(csv_name,squeeze(data(i,j,:))','-append','newline','pc','delimiter',',','precision',4);
+
                     end
                 end
                 
@@ -316,18 +320,22 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 % Set csv output file name
                 csv_name = [Outputdir,'/',inputs.ExptName,'/',inputs.Region,'_',inputs.ExptName,'_',Variable,'.csv'];
                 
-                % If csv has been created already
-                if exist(csv_name,'file')
-                    % Load existing csv
-                    data_csv = csvread(csv_name);
-                    
-                    % Concatenate this with the existing csv and resave
-                    data_csv = cat(1,data_csv,regmean');
-                    csvwrite(csv_name,data_csv)
-                else
-                    % Otherwise create new csv
-                    csvwrite(csv_name,regmean')
-                end
+%                 % If csv has been created already
+%                 if exist(csv_name,'file')
+%                     % Load existing csv
+%                     data_csv = csvread(csv_name);
+%                     
+%                     % Concatenate this with the existing csv and resave
+%                     data_csv = cat(1,data_csv,regmean');
+%                     csvwrite(csv_name,data_csv)
+%                 else
+%                     % Otherwise create new csv
+%                     csvwrite(csv_name,regmean')
+%                 end
+                
+                % Save the data as a .csv file
+                dlmwrite(csv_name,regmean','-append','newline','pc','delimiter',',','precision',4);
+                
             end
         end
         

@@ -194,6 +194,9 @@ if ~exist('skipload','var')
                 
             elseif strcmp(Variable(1:2),'VP')
                 data = VP;
+                
+            elseif strcmp(Variable(1:2),'WB')
+                data = WBGT(T,SH,P);
             end
             
             % Store date info

@@ -68,8 +68,18 @@ if strcmp(Variable,'sWBGT')
     long_name = 'Simplified Wet Buld Globe Temperature daily mean';
     description = 'Simplified Wet Buld Globe Temperature';
     label_units = '°C';
-    plot_label = 'sWBGT at 1.5m (mb)';
+    plot_label = 'sWBGT at 1.5m (°C)';
 end
+
+if strcmp(Variable,'WBGT')
+    units = '°C';
+    standard_name = 'WBGT';
+    long_name = 'Wet Buld Globe Temperature daily mean';
+    description = 'Wet Buld Globe Temperature';
+    label_units = '°C';
+    plot_label = 'WBGT at 1.5m (°C)';
+end
+
 
 % Set some basic meta data for key derived variables
 if strcmp(Variable,'VPmax')
@@ -105,7 +115,16 @@ if strcmp(Variable,'sWBGTmax')
     long_name = 'Simplified Wet Buld Globe Temperature daily maximum';
     description = 'Simplified Wet Buld Globe Temperature';
     label_units = '°C';
-    plot_label = 'sWBGT at 1.5m (mb)';
+    plot_label = 'sWBGT at 1.5m (°C)';
+end
+
+if strcmp(Variable,'sWBGTmax')
+    units = '°C';
+    standard_name = 'WBGT_max';
+    long_name = 'Wet Buld Globe Temperature daily maximum';
+    description = 'Wet Buld Globe Temperature';
+    label_units = '°C';
+    plot_label = 'WBGT at 1.5m (°C)';
 end
 
 % Set some basic meta data for key derived variables
@@ -142,7 +161,16 @@ if strcmp(Variable,'sWBGTmin')
     long_name = 'Simplified Wet Buld Globe Temperature daily minimum';
     description = 'Simplified Wet Buld Globe Temperature';
     label_units = '°C';
-    plot_label = 'sWBGT at 1.5m (mb)';
+    plot_label = 'sWBGT at 1.5m (°C)';
+end
+
+if strcmp(Variable,'WBGTmin')
+    units = '°C';
+    standard_name = 'WBGT_min';
+    long_name = 'Wet Buld Globe Temperature daily minimum';
+    description = 'Wet Buld Globe Temperature';
+    label_units = '°C';
+    plot_label = 'WBGT at 1.5m (°C)';
 end
 
 

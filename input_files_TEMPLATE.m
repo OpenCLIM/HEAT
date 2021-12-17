@@ -26,7 +26,7 @@
 
 
 %% Set some basic experiment details
-inputs.ExptName = 'ARCADIA_UK_RCM_raw'; % Give the experiment a name (no spaces)
+inputs.ExptName = 'WBGT_test'; % Give the experiment a name (no spaces)
 inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
 inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
 inputs.SaveDerivedOutput = 1; % OR inputs.SaveDerivedOutput = 0;
@@ -36,8 +36,8 @@ inputs.OverwriteDerivedOutput = 0; % OR inputs.OverwriteDerivedOutput = 1;
 
 %% Select dataset(s) to use
 inputs.DataType = {'UKCP18'}; % {'UKCP18','UKCP18prob','HadUKGrid','ERA5','CMIP6'};
-inputs.Variable = {'T'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
-inputs.Dataset = {'RCM-01','RCM-04','RCM-05','RCM-06','RCM-07','RCM-08','RCM-09','RCM-10','RCM-11','RCM-12','RCM-13','RCM-15'};
+inputs.Variable = {'WBGT'}; % prefixes: 'T', 'VP', 'sWBGT', 'HD', 'AT', 'THI'; suffixes: 'max', 'min' or nothing for daily mean
+inputs.Dataset = {'RCM-01'};
 % inputs.MMM = 1; % OR inputs.MMM = 1; % Calculate multi-model mean of all selected datasets
 % inputs.MMP = [5 95]; % OR inputs.MMP = 0.1 - 99.9; % Calculate multi-model percentile of all selected datasets
 
@@ -45,7 +45,7 @@ inputs.Dataset = {'RCM-01','RCM-04','RCM-05','RCM-06','RCM-07','RCM-08','RCM-09'
 %% Subsetting of data for analysis
 inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start and end dates
 % inputs.Scenario = {'past', '1.5','2.0','2.5','3.0','4.0'}; % THIS NEEDS TO BE ADDED
-% inputs.AnnSummer = 'JJA'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
+inputs.AnnSummer = 'Summer'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
 % inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = {}; % 'Scotland','North East','North West','Yorkshire and 
 %     % the Humber','East Midlands','West Midlands','East of England','Greater
@@ -55,15 +55,15 @@ inputs.TemporalRange = [19900101, 20191230]; % yyyy, yyyymm or yyyymmdd start an
 
 %% Output types
 % inputs.AbsThresh = [25];
-% inputs.ExtremeMeanPctile = [95 99];
+inputs.ExtremeMeanPctile = [95 99];
 % inputs.Pctile = [95 99];
 % inputs2.DDp = 66;
 % inputs2.DDa = 18;
 
-% inputs.OutputType = {'map'}; % {'map','timeseries'}
+inputs.OutputType = {'map'}; % {'map','timeseries'}
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 % inputs.SaveFigures = 0;
 % inputs.PlotAll = 1;
 % inputs.OutputRegion = 'all'; % 'all' for grid cell output OR 'Scotland','North East','North West','Yorkshire and the Humber','East Midlands','West Midlands','East of England','Greater London','South East','South West','Wales','Northern Ireland','Isle of Man'
-inputs.WorkflowOutput = 'ARCADIA';
+% inputs.WorkflowOutput = 'ARCADIA';
 
