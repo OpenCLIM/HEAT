@@ -27,6 +27,8 @@ pwd
 ls
 disp('-----')
 ls data/
+disp('-----')
+ls data/inputs/
 
 % Set directory paths
 init_HEAT
