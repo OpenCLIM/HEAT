@@ -23,7 +23,8 @@ function [] = HEAT(inputs,varargin)
 %% Initialise
 disp('Running HEAT v.1.0')
 disp('-----')
-
+pwd
+ls
 
 % Set directory paths
 init_HEAT
