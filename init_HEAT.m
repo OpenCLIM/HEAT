@@ -73,7 +73,7 @@ if length(root_dir) >= 14
 else
     % Set data directory
     data_dir = '/data/';
-    UKCP18dir = '/data/UKCP18dir/';
+    UKCP18dir = '/data/inputs/UKCP18dir/';
     Outputdir = '/data/outputs/';
     
     % ATK-A I hope that these directories can be mounted to using:
