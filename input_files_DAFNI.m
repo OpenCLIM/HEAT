@@ -40,8 +40,8 @@ inputs.TemporalRange = [20500101, 20791230]; % yyyy, yyyymm or yyyymmdd start an
 
 
 %% Output types
-% inputs.AbsThresh = 25;
-% inputs.OutputType = {'map'};
+inputs.AbsThresh = 25;
+inputs.OutputType = {'map'};
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 inputs.SaveFigures = 1;
 inputs.PlotAll = 1;
