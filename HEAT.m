@@ -24,6 +24,7 @@ function [] = HEAT(inputs,varargin)
 disp('Running HEAT v.1.0')
 disp('-----')
 pwd
+cd data/
 ls
 
 % Set directory paths
