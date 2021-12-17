@@ -24,8 +24,9 @@ inputs.OverwriteDerivedOutput = 0; % OR inputs.OverwriteDerivedOutput = 1;
 %% Select dataset(s) to use
 inputs.DataType = {'UKCP18'};
 inputs.Variable = {'Tmean'};
-inputs.Dataset = {'GCM-01','GCM-02','GCM-03','GCM-04','GCM-05','GCM-06','GCM-07','GCM-08','GCM-09','GCM-10','GCM-11','GCM-12','GCM-13','GCM-14','GCM-15'};
-inputs.MMM = 1;
+% inputs.Dataset = {'GCM-01','GCM-02','GCM-03','GCM-04','GCM-05','GCM-06','GCM-07','GCM-08','GCM-09','GCM-10','GCM-11','GCM-12','GCM-13','GCM-14','GCM-15'};
+inputs.Dataset = {'GCM-01'};
+% inputs.MMM = 1;
 
 
 %% Subsetting of data for analysis
@@ -39,8 +40,8 @@ inputs.TemporalRange = [20500101, 20791230]; % yyyy, yyyymm or yyyymmdd start an
 
 
 %% Output types
-inputs.AbsThresh = 25;
-inputs.OutputType = {'map'};
+% inputs.AbsThresh = 25;
+% inputs.OutputType = {'map'};
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 inputs.SaveFigures = 1;
 inputs.PlotAll = 1;
