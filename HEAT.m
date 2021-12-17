@@ -48,7 +48,7 @@ startt = now;
 
 % Check if inputs is a script, in which case run it
 if ~exist('inputs','var')
-    run('input_files_DAFNI.m')
+    input_files_DAFNI
 end
 
 if ischar(inputs)
