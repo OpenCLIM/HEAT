@@ -30,7 +30,7 @@ inputs.Dataset = {'GCM-01'};
 
 
 %% Subsetting of data for analysis
-inputs.TemporalRange = [20500101, 20791230]; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.TemporalRange = [20100101, 20181230]; % yyyy, yyyymm or yyyymmdd start and end dates
 % inputs.AnnSummer = 'Summer'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
 % inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = {}; % 'Scotland','North East','North West','Yorkshire and 
@@ -40,8 +40,8 @@ inputs.TemporalRange = [20500101, 20791230]; % yyyy, yyyymm or yyyymmdd start an
 
 
 %% Output types
-inputs.AbsThresh = 25;
-inputs.OutputType = {'map'};
+% inputs.AbsThresh = 25;
+% inputs.OutputType = {'map'};
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 inputs.SaveFigures = 1;
 inputs.PlotAll = 1;

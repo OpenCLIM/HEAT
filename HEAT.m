@@ -312,15 +312,19 @@ end
 %% Generate output for other models in workflows
 if runstep3 == 1
     
-    % Check if this file has already been derived:
-    froot = [Outputdir,'/',inputs.ExptName,'/']; % Take the file name...
-    files = dir([froot '*',Variable,'.csv']); % Then check if any files exist with this root
-    
-    % If so, delete
-    if ~isempty(files)
-        for f = 1:length(files)
-            file = [files(f).folder,'/',files(f).name];
-            delete(file)
+    for v = 1:length(inputs.Variable)
+        Variable = char(inputs.Variable(v));
+        
+        % Check if this file has already been derived:
+        froot = [Outputdir,'/',inputs.ExptName,'/']; % Take the file name...
+        files = dir([froot '*',Variable,'.csv']); % Then check if any files exist with this root
+        
+        % If so, delete
+        if ~isempty(files)
+            for f = 1:length(files)
+                file = [files(f).folder,'/',files(f).name];
+                delete(file)
+            end
         end
     end
     
