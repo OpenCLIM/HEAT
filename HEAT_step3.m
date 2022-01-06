@@ -29,6 +29,8 @@ disp('-----')
 pwd
 ls
 disp('-----')
+ls data/inputs/
+ls data/inputs/UKCP18dir/
 ls data/inputs/UKCP18dir/PreProcessedData
 
 if strcmp(inputs.WorkflowOutput,'ARCADIA')
