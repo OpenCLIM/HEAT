@@ -31,7 +31,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
     init_HEAT
     
     % Load xyz data
-    load_xyz
+    run('DataHandling/load_xyz')
     
     %% Go through each simulation
     for s = 1:length(inputs.Dataset)
