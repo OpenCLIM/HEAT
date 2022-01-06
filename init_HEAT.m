@@ -75,12 +75,7 @@ else
     cd('/data/')
     UKCP18dir = '/data/inputs/UKCP18dir/';
     Outputdir = '/data/outputs/';
-    addpath('PhysicalCalculations/')
-        addpath('DataHandling/')
-        addpath('Processing/')
-        addpath('Outputting/')
-        addpath('PreProcessedData/')
-        addpath('Dependencies/')
+
     
     % ATK-A I hope that these directories can be mounted to using:
     %     docker run -v /Path/to/UKCP18/on/DAFNI/:/data/UKCP18dir/ -v /Path/to/output/storage/on/DAFNI/:/data/HEAToutput/ heat
