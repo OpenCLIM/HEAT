@@ -34,7 +34,13 @@ load('PreProcessedData/LSM12.mat')
 load('PreProcessedData/LSM60.mat')
 
 % Load the lat-long data directly from the data
-generate_UK_latlon
+% load_UK_latlon
+load('PreProcessedData/long_UK_CPM.mat')
+load('PreProcessedData/lat_UK_CPM.mat')
+load('PreProcessedData/long_UK_RCM.mat')
+load('PreProcessedData/lat_UK_RCM.mat')
+load('PreProcessedData/long_UK_GCM.mat')
+load('PreProcessedData/lat_UK_GCM.mat')
 
 % Load the area of each lat-lon box (from generate_UK_latlon_area.m)
 load PreProcessedData/areas_60km_abs.mat
