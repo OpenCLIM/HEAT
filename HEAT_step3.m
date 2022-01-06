@@ -323,10 +323,12 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
 
                     end
                 end
-                squeeze(data(i,j,:))'
+                
+                
             else % Otherwise take a regional mean
                 regmean = calc_reg_mean(data,inputs.Region);
-                regmean
+                
+                
                 % Set csv output file name
                 csv_name = [Outputdir,'/',inputs.ExptName,'/',inputs.Region,'_',inputs.ExptName,'_',Variable,'.csv'];
                 
