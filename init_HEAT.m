@@ -73,8 +73,8 @@ if length(root_dir) >= 14
 else
     % Set data directory
     cd('/data/')
-    UKCP18dir = '/inputs/UKCP18dir/';
-    Outputdir = '/outputs/';
+    UKCP18dir = '/data/inputs/UKCP18dir/';
+    Outputdir = '/data/outputs/';
     
     % ATK-A I hope that these directories can be mounted to using:
     %     docker run -v /Path/to/UKCP18/on/DAFNI/:/data/UKCP18dir/ -v /Path/to/output/storage/on/DAFNI/:/data/HEAToutput/ heat
