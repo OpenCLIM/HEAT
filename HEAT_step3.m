@@ -120,6 +120,8 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 files = dir([vardir,var,'-',inputs.Domain,'-',Dataset,'*.nc']);
             end
             
+            vardir
+            ls(vardir)
             
             
             %% Go through HadUK-Grid data
