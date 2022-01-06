@@ -92,7 +92,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 % Find how many files are to be loaded/produced
                 files = dir([vardir '*.nc']);
                 
-            elseif strcmp(Variable,'T')
+            elseif strcmp(Variable,'Tmean')
                 % Find what files are available
                 var = 'tas';
                 % Directory of raw data for each required variable
