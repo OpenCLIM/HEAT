@@ -31,10 +31,6 @@ ls data/inputs/
 % Set directory paths
 init_HEAT
 
-disp('-----')
-pwd
-ls
-
 % Record start time
 startt = now;
 

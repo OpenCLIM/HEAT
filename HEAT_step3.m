@@ -25,6 +25,11 @@ disp(' ')
 disp('Running Step 3: producing workflow output for ARCADIA')
 disp('-----')
 
+disp('-----')
+pwd
+ls
+ls PreProcessedData
+
 if strcmp(inputs.WorkflowOutput,'ARCADIA')
     
     % Set directory paths
