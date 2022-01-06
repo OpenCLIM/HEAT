@@ -277,7 +277,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
             
             
             %% Temporally subset to the specific required dates and summer type
-            if isfield(inputs,'AnnSummer')
+            if ~isfield(inputs,'AnnSummer')
                 inputs.AnnSummer = 'Annual';
             end
             
