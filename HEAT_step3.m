@@ -321,7 +321,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
 
                     end
                 end
-                
+                regmean
             else % Otherwise take a regional mean
                 regmean = calc_reg_mean(data,inputs.Region);
                 regmean
