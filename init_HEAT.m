@@ -69,30 +69,16 @@ if length(root_dir) >= 14
         addpath('Dependencies/')
         
     end
-    % Otherwise, assume running on DAFNI
+    
+    
+    % Otherwise, assume running on DAFNI (in a Docker container)
 else
     % Set data directory
     cd('/data/')
     UKCP18dir = '/data/inputs/UKCP18dir/';
     Outputdir = '/data/outputs/';
 
-    
-    % ATK-A I hope that these directories can be mounted to using:
-    %     docker run -v /Path/to/UKCP18/on/DAFNI/:/data/UKCP18dir/ -v /Path/to/output/storage/on/DAFNI/:/data/HEAToutput/ heat
-    
-    
-    % Running on another machine
-    
-    
-%     addpath('PhysicalCalculations/')
-%     addpath('DataHandling/')
-%     addpath('Processing/')
-%     addpath('Outputting/')
-%     addpath('PreProcessedData/')
-%     addpath('Dependencies/')
-    
-    % Note: This needs updated so that the entered directories become
-    % global and do not need re-entered everytime init_HEAT.m is called
-    % (which is quite often).
+    % Note: in this case, 'addpath' should have been done before building
+    % the Matlab executable and Docker file, by running add_paths.m.
     
 end

@@ -1,0 +1,18 @@
+kind: Model
+apiVersion: v1beta1
+metadata:
+    displayName: HEAT
+    name: HEAT
+    summary: OpenCLIM Heat Extremes Analysis Toolbox (HEAT)
+    description: The Heat Extremes Analysis Toolbox (HEAT) has been created for the OpenCLIM project, for integration of heatwave and related temperature and heat stress extremes analysis with other climate risk modelling. 
+spec:
+    inputs:
+        dataslots:
+            - name: Dataslot
+              description: A dataslot that should contain a netCDF of UKCP18 data
+              default:
+                  - uid: 30a57232-2c9a-41d9-8497-e870321ac8bf
+                    versionUid: a0bae768-d292-41fb-b064-5e715e20d847
+              path: dataslot-name
+              required: true
+

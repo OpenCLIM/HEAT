@@ -16,15 +16,12 @@ function [] = HEAT(inputs,varargin)
 % variables, dataset to use, temporal and spatial domain, experiment name
 % and whether to save derived variables.
 %
-% Coded by A.T. Kennedy-Asser, University of Bristol, 2021.
+% Coded by A.T. Kennedy-Asser, University of Bristol, 2022.
 % Contact: alan.kennedy@bristol.ac.uk
 %
 
 %% Initialise
 disp('Running HEAT v.1.0')
-disp('-----')
-
-ls data/
 disp('-----')
 
 % Set directory paths
@@ -33,11 +30,19 @@ init_HEAT
 % Record start time
 startt = now;
 
+% If running in a docker container, copy data to the correct location
+if strcmp(pwd,'/data')
+    disp(' ')
+    disp('Running in Docker container')
+    disp('Copying PreProcessedData to correct location')
+    copyfile inputs/UKCP18dir/PreProcessedData/* PreProcessedData/
+    disp('-----')
+end
 
 %% Check inputs
 % If running HEAT as standalone app, inputs should be included in a
 % seperate inputs script, which can be adapted from input_files_TEMPLATE.m.
-% If running HEAT through the MATLAB GUI, thne it is possible to have run
+% If running HEAT through the MATLAB GUI, then it is possible to have run
 % input_files_TEMPLATE.m first, in which case the structures this script
 % creates can be input.
 
@@ -177,6 +182,12 @@ save([Outputdir,'/',inputs.ExptName,'/inputs.mat'],'inputs')
 
 
 %% Produce derived data if required (step 1)
+% This step calculates variables such as sWBGT, which are produced from
+% multiple other raw climate variables. Due to computational limits on
+% DAFNI, this function is not expected to be used on DAFNI: these will be
+% produced elsewhere and uploaded. The code for step 1 is retained here for
+% completeness to show how these variables were computed offline.
+
 if runstep1 == 1
     
     % Go through each required dataset/simulation/variable
@@ -259,7 +270,7 @@ if runstep1 == 1
 end
 
 
-%% Produce diagnostic or workflow data if required (steps 2 and 3)
+%% Produce diagnostic data if required (step 2)
 if runstep2 == 1
     
     % Go through each required dataset/simulation/variable
@@ -304,7 +315,7 @@ if runstep2 == 1
 end
 
 
-%% Generate output for other models in workflows
+%% Generate output for other models in workflows (step 3)
 if runstep3 == 1
     
     for v = 1:length(inputs.Variable)

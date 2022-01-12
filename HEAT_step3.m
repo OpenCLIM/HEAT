@@ -25,13 +25,6 @@ disp(' ')
 disp('Running Step 3: producing workflow output for ARCADIA')
 disp('-----')
 
-if strcmp(pwd,'/data')
-disp('-----')
-disp('Copying PreProcessedData')
-copyfile inputs/UKCP18dir/PreProcessedData/* PreProcessedData/
-ls PreProcessedData/
-disp('-----')
-
 
 if strcmp(inputs.WorkflowOutput,'ARCADIA')
     
