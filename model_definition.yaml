@@ -1,5 +1,5 @@
 kind: Model
-api_version: v1alpha4
+api_version: v1beta1
 metadata:
     displayName: HEAT
     name: HEAT
