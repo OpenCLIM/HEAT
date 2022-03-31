@@ -25,6 +25,12 @@ disp(' ')
 disp('Running Step 3: producing workflow output for ARCADIA')
 disp('-----')
 
+% Find out if temporal subsetting is required
+if isfield(inputs,'TemporalRange')
+    TemporalStart = inputs.TemporalRange(1);
+    TemporalEnd = inputs.TemporalRange(2);
+end
+
 
 if strcmp(inputs.WorkflowOutput,'ARCADIA')
     
@@ -70,18 +76,64 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 LSM = LSM60;
             end
             
+            
+            % Update file path and netCDF dims if using bias corr. data
+            if inputs.BiasCorr == 1
+                BCdir = 'BiasCorrected/';
             % Find location of netCDF data for the required variable
             % Set default domain to load as whole of dataset for T vars
-            ncstarts = [1 1 1 1];
-            ncends = [Inf Inf Inf Inf];
-            % Dimension of yyyymmdd var for T vars
-            datedim = 2;
+                ncstarts = [1 1 1];
+                ncends = [Inf Inf Inf];
+                % Dimension of yyyymmdd var for T vars
+                datedim = 1;
+            else
+                BCdir = [];
+            % Find location of netCDF data for the required variable
+            % Set default domain to load as whole of dataset for T vars
+                ncstarts = [1 1 1 1];
+                ncends = [Inf Inf Inf Inf];
+                % Dimension of yyyymmdd var for T vars
+                datedim = 2;
+            end
+            
+            
+            % Find if scenario is required, and if so, set temporal start and
+            % end:
+            if isfield(inputs,'Scenario')
+                % Load the years each scenario reaches a warming level
+                load('PreProcessedData/tas_GCM_glob_thresh_arr.mat')
+                % Look up the correct model run from the table
+                modelslist = {'run01','run04','run05','run06','run07','run08','run09','run10','run11','run12','run13','run15'};
+                modelid = find(contains(modelslist,runn));
+                
+                % Read the start year of period
+                if strcmp(inputs.Scenario,'past')
+                    TemporalStart = 1990;
+                elseif strcmp(inputs.Scenario,'1.5')
+                    TemporalStart = tas_GCM_glob_thresh_arr(1,modelid);
+                elseif strcmp(inputs.Scenario,'2.0')
+                    TemporalStart = tas_GCM_glob_thresh_arr(2,modelid);
+                elseif strcmp(inputs.Scenario,'3.0')
+                    TemporalStart = tas_GCM_glob_thresh_arr(4,modelid);
+                elseif strcmp(inputs.Scenario,'4.0')
+                    TemporalStart = tas_GCM_glob_thresh_arr(6,modelid);
+                end
+                
+                % Get end year
+                TemporalEnd = TemporalStart+29;
+                
+                % Convert years to correct format
+                TemporalStart = str2double([num2str(TemporalStart),'0101']);
+                TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
+            end
+
+            
             
             if strcmp(Variable,'Tmax')
                 % Find what files are available
                 var = 'tasmax';
                 % Directory of raw data for each required variable
-                vardir = [UKCP18dir,res,var,'/',runn,'/'];
+                vardir = [UKCP18dir,BCdir,res,var,'/',runn,'/'];
                 % Find how many files are to be loaded/produced
                 files = dir([vardir '*.nc']);
                 
@@ -89,7 +141,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 % Find what files are available
                 var = 'tas';
                 % Directory of raw data for each required variable
-                vardir = [UKCP18dir,res,var,'/',runn,'/'];
+                vardir = [UKCP18dir,BCdir,res,var,'/',runn,'/'];
                 % Find how many files are to be loaded/produced
                 files = dir([vardir '*.nc']);
                 
@@ -97,7 +149,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 % Find what files are available
                 var = 'tasmin';
                 % Directory of raw data for each required variable
-                vardir = [UKCP18dir,res,var,'/',runn,'/'];
+                vardir = [UKCP18dir,BCdir,res,var,'/',runn,'/'];
                 % Find how many files are to be loaded/produced
                 files = dir([vardir '*.nc']);
                 
@@ -226,7 +278,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
             
             %% Load only the files required for the temporal subset
             % If specific years are required
-            if isfield(inputs,'TemporalRange')
+            if exist('TemporalStart','var')
                 % Find which files cover the required start and end dates
                 for i = 1:length(files)
                     % Find when the netCDF files start and end
@@ -234,12 +286,12 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                     fend = files(i).name(end-10:end-3);
                     
                     % Find netCDF file that contains required start
-                    if str2double(fstart) <= inputs.TemporalRange(1) && str2double(fend) >= inputs.TemporalRange(1)
+                    if str2double(fstart) <= TemporalStart && str2double(fend) >= TemporalStart
                         startload = i;
                     end
                     
                     % Find netCDF file that contains required end
-                    if str2double(fstart) <= inputs.TemporalRange(2) && str2double(fend) >= inputs.TemporalRange(2)
+                    if str2double(fstart) <= TemporalEnd && str2double(fend) >= TemporalEnd
                         endload = i;
                     end
                 end
@@ -275,7 +327,7 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
             end
             
             % Pull out the required dates and times
-            [data,dates] = subset_temporal(data,dates,inputs.TemporalRange,inputs.AnnSummer);
+            [data,dates] = subset_temporal(data,dates,[TemporalStart,TemporalEnd],inputs.AnnSummer);
             
             
             %% Output ARCADIA data for grid cell or regional mean
@@ -287,33 +339,36 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
                 for i = 1:length(data(:,1,1))
                     for j = 1:length(data(1,:,1))
                         
-                        % Set csv output file name
-                        if strcmp(DataType,'HadUKGrid')
-                            csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_HadUK-Grid-',Dataset,'_',Variable,'.csv'];
-                        elseif strcmp(DataType,'UKCP18')
-                            csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_UKCP18-',res(1:end-1),'_',Variable,'.csv'];
+                        % Only save if the point is on land
+                        if LSM(i,j) == 1
+                            
+                            % Set csv output file name
+                            if strcmp(DataType,'HadUKGrid')
+                                csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_HadUK-Grid-',Dataset,'_',Variable,'.csv'];
+                            elseif strcmp(DataType,'UKCP18')
+                                csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_UKCP18-',res(1:end-1),'_',Variable,'.csv'];
+                            end
+                            
+                            
+                            %                         % If csv has been created already
+                            %                         if exist(csv_name,'file')
+                            %                             % Load existing csv
+                            %                             data_csv = csvread(csv_name);
+                            %                             % Extract individual grid cell for current dataset
+                            %                             data_csv_temp = squeeze(data(i,j,:))';
+                            %                             % Concatenate this with the existing csv and resave
+                            %                             data_csv = cat(1,data_csv,data_csv_temp);
+                            %                             csvwrite(csv_name,data_csv)
+                            %                         else
+                            %                             % Otherwise extract individual grid cell for current
+                            %                             % dataset and create new csv
+                            %                             data_csv = squeeze(data(i,j,:))';
+                            %                             csvwrite(csv_name,data_csv)
+                            %                         end
+                            
+                            % Save the data as a .csv file
+                            dlmwrite(csv_name,squeeze(data(i,j,:))','-append','newline','pc','delimiter',',','precision',4);
                         end
-                        
-                        
-%                         % If csv has been created already
-%                         if exist(csv_name,'file')
-%                             % Load existing csv
-%                             data_csv = csvread(csv_name);
-%                             % Extract individual grid cell for current dataset
-%                             data_csv_temp = squeeze(data(i,j,:))';
-%                             % Concatenate this with the existing csv and resave
-%                             data_csv = cat(1,data_csv,data_csv_temp);
-%                             csvwrite(csv_name,data_csv)
-%                         else
-%                             % Otherwise extract individual grid cell for current
-%                             % dataset and create new csv
-%                             data_csv = squeeze(data(i,j,:))';
-%                             csvwrite(csv_name,data_csv)
-%                         end
-
-                        % Save the data as a .csv file
-                        dlmwrite(csv_name,squeeze(data(i,j,:))','-append','newline','pc','delimiter',',','precision',4);
-
                     end
                 end
                 

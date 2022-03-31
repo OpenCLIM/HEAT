@@ -34,8 +34,8 @@ startt = now;
 if strcmp(pwd,'/data')
     disp(' ')
     disp('Running in Docker container')
-    disp('Copying PreProcessedData to correct location')
-    copyfile inputs/UKCP18dir/PreProcessedData/* PreProcessedData/
+%     disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
+%     copyfile inputs/UKCP18dir/PreProcessedData/* PreProcessedData/
     disp('-----')
 end
 
