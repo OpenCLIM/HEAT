@@ -1,20 +1,26 @@
-kind: Model
 api_version: v1beta1
-metadata:
-    display_name: HEAT
-    name: heat
-    summary: OpenCLIM Heat Extremes Analysis Toolbox (HEAT)
-    publisher: University of Bristol
-    source_code: https://github.com/OpenCLIM/HEAT
-    description: > The Heat Extremes Analysis Toolbox (HEAT) has been created for the OpenCLIM project, for integration of heatwave and related temperature and heat stress extremes analysis with other climate risk modelling. 
-spec:
-    inputs:
-        dataslots:
-            - name: Dataslot
-              description: A dataslot that should contain a netCDF of UKCP18 data
-              default:
-                  - uid: 30a57232-2c9a-41d9-8497-e870321ac8bf
-                    versionUid: a0bae768-d292-41fb-b064-5e715e20d847
-              path: dataslot-name
-              required: true
-
+kind: Model
+metadata: 
+  description: "The Heat Extremes Analysis Toolbox (HEAT) has been created for the OpenCLIM project, for integration of heatwave and related temperature and heat stress extremes analysis with other climate risk modelling. \n"
+  display_name: HEAT
+  name: heat
+  publisher: "University of Bristol"
+  source_code: "https://github.com/OpenCLIM/HEAT"
+  summary: "OpenCLIM Heat Extremes Analysis Toolbox (HEAT)"
+spec: 
+  inputs: 
+    dataslots: 
+      - 
+        default: 
+          - 540cc450-edee-433c-a0b1-bda4ff932e0c
+        description: "A dataslot that should contain a subset of UKCP18 netCDFs"
+        name: UKCP18dir
+        path: /data/inputs/UKCP18dir
+        required: true
+      -
+        default:
+          - 2c71e587-4457-494c-83ab-c8d3b7d9842c
+        description: "A dataslot for the required pre-processed HEAT data"
+        name: PreProcessedData
+        path: /data/PreProcessedData
+        required: true
