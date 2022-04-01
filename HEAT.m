@@ -33,18 +33,24 @@ startt = now;
 % If running in a docker container, copy data to the correct location
 if strcmp(pwd,'/data')
     disp(' ')
+    disp('You are here:')
+    pwd
     disp('Running in Docker container with these files:')
     ls
     ls('inputs')
     disp(' ')
-    disp('Attempting to unzip directories passed to Docker file')
+
     cd('inputs')
-    untar(gunzip('inputs/UKCP18dir/.tar.gz'))
-    untar(gunzip('inputs/PreProcessedData/.tar.gz'))
+    ls
+    disp('Attempting to unzip directories passed to Docker file')
+    unzip('UKCP18dir.zip')
+    unzip('PreProcessedData.zip')
+    ls
+    disp(' ')
     cd('..')
     
-%     disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
-%     copyfile inputs/PreProcessedData/* PreProcessedData/
+    disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
+    copyfile inputs/PreProcessedData/* PreProcessedData/
     disp('-----')
 end
 
