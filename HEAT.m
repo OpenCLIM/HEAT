@@ -40,17 +40,17 @@ if strcmp(pwd,'/data')
     ls('inputs')
     disp(' ')
 
-    cd('inputs')
-    ls
+%     cd('inputs')
+%     ls
     disp('Attempting to unzip directories passed to Docker file')
-    unzip('UKCP18dir.zip')
-    unzip('PreProcessedData.zip')
-    ls
+    unzip('inputs/UKCP18_subset.zip','inputs/UKCP18dir')
+    unzip('inputs/PreProcessedData.zip','PreProcessedData')
+%     ls
     disp(' ')
-    cd('..')
+%     cd('..')
     
-    disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
-    copyfile inputs/PreProcessedData/* PreProcessedData/
+%     disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
+%     copyfile inputs/PreProcessedData/* PreProcessedData/
     disp('-----')
 end
 
