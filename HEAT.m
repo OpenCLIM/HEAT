@@ -31,20 +31,22 @@ init_HEAT
 startt = now;
 
 % If running in a docker container, copy data to the correct location
-if strcmp(pwd,'/data')
+if strcmp(pwd,'/code')
     disp(' ')
     disp('You are here:')
     pwd
     disp('Running in Docker container with these files:')
     ls
-    ls('inputs')
+    disp(' ')
+    ls('code')
+%     ls('inputs')
     disp(' ')
 
 %     cd('inputs')
 %     ls
     disp('Attempting to unzip directories passed to Docker file')
-    unzip('/code/UKCP18_subset.zip','inputs/UKCP18dir')
-    unzip('inputs/PreProcessedData.zip','PreProcessedData')
+    unzip('/code/UKCP18_subset.zip','/code/UKCP18dir')
+    unzip('/code/PreProcessedData.zip','/code/PreProcessedData')
 %     ls
     disp(' ')
 %     cd('..')
