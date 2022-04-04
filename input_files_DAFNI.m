@@ -18,7 +18,7 @@ inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
 inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
 inputs.SaveDerivedOutput = 0; % OR inputs.SaveDerivedOutput = 0;
 inputs.OverwriteDerivedOutput = 0; % OR inputs.OverwriteDerivedOutput = 1;
-% inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0; 
+inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0; 
 
 
 %% Select dataset(s) to use
