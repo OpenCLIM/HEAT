@@ -15,12 +15,12 @@ spec:
           - 540cc450-edee-433c-a0b1-bda4ff932e0c
         description: "A dataslot that should contain a subset of UKCP18 netCDFs"
         name: UKCP18dir
-        path: inputs/
+        path: inputs/UKCP18dir/
         required: true
       -
         default:
           - cf93c69e-a554-42f0-b1ed-c5e9f5423a03
         description: "A dataslot for the required pre-processed HEAT data"
         name: PreProcessedData
-        path: inputs/
+        path: inputs/PreProcessedData/
         required: true
