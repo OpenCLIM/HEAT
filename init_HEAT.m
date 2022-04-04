@@ -74,8 +74,8 @@ if length(root_dir) >= 14
     % Otherwise, assume running on DAFNI (in a Docker container)
 else
     % Set data directory
-    cd('/data/')
-    UKCP18dir = '/data/inputs/UKCP18dir/';
+    % cd('/data/')
+    UKCP18dir = '/code/UKCP18dir/';
     Outputdir = '/data/outputs/';
 
     % Note: in this case, 'addpath' should have been done before building

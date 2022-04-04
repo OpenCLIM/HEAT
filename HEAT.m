@@ -43,7 +43,7 @@ if strcmp(pwd,'/data')
 %     cd('inputs')
 %     ls
     disp('Attempting to unzip directories passed to Docker file')
-    unzip('inputs/UKCP18_subset.zip','inputs/UKCP18dir')
+    unzip('/code/UKCP18_subset.zip','inputs/UKCP18dir')
     unzip('inputs/PreProcessedData.zip','PreProcessedData')
 %     ls
     disp(' ')
