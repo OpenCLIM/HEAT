@@ -31,10 +31,13 @@ init_HEAT
 startt = now;
 
 % If running in a docker container, copy data to the correct location
-if strcmp(pwd,'/code')
     disp(' ')
     disp('You are here:')
     pwd
+    
+if strcmp(pwd,'/code')
+
+
     disp('Running in Docker container with these files:')
     ls
     disp(' ')
