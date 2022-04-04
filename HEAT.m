@@ -47,9 +47,9 @@ if strcmp(pwd,'/code')
 
 %     cd('inputs')
 %     ls
-    disp('Attempting to unzip directories passed to Docker file')
-    unzip('/code/UKCP18_subset.zip','/code/UKCP18dir')
-    unzip('/code/PreProcessedData.zip','/code/PreProcessedData')
+%     disp('Attempting to unzip directories passed to Docker file')
+%     unzip('/code/UKCP18_subset.zip','/code/UKCP18dir/')
+%     unzip('/code/PreProcessedData.zip','/code/PreProcessedData/')
 %     ls
     disp(' ')
 %     cd('..')
