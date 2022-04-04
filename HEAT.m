@@ -41,7 +41,7 @@ if strcmp(pwd,'/code')
     disp('Running in Docker container with these files:')
     ls
     disp(' ')
-    ls('code')
+%     ls('code')
 %     ls('inputs')
     disp(' ')
 
