@@ -37,6 +37,14 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
     % Set directory paths
     init_HEAT
     
+    % Find out of PreProcessedData exists
+    disp('You are here:')
+    pwd
+    disp('This is here:')
+    ls
+    disp('This is what is in PreProcessedData (or not!):')
+    ls('PreProcessedData')
+    
     % Load xyz data
     load_xyz
     
