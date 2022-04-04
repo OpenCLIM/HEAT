@@ -410,6 +410,6 @@ if strcmp(inputs.WorkflowOutput,'ARCADIA')
     end
 end
 disp('Step 3 complete. These files have been created:')
-ls('/data/outputs/')
+ls(['/data/outputs/',inputs.ExptName])
 end
 

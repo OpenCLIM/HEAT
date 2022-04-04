@@ -41,21 +41,7 @@ if strcmp(pwd,'/code')
     disp('Running in Docker container with these files:')
     ls
     disp(' ')
-%     ls('code')
-%     ls('inputs')
-    disp(' ')
 
-%     cd('inputs')
-%     ls
-%     disp('Attempting to unzip directories passed to Docker file')
-%     unzip('/code/UKCP18_subset.zip','/code/UKCP18dir/')
-%     unzip('/code/PreProcessedData.zip','/code/PreProcessedData/')
-%     ls
-    disp(' ')
-%     cd('..')
-    
-%     disp('Copying PreProcessedData to correct location') % ATKA: commented out to test if this was the source of error on DAFNI
-%     copyfile inputs/PreProcessedData/* PreProcessedData/
     disp('-----')
 end
 
