@@ -1,5 +1,5 @@
 function [] = HEAT(inputs,varargin)
-% HEAT v.1.0
+% HEAT v.1.1
 %
 % Run the OpenCLIM Heat Extremes Analysis Toolbox (HEAT). This function
 % does an inital setup and check of file directories, then goes through
@@ -31,17 +31,17 @@ init_HEAT
 startt = now;
 
 % If running in a docker container, copy data to the correct location
-    disp(' ')
-    disp('You are here:')
-    pwd
-    
+disp(' ')
+disp('You are here:')
+pwd
+
 if strcmp(pwd,'/code')
-
-
+    
+    
     disp('Running in Docker container with these files:')
     ls
     disp(' ')
-
+    
     disp('-----')
 end
 
@@ -52,11 +52,41 @@ end
 % input_files_TEMPLATE.m first, in which case the structures this script
 % creates can be input.
 
-% Check if inputs is a script, in which case run it
-if ~exist('inputs','var')
+% If running on DAFNI, no 'inputs' will have been passed directly to HEAT.m
+% First, check if an inputs file has been uploaded/included in the
+% workflow (should have been moved from /data/inputs/input_file/* to
+% /code/inputs.m): 
+if exist('inputs.m','file')
+    run(inputs)
+    DAFNI = 1;
+% If a file has not been uploaded, then load the default DAFNI template:
+elseif ~exist('inputs','var')
     input_files_DAFNI
+    DAFNI = 1;
 end
 
+% Then overwrite defaults with environment variables if running on DAFNI:
+env_varn = getenv('VARNAME');
+env_scen = getenv('SCENARIO');
+% env_tims = getenv('TIMEPERIOD_S');
+% env_timl = getenv('TIMEPERIOD_L');
+
+if ~isempty(env_varn)
+    inputs.Variable = {string(env_varn)};
+end
+if ~isempty(env_scen)
+    inputs.Scenario = {string(env_scen)};
+end
+% TO DO: add in this option
+% if ~isempty(env_tims)
+%     inputs.TemporalRange = string(env_tims);
+% end
+% if ~isempty(env_timl)
+%     inputs.Variable = {string(env_timl)};
+% end
+
+% Otherwise, if not running on DAFNI:
+% Check if inputs is a script, in which case run it
 if ischar(inputs)
     if exist(inputs,'file')
         run(inputs)
@@ -85,6 +115,8 @@ if ~isfield(inputs,'Domain')
     inputs.Domain = 'UK';
 end
 
+
+
 %% Find which steps of HEAT to run
 % Set default to not run steps
 runstep1 = 0;
@@ -92,9 +124,14 @@ runstep2 = 0;
 runstep3 = 0;
 
 % Run steps if necessary
-if isfield(inputs,'SaveDerivedOutput')
-    if inputs.SaveDerivedOutput == 1
-        runstep1 = 1;
+if DAFNI == 1
+    disp('Step 1 is currently disabled on DAFNI.')
+    disp('Processing heat stress metrics must be done on an alternative machine.')
+else
+    if isfield(inputs,'SaveDerivedOutput')
+        if inputs.SaveDerivedOutput == 1
+            runstep1 = 1;
+        end
     end
 end
 
@@ -293,31 +330,31 @@ if runstep2 == 1
         end
         
     end
-  
-        
-%         % Load model data if required
-%         if ismember(inputs.DataType(d),'HadUKGrid')
-%             
-%             % Load each required simulation
-%             for s = 1:length(inputs.Dataset)
-%                 Dataset = char(inputs.Dataset(s));
-%                 
-%                 % Load each required variable
-%                 for v = 1:length(inputs.Variable)
-%                     Variable = char(inputs.Variable(v));
-%                     
-%   
-%                     %% Run Step 2: Extremes analysis
-%                     if runstep2 == 1
-%                         HEAT_step2(inputs,data,xyz,Dataset,Variable,inputs.ExptName)
-%                     end
-%                     
-%                 end
-%             end
-%             
-%         end
-        
-%     end
+    
+    
+    %         % Load model data if required
+    %         if ismember(inputs.DataType(d),'HadUKGrid')
+    %
+    %             % Load each required simulation
+    %             for s = 1:length(inputs.Dataset)
+    %                 Dataset = char(inputs.Dataset(s));
+    %
+    %                 % Load each required variable
+    %                 for v = 1:length(inputs.Variable)
+    %                     Variable = char(inputs.Variable(v));
+    %
+    %
+    %                     %% Run Step 2: Extremes analysis
+    %                     if runstep2 == 1
+    %                         HEAT_step2(inputs,data,xyz,Dataset,Variable,inputs.ExptName)
+    %                     end
+    %
+    %                 end
+    %             end
+    %
+    %         end
+    
+    %     end
 end
 
 

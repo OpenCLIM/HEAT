@@ -9,6 +9,51 @@ metadata:
   summary: "OpenCLIM Heat Extremes Analysis Toolbox (HEAT)"
 spec: 
   inputs: 
+    parameters:
+      - 
+        name: VARNAME
+        title: Variable Name
+        description: The climate variable you want to analyse
+        type: string
+        options: 
+          - name: Tmax
+            title: Daily max. temperature
+          - name: Tmean
+            title: Daily mean temperature
+        default: Tmean
+        required: true
+      -
+        name: SCENARIO
+        title: Warming scenario
+        description: The warming level above pre-industrial you want to analyse
+        type: string
+        options: 
+          - name: past
+            title: Recent past (1990-2019)
+          - name: 1.5
+            title: 1.5 °C warming above pre-industrial
+          - name: 2.0
+            title: 2.0 °C warming above pre-industrial
+          - name: 3.0
+            title: 3.0 °C warming above pre-industrial
+        required: false
+      -
+        name: TIMEPERIOD_S
+        title: Time period start
+        description: The first year of the time period you want to analyse
+        type: integer
+        min: 1981
+        max: 2079
+        required: false
+      -
+        name: TIMEPERIOD_L
+        title: Time period length
+        description: The length of the time period you want to analyse
+        type: integer
+        min: 1
+        max: 99
+        required: false
+
     dataslots: 
       - 
         default: 
@@ -24,3 +69,9 @@ spec:
         name: PreProcessedData
         path: inputs/PreProcessedData/
         required: true
+      -
+        description: "An optional dataslot to include your own inputs.m file "
+        name: InputsFile
+        path: inputs/input_file/
+        required: false
+
