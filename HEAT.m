@@ -57,6 +57,7 @@ end
 % workflow (should have been moved from /data/inputs/input_file/* to
 % /code/inputs.m): 
 if exist('inputs.m','file')
+    disp('Inputs file passed to Docker: loading now')
     run(inputs)
     DAFNI = 1;
 % If a file has not been uploaded, then load the default DAFNI template:
@@ -72,9 +73,11 @@ env_scen = getenv('SCENARIO');
 % env_timl = getenv('TIMEPERIOD_L');
 
 if ~isempty(env_varn)
+    disp('Environment variable found for Variable: updating inputs file')
     inputs.Variable = {string(env_varn)};
 end
 if ~isempty(env_scen)
+    disp('Environment variable found for Scenario: updating inputs file')
     inputs.Scenario = {string(env_scen)};
 end
 % TO DO: add in this option
