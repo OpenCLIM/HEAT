@@ -58,7 +58,7 @@ end
 % /code/inputs.m): 
 if exist('inputs.m','file')
     disp('Inputs file passed to Docker: loading now')
-    run('inputs.m')
+    inputs
     DAFNI = 1;
 % If a file has not been uploaded, then load the default DAFNI template:
 elseif ~exist('inputs','var')
