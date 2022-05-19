@@ -53,41 +53,12 @@ end
 % creates can be input.
 
 % If running on DAFNI, no 'inputs' will have been passed directly to HEAT.m
-% First, check if an inputs file has been uploaded/included in the
-% workflow (should have been moved from /data/inputs/input_file/* to
-% /code/inputs.m): 
-if exist('inputs.m','file')
-    disp('Inputs file passed to Docker: loading now')
-    run('inputs.m')
-    DAFNI = 1;
-% If a file has not been uploaded, then load the default DAFNI template:
-elseif ~exist('inputs','var')
+% Load the default DAFNI template:
+if ~exist('inputs','var')
     disp('No inputs file passed to Docker: running default for DAFNI')
     input_files_DAFNI
-    DAFNI = 1;
 end
 
-% Then overwrite defaults with environment variables if running on DAFNI:
-env_varn = getenv('VARNAME');
-env_scen = getenv('SCENARIO');
-% env_tims = getenv('TIMEPERIOD_S');
-% env_timl = getenv('TIMEPERIOD_L');
-
-if ~isempty(env_varn)
-    disp('Environment variable found for Variable: updating inputs file')
-    inputs.Variable = {env_varn};
-end
-if ~isempty(env_scen)
-    disp('Environment variable found for Scenario: updating inputs file')
-    inputs.Scenario = {string(env_scen)};
-end
-% TO DO: add in this option
-% if ~isempty(env_tims)
-%     inputs.TemporalRange = string(env_tims);
-% end
-% if ~isempty(env_timl)
-%     inputs.Variable = {string(env_timl)};
-% end
 
 % Otherwise, if not running on DAFNI:
 % Check if inputs is a script, in which case run it
@@ -128,16 +99,12 @@ runstep2 = 0;
 runstep3 = 0;
 
 % Run steps if necessary
-if DAFNI == 1
-    disp('Step 1 is currently disabled on DAFNI.')
-    disp('Processing heat stress metrics must be done on an alternative machine.')
-else
-    if isfield(inputs,'SaveDerivedOutput')
-        if inputs.SaveDerivedOutput == 1
-            runstep1 = 1;
-        end
+if isfield(inputs,'SaveDerivedOutput')
+    if inputs.SaveDerivedOutput == 1
+        runstep1 = 1;
     end
 end
+
 
 if isfield(inputs,'OutputType')
     runstep2 = 1;

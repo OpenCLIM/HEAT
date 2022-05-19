@@ -11,6 +11,12 @@ spec:
   inputs: 
     parameters:
       - 
+        name: EXPNAME
+        title: Experiment Name
+        description: Experiment name for easier future identification of results
+        type: string
+        required: false
+      - 
         name: VARNAME
         title: Variable Name
         description: The climate variable you want to analyse
@@ -70,8 +76,8 @@ spec:
         path: inputs/PreProcessedData/
         required: true
       -
-        description: "An optional dataslot to include your own inputs.m file "
-        name: InputsFile
-        path: inputs/input_file/
+        description: "An optional dataslot to include and urban % map"
+        name: Urban
+        path: inputs/UrbanData/
         required: false
 
