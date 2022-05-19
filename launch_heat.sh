@@ -8,6 +8,5 @@ tar -xf /code/UKCP18_subset.tar.gz -C /code/UKCP18dir/
 cp /data/inputs/input_file/* /code/
 
 
-
 # echo "Running containerised model"
 /usr/bin/mlrtapp/HEAT

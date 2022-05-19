@@ -74,7 +74,7 @@ env_scen = getenv('SCENARIO');
 
 if ~isempty(env_varn)
     disp('Environment variable found for Variable: updating inputs file')
-    inputs.Variable = {string(env_varn)};
+    inputs.Variable = {env_varn};
 end
 if ~isempty(env_scen)
     disp('Environment variable found for Scenario: updating inputs file')
