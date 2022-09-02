@@ -80,7 +80,7 @@ else
     % Set data directory
     % cd('/data/')
     Inputdir = '/data/inputs/';
-    UKCP18dir = '/data/inputs/UKCP18dir/';
+    UKCP18dir = '/data/inputs/ClimateData/';
     Outputdir = '/data/outputs/';
 
     % Note: in this case, 'addpath' should have been done before building
