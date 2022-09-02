@@ -57,10 +57,10 @@ end
 %% Extract the corresponding days for the desired period
 if ndims(var) == 3
     varsum = var(:,:,summerid);
-else 
-    if ndims(var) == 2
-        varsum = var(:,summerid);
-    end
+elseif ndims(var) == 2
+    varsum = var(:,summerid);
+elseif ndims(var) == 1
+    varsum = var(summerid);
 end
 
 

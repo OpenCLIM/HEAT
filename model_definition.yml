@@ -28,6 +28,12 @@ spec:
             title: Daily mean temperature
         default: Tmean
         required: true
+      - 
+        name: BIASCORR
+        title: Bias Correction
+        description: Use bias corrected climate data?
+        type: bool
+        required: true
       -
         name: SCENARIO
         title: Warming scenario
@@ -64,9 +70,9 @@ spec:
       - 
         default: 
           - 750e5aaa-d03c-49b2-a862-0d2446e0d9bd
-        description: "A dataslot that should contain a subset of UKCP18 netCDFs"
-        name: UKCP18dir
-        path: inputs/UKCP18dir/
+        description: "A dataslot that should contain netCDF climate data"
+        name: ClimateData
+        path: inputs/ClimateData/
         required: true
       -
         default:

@@ -21,27 +21,24 @@ function [] = HEAT(inputs,varargin)
 %
 
 %% Initialise
-disp('Running HEAT v.1.0')
+disp('Running HEAT v.1.1')
 disp('-----')
 
-% Set directory paths
+% Set directory paths: essential for running in non-Docker environments
 init_HEAT
 
 % Record start time
 startt = now;
 
-% If running in a docker container, copy data to the correct location
+% For testing purposes, to show the correct data has copied to the Docker
+% container (remove this later):
 disp(' ')
 disp('You are here:')
 pwd
-
 if strcmp(pwd,'/code')
-    
-    
     disp('Running in Docker container with these files:')
     ls
     disp(' ')
-    
     disp('-----')
 end
 
@@ -56,7 +53,11 @@ end
 % Load the default DAFNI template:
 if ~exist('inputs','var')
     disp('No inputs file passed to Docker: running default for DAFNI')
+    DAFNI = 1; % A helpful flag for later on
     input_files_DAFNI
+    disp(' ')
+else
+    DAFNI = 0;
 end
 
 
@@ -74,7 +75,7 @@ if ischar(inputs)
     % Otherwise if inputs is a structure, then adjust the name ready to run HEAT
 else
     if ~isstruct(inputs)
-        disp('Error: inputs1 must be a structure');
+        disp('Error: inputs must be a structure');
         return
     end
     if ~isfield(inputs,'ExptName')
@@ -85,71 +86,66 @@ else
     end
 end
 
-% Set default domain to UK if not specified
-if ~isfield(inputs,'Domain')
-    inputs.Domain = 'UK';
+
+%% Update fields if Environment variables are provided
+disp('Updating inputs with environment variables')
+% Then overwrite defaults with environment variables if running on DAFNI:
+env_BC = getenv('BIASCORR');
+env_expn = getenv('EXPNAME');
+env_varn = getenv('VARNAME');
+env_scen = getenv('SCENARIO');
+env_tims = getenv('TIMEPERIOD_S');
+env_timl = getenv('TIMEPERIOD_L');
+
+if ~isempty(env_BC)
+    env_BC
+    if strcmp(env_BC,'y')
+        disp('Environment variable found for bias correction option: updating inputs file')
+        inputs.BiasCorr = 1;
+    end
 end
 
+if ~isempty(env_expn)
+    disp('Environment variable found for Experiment Name: updating inputs file')
+    inputs.ExptName = {env_expn};
+%     inputs.ExptName
+end
+if ~isempty(env_varn)
+    disp('Environment variable found for Variable: updating inputs file')
+    inputs.Variable = {env_varn};
+%     inputs.Variable
+end
+if ~isempty(env_scen)
+    disp('Environment variable found for Scenario: updating inputs file')
+    inputs.Scenario = {string(env_scen)};
+end
+
+if ~isempty(env_tims)
+    disp('Environment variable found for defining time period: updating inputs file')
+    inputs.PeriodStart = env_tims;
+end
+
+if ~isempty(env_timl)
+    inputs.PeriodLength = env_timl;
+end
+disp(' ')
 
 
 %% Find which steps of HEAT to run
 % Set default to not run steps
-runstep1 = 0;
-runstep2 = 0;
-runstep3 = 0;
+runanalysis = 0;
+runworkflow = 0;
 
 % Run steps if necessary
-if isfield(inputs,'SaveDerivedOutput')
-    if inputs.SaveDerivedOutput == 1
-        runstep1 = 1;
+if isfield(inputs,'OutputType')
+    if strcmp(string(inputs.OutputType),'Analysis')
+        runanalysis = 1;
+    elseif strcmp(string(inputs.OutputType),'workflow_netCDF')
+        runworkflow = 1;
     end
 end
 
 
-if isfield(inputs,'OutputType')
-    runstep2 = 1;
-end
-
-if isfield(inputs,'WorkflowOutput')
-    runstep3 = 1;
-end
-
-
-
-% % If multiple inputs are provided, go through to find if running further steps:
-% for i = 1:length(varargin)
-%
-%     % Set inputs2 and inputs3 if they are provided
-%     if isstruct(varargin{i})
-%         if isfield(varargin{i},'OutputType')
-%             inputs2 = varargin{i};
-%             % Switch on step
-%             runstep2 = 1;
-%         else
-%             if isfield(varargin{i},'ExampleAdaptationParameter')
-%                 inputs3 = varargin{i};
-%                 % Switch on step
-%                 runstep3 = 1;
-%             end
-%
-%             % Can add further steps here in the future as necessary.
-%         end
-%     end
-% end
-
-% % If inputs were provided as a script, structures inputs2, inputs3 etc. may
-% % exist, in which case these steps need run:
-% if exist('inputs2','var')
-%     if isstruct(inputs2)
-%         runstep2 = 1;
-%     end
-% end
-%
-% if exist('inputs3','var')
-%     if isstruct(inputs3)
-%         runstep3 = 1;
-%     end
-% end
 
 
 %% Set up output directory
@@ -160,7 +156,11 @@ if strcmp(inputs.ExptName,'DerivedData')
 end
 
 % Next, check if output directory already exists
-if exist([Outputdir,'/',inputs.ExptName],'dir')
+if DAFNI == 0
+    Outputdir = [Outputdir,inputs.ExptName,'/'];
+end
+
+if exist(Outputdir,'dir')
     
     % Check if overwriting has been authorised in input file
     if ~isfield(inputs,'OverwriteExpt')
@@ -187,179 +187,570 @@ if exist([Outputdir,'/',inputs.ExptName],'dir')
     
 else
     % Create output directory
-    mkdir([Outputdir,'/',inputs.ExptName])
+    mkdir(Outputdir)
 end
 
 
 % Save input files for future reference
-save([Outputdir,'/',inputs.ExptName,'/inputs.mat'],'inputs')
+save([Outputdir,'inputs.mat'],'inputs')
 
 
-%% Produce derived data if required (step 1)
-% This step calculates variables such as sWBGT, which are produced from
-% multiple other raw climate variables. Due to computational limits on
-% DAFNI, this function is not expected to be used on DAFNI: these will be
-% produced elsewhere and uploaded. The code for step 1 is retained here for
-% completeness to show how these variables were computed offline.
-
-if runstep1 == 1
-    
-    % Go through each required dataset/simulation/variable
-    % Data hierarchy:
-    % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
-    
-    for d = 1:length(inputs.DataType)
-        DataType = char(inputs.DataType(d));
-        
-        % Load model data if required
-        if ismember(inputs.DataType(d),'UKCP18')
-            
-            % Load each required simulation
-            for s = 1:length(inputs.Dataset)
-                Dataset = char(inputs.Dataset(s));
-                
-                % Only attempt to load UKCP18-related data
-                if strcmp(Dataset(1),'G') || strcmp(Dataset(1),'R') || strcmp(Dataset(1),'C')
-                    
-                    % Load each required variable
-                    for v = 1:length(inputs.Variable)
-                        Variable = char(inputs.Variable(v));
-                        
-                        if strcmp(Variable(1),'T') % Any temperature variable might as well be loaded from raw data for UKCP18 models
-                            disp('No benefit in saving derived data: simply use raw temperature data')
-                            disp('-----')
-                        else
-                            % Run Step 1: Produce derived data
-                            HEAT_step1(inputs,DataType,Dataset,Variable);
-                        end
-                    end
-                end
-            end
-            
-        end
-        
-        
-        % Load observational data if required
-        if ismember(inputs.DataType(d),'HadUKGrid')
-            
-            % Load each required simulation
-            for s = 1:length(inputs.Dataset)
-                Dataset = char(inputs.Dataset(s));
-                
-                % Only attempt to load UKCP18-related data
-                if strcmp(Dataset(1),'1') || strcmp(Dataset(1),'2') || strcmp(Dataset(1),'6')
-                    
-                    % Load each required variable
-                    for v = 1:length(inputs.Variable)
-                        Variable = char(inputs.Variable(v));
-                        
-                        % If using 1km, 12km or 60km there is no benefit in
-                        % deriving anything for Tmax or Tmin
-                        if ~strcmp(Dataset,'2km')
-                            if strcmp(Variable,'Tmin') || strcmp(Variable,'Tmax') % Tmax and Tmin might as well be loaded from raw data for UKCP18 models, however Tmean could be derived at daily resolution
-                                disp('No benefit in saving derived data: simply use raw max./min. temperature data')
-                                disp('-----')
-                            elseif strcmp(Variable,'VPmax') || strcmp(Variable,'VPmin')
-                                disp('No benefit in saving derived data: all VP data is daily mean')
-                                disp('-----')
-                            else
-                                % Run Step 1: Produce derived data
-                                HEAT_step1(inputs,DataType,Dataset,Variable);
-                            end
-                            
-                            % HadUK-Grid is not available at 2km resolution so can
-                            % be regridded as derived data for any variable
-                        else
-                            % Run Step 1: Produce derived data
-                            HEAT_step1(inputs,DataType,Dataset,Variable);
-                        end
-                        
-                    end
-                end
-            end
-            
-        end
-        
-    end
-end
-
-
-%% Produce diagnostic data if required (step 2)
-if runstep2 == 1
-    
-    % Go through each required dataset/simulation/variable
-    % Data hierarchy:
-    % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
-    
-    % Load each required variable
-    for v = 1:length(inputs.Variable)
-        Variable = char(inputs.Variable(v));
-        
-        % Run Step 2: Extremes analysis
-        if runstep2 == 1
-            HEAT_step2(inputs,Variable)
-        end
-        
-    end
-    
-    
-    %         % Load model data if required
-    %         if ismember(inputs.DataType(d),'HadUKGrid')
-    %
-    %             % Load each required simulation
-    %             for s = 1:length(inputs.Dataset)
-    %                 Dataset = char(inputs.Dataset(s));
-    %
-    %                 % Load each required variable
-    %                 for v = 1:length(inputs.Variable)
-    %                     Variable = char(inputs.Variable(v));
-    %
-    %
-    %                     %% Run Step 2: Extremes analysis
-    %                     if runstep2 == 1
-    %                         HEAT_step2(inputs,data,xyz,Dataset,Variable,inputs.ExptName)
-    %                     end
-    %
-    %                 end
-    %             end
-    %
-    %         end
-    
-    %     end
-end
-
-
-%% Generate output for other models in workflows (step 3)
-if runstep3 == 1
+%% If an experiment has already been run producing workflow output with this name, delete it
+if runworkflow == 1
     
     for v = 1:length(inputs.Variable)
         Variable = char(inputs.Variable(v));
         
         % Check if this file has already been derived:
-        froot = [Outputdir,'/',inputs.ExptName,'/']; % Take the file name...
-        files = dir([froot '*',Variable,'.csv']); % Then check if any files exist with this root
+        froot = Outputdir; % Take the file name...
+        files = dir([froot '*.nc']); % Then check if any files exist with this root
         
         % If so, delete
         if ~isempty(files)
+            disp('HARM-ready .nc files already exist: deleting these.')
             for f = 1:length(files)
                 file = [files(f).folder,'/',files(f).name];
                 delete(file)
             end
         end
     end
+end
+
+%% Start to load data for analysis
+
+% Load xyz data and regions
+load_xyz
+load_regions
+
+% Create blank output array if calculating acclimatisation
+if isfield(inputs,'MMTpctile')
+	reg_acclim = nan(length(inputs.Dataset),13,2); % Dims: models x regions x time slices
+    inputs.AnnSummer = 'Annual'; % This only works for annual data
+end
+
+%% Go through each UKCP18 simulation
+for s = 1:length(inputs.Dataset)
+    Dataset = char(inputs.Dataset(s));
     
-    for d = 1:length(inputs.DataType)
-        DataType = char(inputs.DataType(d));
-        
-        % Load each required variable
-        for v = 1:length(inputs.Variable)
-            Variable = char(inputs.Variable(v));
+    if strcmp(inputs.DataType,'UKCP18')
+        % Find resolution
+        if strcmp(Dataset(1:2),'RC')
+            res = '12km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_RCM;
+            lons = long_UK_RCM;
+            LSM = LSM12;
+            UK_area = areas_12km_frac_UK;
+            reg_area = areas_12km_frac_regions;
             
-            HEAT_step3(inputs,DataType,Variable);
+        elseif strcmp(Dataset(1:2),'CP')
+            res = '2km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_CPM;
+            lons = long_UK_CPM;
+            LSM = LSM2;
+%             reg_area = areas_CPM_frac_regions;
+            
+        elseif strcmp(Dataset(1:2),'GC')
+            res = '60km/';
+            runn = ['run',Dataset(5:6)];
+            lats = lat_UK_GCM;
+            lons = long_UK_GCM;
+            LSM = LSM60;
+            UK_area = areas_60km_frac_UK;
+            reg_area = areas_60km_frac_regions;
+            
+        elseif strcmp(Dataset(1:2),'CM')
+            res = '60km/';
+            runn = ['run',Dataset(7:8)];
+            lats = lat_UK_GCM;
+            lons = long_UK_GCM;
+            LSM = LSM60;
+            UK_area = areas_60km_frac_UK;
+            reg_area = areas_60km_frac_regions;
+        end
+        
+        % Get rid of res sub-directory if using on DAFNI
+        if DAFNI == 1
+            res = [];
+        end
+        
+        % Update file path and netCDF dims if using bias corr. data
+        if inputs.BiasCorr == 1
+            if DAFNI == 0
+                BCdir = 'BiasCorrected/';
+            else 
+                BCdir = [];
+            end
+            % Find location of netCDF data for the required variable
+            % Set default domain to load as whole of dataset for T vars
+            ncstarts = [1 1 1];
+            ncends = [Inf Inf Inf];
+            % Dimension of yyyymmdd var for T vars
+            datedim = 1;
+        else
+            BCdir = [];
+            % Find location of netCDF data for the required variable
+            % Set default domain to load as whole of dataset for T vars
+            ncstarts = [1 1 1 1];
+            ncends = [Inf Inf Inf Inf];
+            % Dimension of yyyymmdd var for T vars
+            datedim = 2;
+        end
+        
+        
+        % Find out if temporal subsetting is required or if scenario is
+        % required, and if so, set temporal start and end:
+        if isfield(inputs,'PeriodStart')
+            TemporalStart = inputs.PeriodStart;
+            if isfield(inputs,'PeriodLength')
+                TemporalEnd = inputs.PeriodStart + inputs.PeriodLength - 1;
+            else
+                TemporalEnd = inputs.PeriodStart + 29;
+            end
+            
+            TemporalStart = str2double([num2str(TemporalStart),'0101']);
+            TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
+            
+        elseif isfield(inputs,'Scenario')
+            % Load the years each scenario reaches a warming level
+            load('PreProcessedData/tas_GCM_glob_thresh_arr_arnell.mat')
+            % TO DO: add option so users can upload their own time slice
+            % info
+            
+            % Look up the correct model run from the table
+            modelslist = {'run01','run04','run05','run06','run07','run08','run09','run10','run11','run12','run13','run15'};
+            modelid = find(contains(modelslist,runn));
+            
+            % Read the start year of period
+            if strcmp(inputs.Scenario,'past')
+                TemporalStart = 1990;
+            elseif strcmp(inputs.Scenario,'1.5')
+                TemporalStart = tas_GCM_glob_thresh_arr_arnell(1,modelid);
+            elseif strcmp(inputs.Scenario,'2.0')
+                TemporalStart = tas_GCM_glob_thresh_arr_arnell(2,modelid);
+            elseif strcmp(inputs.Scenario,'3.0')
+                TemporalStart = tas_GCM_glob_thresh_arr_arnell(4,modelid);
+            elseif strcmp(inputs.Scenario,'4.0')
+                TemporalStart = tas_GCM_glob_thresh_arr_arnell(6,modelid);
+            end
+            
+            % Set max time period to 2050-2079 (end of RCM simulations)
+            if TemporalStart > 2050
+                TemporalStart = 2050;
+            end
+            
+            % Get end year
+            TemporalEnd = TemporalStart+29;
+            
+            % Convert years to correct format
+            TemporalStart = str2double([num2str(TemporalStart),'0101']);
+            TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
+        end
+        
+        
+        % Find list of correct data for this variable
+        if strcmp(inputs.Variable,'Tmax')
+            % Find what files are available
+            if DAFNI == 0
+                var = 'tasmax/';
+            else 
+                var = [];
+            end
+            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,BCdir,res,var,runn,'/'];
+            % Find how many files are to be loaded/produced
+            files = dir([vardir '*.nc']);
+            
+        elseif strcmp(inputs.Variable,'Tmean')
+            % Find what files are available
+            if DAFNI == 0
+                var = 'tas/';
+            else 
+                var = [];
+            end            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,BCdir,res,var,runn,'/'];
+            % Find how many files are to be loaded/produced
+            files = dir([vardir '*.nc']);
+            
+        elseif strcmp(inputs.Variable,'Tmin')
+            % Find what files are available
+            if DAFNI == 0
+                var = 'tasmin/';
+            else 
+                var = [];
+            end            % Directory of raw data for each required variable
+            vardir = [UKCP18dir,BCdir,res,var,runn,'/'];
+            % Find how many files are to be loaded/produced
+            files = dir([vardir '*.nc']);
+            
+        else % All other heat stress variables are found in  Deriveddir
+            var = char(inputs.Variable);
+            vardir = Deriveddir;
+            % Set default domain to load as whole of dataset for all other vars
+            ncstarts = [1 1 1];
+            ncends = [Inf Inf Inf];
+            % Dimension of yyyymmdd for all other vars
+            datedim = 1;
+            % Find how many files are to be loaded/produced
+            files = dir([vardir,var,'-',inputs.Domain,'-',Dataset,'*.nc']);
+        end
+        
+        % Remove the railing / on the variable name before reading .nc
+        var = var(1:end-1);
+        
+        % Some print outs for testing purposes (remove later):
+        disp('This data directory is being accessed:')
+        vardir
+        disp('These data files are available:')
+        ls(vardir)
+        disp(' ')
+        
+        
+        %% Go through HadUK-Grid data
+        % Set variable, directory and temporal subsetting info for loading
+        % HadUK-Grid observations
+    elseif strcmp(inputs.DataType,'HadUKGrid')
+        % Find resolution
+        if strcmp(Dataset(1:2),'12')
+            res = '12km/';
+            %             runn = ['run',Dataset(5:6)];
+            lats = lat_UK_RCM;
+            lons = long_UK_RCM;
+            LSM = LSM12;
+            
+        elseif strcmp(Dataset(1:2),'2k')
+            res = '2km/';
+            %             runn = ['run',Dataset(5:6)];
+            lats = lat_UK_CPM;
+            lons = long_UK_CPM;
+            LSM = LSM2;
+            
+        elseif strcmp(Dataset(1:2),'60')
+            res = '60km/';
+            %             runn = ['run',Dataset(5:6)];
+            lats = lat_UK_GCM;
+            lons = long_UK_GCM;
+            LSM = LSM60;
+            
+        elseif strcmp(Dataset(1:2),'1k')
+            res = '1km/';
+            %             runn = ['run',Dataset(7:8)];
+            lats = lat_UK_HadUK1;
+            lons = long_UK_HadUK1;
+            LSM = LSM1;
+        end
+        
+        % Find location of netCDF data for the required variable
+        % Set default domain to load as whole of dataset for T vars
+        ncstarts = [1 1 1];
+        ncends = [Inf Inf Inf];
+        % Dimension of yyyymmdd var for T vars
+        datedim = 2;
+        
+        if strcmp(inputs.Variable,'Tmax')
+            % Find what files are available
+            var = 'tasmax';
+            % Directory of raw data for each required variable
+            vardir = [HadUKdir,var,'/',res];
+            % Find how many files are to be loaded/produced
+            files = dir([vardir '*.nc']);
+            
+        elseif strcmp(inputs.Variable,'T')
+            % Find what files are available
+            var = 'T';
+            % Directory of raw data for each required variable
+            vardir = Deriveddir;
+            files = dir([vardir,'T-',inputs.Domain,'-HadUK-Grid-',Dataset,'*.nc']);
+            % Dimension of yyyymmdd for all other vars
+            datedim = 1;
+            
+        elseif strcmp(inputs.Variable,'Tmin')
+            % Find what files are available
+            var = 'tasmin';
+            % Directory of raw data for each required variable
+            vardir = [HadUKdir,var,'/',res];
+            % Find how many files are to be loaded/produced
+            files = dir([vardir '*.nc']);
+            
+        else % All other heat stress variables are found in  Deriveddir
+            var = Variable;
+            vardir = Deriveddir;
+            % Set default domain to load as whole of dataset for all other vars
+            ncstarts = [1 1 1];
+            ncends = [Inf Inf Inf];
+            % Dimension of yyyymmdd for all other vars
+            datedim = 1;
+            files = dir([vardir,var,'-',inputs.Domain,'-HadUK-Grid-',Dataset,'*.nc']);
+        end
+        
+        % Find out if temporal subsetting is required (scenarios not
+        % available for past observations)
+        if isfield(inputs,'PeriodStart')
+            TemporalStart = inputs.PeriodStart;
+            if isfield(inputs,'PeriodLength')
+                TemporalEnd = inputs.PeriodStart + inputs.PeriodLength - 1;
+            else
+                TemporalEnd = inputs.PeriodStart + 29;
+            end
+            
+            TemporalStart = str2double([num2str(TemporalStart),'0101']);
+            TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
             
         end
     end
     
+    
+    % Assuming data files exist, continue with loading
+    if ~isempty(files)
+        
+        %% Spatially subset data as required
+        % Find corners of requested domain
+        if isfield(inputs,'SpatialRange')
+            if length(inputs.SpatialRange(1,:)) == 2 % lat-long box specified to load
+                [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+                [lon_id2,lat_id2] = find_location(inputs.SpatialRange(2,2),inputs.SpatialRange(1,2),lons,lats);
+                
+                ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+                ncends(1) = 1+lon_id2-lon_id1; ncends(2) = 1+lat_id2-lat_id1;
+                
+                % Create an ID field for subsetting e.g. lat-long, areas etc.
+                grid_idx = lon_id1:lon_id2;
+                grid_idy = lat_id1:lat_id2;
+                
+            elseif length(inputs.SpatialRange(1,:)) == 1 % specific grid cell specified
+                [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+                
+                ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+                ncends(1) = 1; ncends(2) = 1;
+                
+                % Create an ID field for subsetting e.g. lat-long, areas etc.
+                grid_idx = lon_id1;
+                grid_idy = lat_id1;
+                
+            end
+            
+        elseif isfield(inputs,'Region')
+            % TO DO: Insert code for selecting specific regions
+        end
+        
+        
+        %% Load only the files required for the temporal subset
+        % If specific years are required
+        if exist('TemporalStart','var')
+            % Find which files cover the required start and end dates
+            for i = 1:length(files)
+                % Find when the netCDF files start and end
+                fstart = files(i).name(end-19:end-12);
+                fend = files(i).name(end-10:end-3);
+                
+                % Find netCDF file that contains required start
+                if str2double(fstart) <= TemporalStart && str2double(fend) >= TemporalStart
+                    startload = i;
+                end
+                
+                % Find netCDF file that contains required end
+                if str2double(fstart) <= TemporalEnd && str2double(fend) >= TemporalEnd
+                    endload = i;
+                end
+            end
+        else
+            startload = 1;
+            endload = length(files);
+        end
+        
+        % Load all of the files between the start and end file
+        for i = startload:endload
+            
+            % File name
+            file = [files(i).folder,'/',files(i).name];
+            
+            % Load temperature for the correct region and concatenate through time if necessary
+            if i == startload
+                data = double(ncread(file,var,ncstarts,ncends));
+                dates = ncread(file,'yyyymmdd');
+                times = ncread(file,'time');
+                projection_x_coordinate = ncread(file,'projection_x_coordinate',ncstarts(1),ncends(1));
+                projection_y_coordinate = ncread(file,'projection_y_coordinate',ncstarts(2),ncends(2));
+            else
+                data = cat(3,data,double(ncread(file,var,ncstarts,ncends)));
+                dates = cat(datedim,dates,ncread(file,'yyyymmdd'));
+                times = cat(1,times,ncread(file,'time'));
+            end
+        end
+        
+        if datedim == 1
+            dates = dates';
+        end
+        
+        
+        % Tidy up the calendar dates:
+        
+        % Update TemporalEnd if there is data for 31st December
+        if strcmp(string(dates(5:8,end)'),'1231')
+            TemporalEnd = TemporalEnd + 1;
+        end
+        
+        % Remove leap year days
+        dates_no_ly = string(dates(5:8,:)');
+        keep_dates = ~strcmp(dates_no_ly,'0229');      
+        times = times(keep_dates);
+        dates = dates(:,keep_dates);
+        data = data(:,:,keep_dates);
+        
+        
+        % Temporally subset to the specific required dates and summer type
+        if ~isfield(inputs,'AnnSummer')
+            inputs.AnnSummer = 'Annual';
+        end
+        
+        if ~exist('grid_idx','var')
+            grid_idx = [1:length(projection_x_coordinate)];
+        end
+        if ~exist('grid_idy','var')
+            grid_idy = [1:length(projection_y_coordinate)];
+        end
+        
+        % If required, calculate acclimatisation baseline
+        if isfield(inputs,'MMTpctile')
+            baseline = prctile(data(:,:,1:7300),inputs.MMTpctile,3); % This takes 1981-2000 as the baseline
+            for reg = 1:13
+                if reg == 13
+                    reg_acclim(s,reg,1) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
+                else
+                    reg_acclim(s,reg,1) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+                end
+            end
+        end
+        
+        
+        % Pull out the required dates and times
+        [data,dates,times] = subset_temporal(data,dates,times,[TemporalStart,TemporalEnd],inputs.AnnSummer);
+                
+        
+        %% Adjust temperature for urban greening
+        
+        
+        
+        %% Produce diagnostic data if required (step 2)
+        if runanalysis == 1
+            
+            % Go through each required dataset/simulation/variable
+            % Data hierarchy:
+            % DataType (e.g. UKCP18, ERA5, CMIP6) -> Dataset (e.g. specific simulation, observation resolution)
+            
+            % Load each required variable
+            for v = 1:length(inputs.Variable)
+                Variable = char(inputs.Variable(v));
+                
+                % Run Step 2: Extremes analysis
+                if runanalysis == 1
+                    HEAT_step2(inputs,Variable)
+                end
+            end
+        end
+        
+        
+%         %% Extract only heatwave days if required
+%         % Extract days depending on threshold definition:
+%         % If an absolute threshold map has been provided
+%         if exist('Thresholds','dir')
+%             disp('Extracting heatwave days based on absolute threshold map')
+%             load('Thresholds/threshmap.mat')
+%             % Note: this currently assumes the threshold map will be
+%             % provided as a raster .mat file. Flexibility to provide this
+%             % in other ways will need to be added later.
+%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,threshmap-10,inputs.Duration,'absolute');
+%             data(HWdays==0) = nan;
+%             disp(' ')
+%             
+%         % If using a percentile threshold across all of UK    
+%         elseif isfield(inputs,'PctThresh')
+%             disp('Extracting heatwave days based on percentile threshold')
+%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,inputs.PctThresh,inputs.Duration,'percentile');
+%             disp(' ')
+%             
+%         % If using a single absolute threshold across all of UK    
+%         elseif isfield(inputs,'AbsThresh')
+%             disp('Extracting heatwave days based on absolute threshold')
+%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,inputs.AbsThresh,inputs.Duration,'absolute');
+%             disp(' ')
+%             
+%         end
+        
+        
+        %% Calculate acclimatisation as shift in regional percentile
+        if isfield(inputs,'MMTpctile')
+            baseline = prctile(data,inputs.MMTpctile,3);
+            for reg = 1:13
+                if reg == 13
+                    reg_acclim(s,reg,2) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
+                else
+                    reg_acclim(s,reg,2) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+                end
+            end
+        end
+        
+        
+        %% Generate output for other models in workflows
+        if runworkflow == 1
+            
+            % Save as netCDF for HARM to use
+            nc_name = [Outputdir,'HEAT-',Dataset,'_',Variable];
+            
+            xyz.dates = dates;
+            xyz.times = times;
+            xyz.projection_x_coordinate = projection_x_coordinate;
+            xyz.projection_y_coordinate = projection_y_coordinate;
+            
+            save_HARM_nc(nc_name,data,xyz,'Tmean')
+            
+%             % csv needs saved for every grid box: go through each lat-long
+%             for i = 1:length(data(:,1,1))
+%                 for j = 1:length(data(1,:,1))
+%                     
+%                     % Only save if the point is on land
+%                     if LSM(i,j) == 1
+%                         
+%                         % Set csv output file name
+%                         if strcmp(inputs.DataType,'HadUKGrid')
+%                             csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_HadUK-Grid-',Dataset,'_',Variable,'.csv'];
+%                         elseif strcmp(inputs.DataType,'UKCP18')
+%                             csv_name = [Outputdir,'/',inputs.ExptName,'/',num2str(i),'_',num2str(j),'_UKCP18-',res(1:end-1),'_',Variable,'.csv'];
+%                         end
+%                         
+%                         % Save the data as a .csv file
+%                         dlmwrite(csv_name,squeeze(data(i,j,:))','-append','newline','pc','delimiter',',','precision',4);
+%                     end
+%                 end
+%             end
+        end
+    end
+end
+
+
+%% Save other outputs that might be required later in workflow
+% Shift in percentiles for acclimatisation
+reg_acclim = reg_acclim(:,:,2) - reg_acclim(:,:,1);
+% First, convert to 2D:
+reg_acclim_2D = zeros(length(grid_idx),length(grid_idy),12); % lon x lat x model sim
+for reg = 1:12
+    mask = UKregions12 == reg;
+    for sim = 1:12
+        reg_acclim_sim = zeros(length(grid_idx),length(grid_idy));
+        reg_acclim_sim(mask) = reg_acclim(sim,reg);
+        reg_acclim_2D(:,:,sim) = reg_acclim_2D(:,:,sim) + reg_acclim_sim;
+        
+    end
+end
+save([Outputdir,'reg_acclim_2D.mat'],'reg_acclim_2D')
+
+% Spatial subset ids
+if exist('grid_idx','var')
+    save([Outputdir,'grid_idx.mat'],'grid_idx')
+end
+if exist('grid_idy','var')
+    save([Outputdir,'grid_idy.mat'],'grid_idy')
 end
 
 

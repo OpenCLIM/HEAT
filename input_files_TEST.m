@@ -27,8 +27,8 @@ inputs.OverwriteDerivedOutput = 1; % OR inputs.OverwriteDerivedOutput = 1;
 
 %% Select dataset(s) to use
 inputs.DataType = {'UKCP18'};
-inputs.Variable = {'sWBGTmax'};
-inputs.Dataset = {'GCM-01','GCM-04'};
+inputs.Variable = {'T'};
+inputs.Dataset = {'RCM-01','RCM-04'};
 inputs.MMM = 1;
 
 
@@ -46,7 +46,7 @@ inputs.AnnSummer = 'Summer'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','a
 inputs.AbsThresh = 25;
 
 
-inputs.OutputType = {'map'};
+inputs.OutputType = {'workflow_netCDF'};
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 inputs.SaveFigures = 1;
 inputs.PlotAll = 1;

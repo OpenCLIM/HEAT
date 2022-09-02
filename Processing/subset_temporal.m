@@ -1,4 +1,4 @@
-function [data,dates] = subset_temporal(data,dates,Years,AnnSummer)
+function [data,dates,times] = subset_temporal(data,dates,times,Years,AnnSummer)
 
 
 %% Subset the correct temporal period
@@ -7,6 +7,7 @@ tsstart = find_date(num2str(Years(1)),dates(1:8,:));
 tsend = find_date(num2str(Years(2)),dates(1:8,:));
 data = data(:,:,tsstart:tsend);
 dates = dates(:,tsstart:tsend);
+times = times(tsstart:tsend);
 
 % Subset summers if necessary
 if strcmp(AnnSummer,'Summer')
@@ -15,6 +16,7 @@ if strcmp(AnnSummer,'Summer')
 %     disp('-----')
     data = extract_summers(data,dates,summer);
     dates = extract_summers(dates,dates,summer);
+    times = extract_summers(times,dates,summer);
 else
     if strcmp(AnnSummer,'JJA')
         summer = 'JJA';
@@ -22,6 +24,8 @@ else
 %         disp('-----')
         data = extract_summers(data,dates,summer);
         dates = extract_summers(dates,dates,summer);
+        times = extract_summers(times,dates,summer);
+
     end
 end
 

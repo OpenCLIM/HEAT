@@ -13,7 +13,7 @@
 %
 
 %% Set some basic experiment details
-inputs.ExptName = 'HEAT_DAFNI_default';
+inputs.ExptName = 'HEAT_DAFNI_next_20years';
 inputs.OverwriteExpt = 1; % OR inputs.OverwriteExpt = 1;
 inputs.Domain = 'UK'; % OR inputs.Domain = 'global';
 inputs.SaveDerivedOutput = 0; % OR inputs.SaveDerivedOutput = 0;
@@ -30,9 +30,9 @@ inputs.Dataset = {'RCM-01','RCM-04','RCM-05','RCM-06','RCM-07','RCM-08','RCM-09'
 
 
 %% Subsetting of data for analysis
-inputs.Scenario = 'past';
-% inputs.TemporalRange = [20100101, 20181230]; % yyyy, yyyymm or yyyymmdd start and end dates
-inputs.PeriodStart = 1990; % yyyy, yyyymm or yyyymmdd start and end dates
+% inputs.TemporalRange = [20230101, 20521230]; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.PeriodStart = 2023; % yyyy, yyyymm or yyyymmdd start and end dates
+inputs.PeriodLength = 20; % yyyy, yyyymm or yyyymmdd start and end dates
 % inputs.AnnSummer = 'Summer'; % OR inputs.AnnSummer = 'Summer'; 'JJA'; 'MJJAS','ann'; % Summer = 1st June-15th Sept. or leave blank for annual mean
 % inputs.SpatialRange = [51,55.5;-11, -5]; % [latS,latN;lonW,lonE] for boxed region or [lat,lon] for single grid point
 % inputs.Region = {}; % 'Scotland','North East','North West','Yorkshire and
