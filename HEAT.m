@@ -401,7 +401,7 @@ for s = 1:length(inputs.Dataset)
         end
         
         % Remove the railing / on the variable name before reading .nc
-        var = var(1:end-1);
+%         var = var(1:end-1);
         
         % Some print outs for testing purposes (remove later):
         disp('This data directory is being accessed:')
