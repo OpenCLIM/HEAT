@@ -404,11 +404,11 @@ for s = 1:length(inputs.Dataset)
 %         var = var(1:end-1);
         
         % Some print outs for testing purposes (remove later):
-        disp('This data directory is being accessed:')
-        vardir
-        disp('These data files are available:')
-        ls(vardir)
-        disp(' ')
+%         disp('This data directory is being accessed:')
+%         vardir
+%         disp('These data files are available:')
+%         ls(vardir)
+%         disp(' ')
         
         
         %% Go through HadUK-Grid data
