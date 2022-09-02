@@ -366,10 +366,12 @@ for s = 1:length(inputs.Dataset)
             % Find what files are available
             if DAFNI == 0
                 var = 'tas/';
+                runn = [runn,'/']; % ATKA: Needs repeated for other T vars if this works
             else 
                 var = [];
+                runn = [];
             end            % Directory of raw data for each required variable
-            vardir = [UKCP18dir,BCdir,res,var,runn,'/'];
+            vardir = [UKCP18dir,BCdir,res,var,runn];
             % Find how many files are to be loaded/produced
             files = dir([vardir '*.nc']);
             
