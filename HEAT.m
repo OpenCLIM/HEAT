@@ -365,13 +365,15 @@ for s = 1:length(inputs.Dataset)
         elseif strcmp(inputs.Variable,'Tmean')
             % Find what files are available
             if DAFNI == 0
-                var = 'tas/';
+                var = 'tas';
+                vard = 'tas/';
                 runn = [runn,'/']; % ATKA: Needs repeated for other T vars if this works
             else 
-                var = [];
+                var = 'tas';
+                vard = [];
                 runn = [];
             end            % Directory of raw data for each required variable
-            vardir = [UKCP18dir,BCdir,res,var,runn];
+            vardir = [UKCP18dir,BCdir,res,vard,runn];
             % Find how many files are to be loaded/produced
             files = dir([vardir '*.nc']);
             
@@ -565,7 +567,7 @@ for s = 1:length(inputs.Dataset)
         for i = startload:endload
             
             % File name
-            file = char([files(i).folder,'/',files(i).name]) % ATKA: Suppress this later if works
+            file = ([files(i).folder,'/',files(i).name]);
             
             % Load temperature for the correct region and concatenate through time if necessary
             if i == startload
