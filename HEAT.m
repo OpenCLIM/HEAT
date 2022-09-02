@@ -375,7 +375,7 @@ for s = 1:length(inputs.Dataset)
             end            % Directory of raw data for each required variable
             vardir = [UKCP18dir,BCdir,res,vard,runn];
             % Find how many files are to be loaded/produced
-            files = dir([vardir '*.nc']);
+            files = dir([vardir,'*rcm85',num2str(Dataset(5:6)),'*.nc']); % ATKA: Copy for other T vars if this works
             
         elseif strcmp(inputs.Variable,'Tmin')
             % Find what files are available
