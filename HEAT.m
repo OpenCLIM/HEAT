@@ -565,7 +565,7 @@ for s = 1:length(inputs.Dataset)
         for i = startload:endload
             
             % File name
-            file = string([files(i).folder,'/',files(i).name]) % ATKA: Suppress this later if works
+            file = char([files(i).folder,'/',files(i).name]) % ATKA: Suppress this later if works
             
             % Load temperature for the correct region and concatenate through time if necessary
             if i == startload
