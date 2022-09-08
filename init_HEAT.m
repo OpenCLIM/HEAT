@@ -81,7 +81,7 @@ else
     % cd('/data/')
     Inputdir = '/data/inputs/';
     UKCP18dir = '/data/inputs/ClimateData/';
-    Outputdir = '/data/outputs/';
+    Outputdir = '/data/outputs/Climate/';
 
     % Note: in this case, 'addpath' should have been done before building
     % the Matlab executable and Docker file, by running add_paths.m.
