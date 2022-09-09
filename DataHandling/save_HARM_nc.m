@@ -36,6 +36,16 @@ if strcmp(Variable,'Tmean')
     plot_label = 'Temperature at 1.5m (°C)';
 end
 
+% Set some basic meta data for key derived variables
+if strcmp(Variable,'tas')
+    units = '°C';
+    standard_name = 'tas';
+    long_name = 'Daily mean temperature';
+    description = 'Daily mean temperature derived from daily max. and min.';
+    label_units = '°C';
+    plot_label = 'Temperature at 1.5m (°C)';
+end
+
 
 %% Start to save
 disp(['Saving workflow netCDF: ',fname])

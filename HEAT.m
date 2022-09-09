@@ -707,7 +707,7 @@ for s = 1:length(inputs.Dataset)
             xyz.projection_x_coordinate = projection_x_coordinate;
             xyz.projection_y_coordinate = projection_y_coordinate;
             
-            save_HARM_nc(nc_name,data,xyz,'Tmean')
+            save_HARM_nc(nc_name,data,xyz,'tas')
             
 %             % csv needs saved for every grid box: go through each lat-long
 %             for i = 1:length(data(:,1,1))
