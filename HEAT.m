@@ -737,10 +737,10 @@ end
 % Shift in percentiles for acclimatisation
 reg_acclim = reg_acclim(:,:,2) - reg_acclim(:,:,1);
 % First, convert to 2D:
-reg_acclim_2D = zeros(length(grid_idx),length(grid_idy),12); % lon x lat x model sim
+reg_acclim_2D = zeros(length(grid_idx),length(grid_idy),length(inputs.Dataset)); % lon x lat x model sim
 for reg = 1:12
     mask = UKregions12 == reg;
-    for sim = 1:12
+    for sim = 1:length(inputs.Dataset)
         reg_acclim_sim = zeros(length(grid_idx),length(grid_idy));
         reg_acclim_sim(mask) = reg_acclim(sim,reg);
         reg_acclim_2D(:,:,sim) = reg_acclim_2D(:,:,sim) + reg_acclim_sim;
