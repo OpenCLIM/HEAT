@@ -24,9 +24,9 @@ spec:
         options: 
           - name: Tmax
             title: Daily max. temperature
-          - name: tas
+          - name: Tmean
             title: Daily mean temperature
-        default: tas
+        default: Tmean
         required: true
       - 
         name: BIASCORR
