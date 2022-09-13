@@ -98,7 +98,7 @@ env_tims = getenv('TIMEPERIOD_S');
 env_timl = getenv('TIMEPERIOD_L');
 
 if ~isempty(env_BC)
-    env_BC
+%     env_BC
     if strcmp(env_BC,'y')
         disp('Environment variable found for bias correction option: updating inputs file')
         inputs.BiasCorr = 1;
@@ -113,7 +113,7 @@ end
 if ~isempty(env_varn)
     disp('Environment variable found for Variable: updating inputs file')
     inputs.Variable = {env_varn};
-%     inputs.Variable
+    inputs.Variable
 end
 if ~isempty(env_scen)
     disp('Environment variable found for Scenario: updating inputs file')
