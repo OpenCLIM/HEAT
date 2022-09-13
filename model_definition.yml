@@ -24,15 +24,18 @@ spec:
         options: 
           - name: Tmax
             title: Daily max. temperature
-          - name: Tmean
+          - name: tas
             title: Daily mean temperature
-        default: Tmean
+        default: tas
         required: true
       - 
         name: BIASCORR
         title: Bias Correction
         description: Use bias corrected climate data?
-        type: bool
+        type: integer
+        min: 0
+        max: 1
+        default: 1
         required: true
       -
         name: SCENARIO
