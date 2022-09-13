@@ -26,15 +26,15 @@ fname = [fname,'-',period_start','-',period_end','.nc'];
 % fname_long = [Deriveddir,fname,''];
 fname_long = fname;
 
-% Set some basic meta data for key derived variables
-if strcmp(Variable,'Tmean')
-    units = '°C';
-    standard_name = 'Tmean';
-    long_name = 'Daily mean temperature';
-    description = 'Daily mean temperature derived from daily max. and min.';
-    label_units = '°C';
-    plot_label = 'Temperature at 1.5m (°C)';
-end
+% % Set some basic meta data for key derived variables
+% if strcmp(Variable,'Tmean')
+%     units = '°C';
+%     standard_name = 'Tmean';
+%     long_name = 'Daily mean temperature';
+%     description = 'Daily mean temperature derived from daily max. and min.';
+%     label_units = '°C';
+%     plot_label = 'Temperature at 1.5m (°C)';
+% end
 
 % Set some basic meta data for key derived variables
 if strcmp(Variable,'tas')

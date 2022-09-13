@@ -10,15 +10,15 @@ root_dir = pwd;
 if length(root_dir) >= 14
     if strcmp(root_dir(1:14),'/Users/ak0920/')
         % Set data directories
-        UKCP18dir = '/Volumes/DataDrive/UKCP18/';
+%         UKCP18dir = '/Volumes/DataDrive/UKCP18/';
 %         UKCP18dir = '/Users/ak0920/Data/';
-%         UKCP18dir = '/Volumes/BCDATA/';
+        UKCP18dir = '/Volumes/BCDATA/';
         ERA5dir = '/Volumes/DataDrive/ERA5/';
         HadUKdir = '/Volumes/DataDrive/HadUK-Grid/v1.0.2.1/';
         Deriveddir = '/Volumes/DataDrive/HEAToutput/DerivedData/';
         Inputdir = '/data/inputs/';
-        Outputdir = '/Volumes/DataDrive/HEAToutput/';
-%         Outputdir = '/Users/ak0920/Data/HEAToutput/';
+%         Outputdir = '/Volumes/DataDrive/HEAToutput/';
+        Outputdir = '/Users/ak0920/Data/HEAToutput/';
         
         addpath('PhysicalCalculations/')
         addpath('DataHandling/')
