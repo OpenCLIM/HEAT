@@ -12,46 +12,14 @@ if length(root_dir) >= 14
         % Set data directories
 %         UKCP18dir = '/Volumes/DataDrive/UKCP18/';
 %         UKCP18dir = '/Users/ak0920/Data/';
-        UKCP18dir = '/Volumes/BCDATA/';
-        ERA5dir = '/Volumes/DataDrive/ERA5/';
-        HadUKdir = '/Volumes/DataDrive/HadUK-Grid/v1.0.2.1/';
+%         Climatedirin = '/Volumes/BCDATA/';
+%         ERA5dir = '/Volumes/DataDrive/ERA5/';
+%         HadUKdir = '/Volumes/DataDrive/HadUK-Grid/v1.0.2.1/';
         Deriveddir = '/Volumes/DataDrive/HEAToutput/DerivedData/';
         Inputdir = '/data/inputs/';
-%         Outputdir = '/Volumes/DataDrive/HEAToutput/';
-        Outputdir = '/Users/ak0920/Data/HEAToutput/';
+        Climatedirout = '/Volumes/DataDrive/HEAToutput/';
+%         Climatedirout = '/Users/ak0920/Data/HEAToutput/';
         
-        addpath('PhysicalCalculations/')
-        addpath('DataHandling/')
-        addpath('Processing/')
-        addpath('Outputting/')
-        addpath('PreProcessedData/')
-        addpath('Dependencies/')
-        
-        
-        % Running on Anthropocene
-    elseif strcmp(root_dir(1:14),'/home/bridge/a')
-        % Set data directories
-        UKCP18dir = '/export/anthropocene/array-01/ak0920/ukcp18_data/';
-        ERA5dir = '/export/anthropocene/array-01/ak0920/ERA5/';
-        HadUKdir = '/export/anthropocene/array-01/ak0920/HadUKGrid/';
-        Deriveddir = '/export/anthropocene/array-01/ak0920/HEAToutput/DerivedData/';
-        Outputdir = '/export/anthropocene/array-01/ak0920/HEAToutput/';
-        addpath('PhysicalCalculations/')
-        addpath('DataHandling/')
-        addpath('Processing/')
-        addpath('Outputting/')
-        addpath('PreProcessedData/')
-        addpath('Dependencies/')
-        
-        
-        % Running on BluePebble
-    elseif strcmp(root_dir(1:14),'/home/ak0920/h')
-        % Set data directories
-        UKCP18dir = '/bp1store/geog-tropical/data/ukcp18_data/';
-        ERA5dir = '/bp1store/geog-tropical/data/ERA-5/';
-        HadUKdir = '/bp1store/geog-tropical/data/HadUK-Grid/';
-        Deriveddir = '/work/ak0920/HEAToutput/DerivedData/';
-        Outputdir = '/work/ak0920/HEAToutput/';
         addpath('PhysicalCalculations/')
         addpath('DataHandling/')
         addpath('Processing/')
@@ -60,11 +28,11 @@ if length(root_dir) >= 14
         addpath('Dependencies/')
         
     elseif strcmp(root_dir(1:14),'/home/alanka/H')
-        UKCP18dir = '/data/ukcp18_data/';
+        Climatedirin = '/data/ukcp18_data/';
         ERA5dir = '/data/ERA5/';
         HadUKdir = '/data/HadUK-Grid/';
         Deriveddir = '/data/HEAToutput/DerivedData/';
-        Outputdir = '/data/HEAToutput/';
+        Climatedirout = '/data/HEAToutput/';
         addpath('PhysicalCalculations/')
         addpath('DataHandling/')
         addpath('Processing/')
@@ -77,11 +45,15 @@ if length(root_dir) >= 14
     
     % Otherwise, assume running on DAFNI (in a Docker container)
 else
-    % Set data directory
-    % cd('/data/')
+    % Set input and output data directories
     Inputdir = '/data/inputs/';
-    UKCP18dir = '/data/inputs/ClimateData/';
-    Outputdir = '/data/outputs/Climate/';
+    Climatedirin = '/data/inputs/ClimateData/';
+    Urbandirin = '/data/inputs/Urban/';
+    SubsetClimatedirin = '/data/inputs/ClimateAlt/';
+    BaseClimatedirin = '/data/inputs/ClimateBase/';
+    
+    Climatedirout = '/data/outputs/Climate/';
+
 
     % Note: in this case, 'addpath' should have been done before building
     % the Matlab executable and Docker file, by running add_paths.m.
