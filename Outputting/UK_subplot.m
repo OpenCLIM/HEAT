@@ -1,4 +1,4 @@
-function [] = UK_subplot(data,figname,collim,lat,lon,inputs)
+function [] = UK_subplot(data,figname,directory,lat,lon,collim,inputs)
 % [] = UK_subplot(data,figname,collim)
 %
 % Do a plot of the UK region in transmercator projection
@@ -13,7 +13,7 @@ function [] = UK_subplot(data,figname,collim,lat,lon,inputs)
 
 
 %% Find which machine is being used
-init_HEAT 
+% init_HEAT 
 
 
 %% Load lat-long and coast data for plotting
@@ -81,7 +81,8 @@ S = shaperead('landareas','UseGeoCoords',true);
 % lat-long limits for plotting
 latlim = [48 61];
 lonlim = [-15 7];
-
+latlim = [49 61];
+lonlim = [-12 4];
 
 %% Plotting
 % Set up axes
@@ -121,11 +122,12 @@ set(gcf, 'color', 'w');
 colorbar()
 
 % Save output figure
-if inputs.SaveFigures == 1
-    filename = [Outputdir,inputs.ExptName,'/',figname,'.png'];
+% if inputs.SaveFigures == 1
+    filename = [directory,figname,'.png'];
     warning('off','all')
-    export_fig(sprintf('%s', filename{:}),  '-png', '-nocrop', '-m5', '-zbuffer');
+%     export_fig(sprintf('%s', filename),  '-png', '-nocrop', '-m5', '-zbuffer');
+    export_fig(filename,  '-png', '-nocrop', '-m5', '-zbuffer');
     warning('on','all')
-end
+% end
 
 
