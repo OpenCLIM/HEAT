@@ -53,7 +53,9 @@ inputs.MMTpctile = 93;
 inputs.SaveFigures = 1;
 inputs.PlotAll = 1;
 % inputs.OutputRegion = 'all';
-inputs.OutputType = 'NetCDF'; % {'map'};
+% inputs.OutputType = 'NetCDF'; % {'map'};
+% inputs.OutputType = 'Extreme mean'; % {'map'};
+inputs.OutputType = 'DD66'; % {'map'};
 
 
 %% Update fields if Environment variables are provided
@@ -67,6 +69,8 @@ env_tims = getenv('TIMEPERIOD_S');
 env_timl = getenv('TIMEPERIOD_L');
 env_outp = getenv('OUTPUT');
 env_adap = getenv('ADAPT');
+env_uhii = getenv('UHI_I');
+
 
 if ~isempty(env_BC)
     if strcmp(env_BC,'y')
@@ -107,7 +111,11 @@ if ~isempty(env_adap)
     inputs.MMTpctile = env_adap;
 end
 
-
+if ~isempty(env_uhii)
+    inputs.UHI_I = env_uhii;
+else
+    inputs.UNI_I = 2;
+end
 
 disp(' ')
 

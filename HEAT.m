@@ -443,11 +443,13 @@ if exist('Urbandirin','var')
         urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
 
         % Adjust temperature based on increased UHI intensity
-        UHI_I = 2; % Value based upon offline analysis (load_urban_fraction.m), plausible range ~ 1.5 - 3. Possibly include option to change this in future.
+        UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
         
         UHI_adjustment = urb_change_interp * UHI_I;
         UHI_adjustment(isnan(UHI_adjustment)) = 0;
         data = data + UHI_adjustment;
+        
+        save([Climatedirout,'UHI_adjustment.mat'],'UHI_adjustment')
     end
 end
 
@@ -457,6 +459,9 @@ if runexmean == 1
     % Set default if necessary
     if ~isfield(inputs,'ExtremeMeanPctile')
         inputs.ExtremeMeanPctile = 95; 
+        disp('Calculating extreme mean for default 95th percentile')
+        disp('For reproduction of Kennedy-Asser et al. 2022, use Tmax summer only data')
+        disp('-----')
     end
     
     % Find xth percentile for each grid point
@@ -473,62 +478,40 @@ if runexmean == 1
     exmean = nanmean(exdays,3);
     
     % Save output
-    save('exmean.mat','exmean')
+    save([Climatedirout,'exmean.mat'],'exmean')
 end
 
 
 %% Calculate DD66 degree day metric if required
-if runDD66 == 1
+if runDD == 1
     % Set default if necessary
     if ~isfield(inputs,'DD')
-        inputs.DD = 66; % Set default if necessary
+        inputs.DD = 66; 
+        disp('Calculating Degree Days for default 66th percentile')
+        disp('For reproduction of Kennedy-Asser et al. 2022, use Tmean summer only data')
+        disp('-----')
     end
     
+    % Find xth percentile for each grid point
+    DDthresh = prctile(data,inputs.DD,3);
+    
+    % Find days that do not exceed xth percentile
+    nonexdays = data < DDthresh;
+    
+    % Copy data then remove non-extreme days
+    exdays = data - DDthresh;
+    exdays(nonexdays) = nan;
+    
+    % Calculate extreme mean
+    DDx = nansum(exdays,3);
+    
+    % Save output
+%     save([Climatedirout,'DDx.mat'],'DDx')
+    dlmwrite([Climatedirout,'DDx.csv'],DDx, 'delimiter', ',', 'precision', '%i')
+    UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
     
 end
 
-
-%% Produce diagnostic data if required (step 2)
-if runanalysis == 1
-    
-    % Load each required variable
-    for v = 1:length(inputs.Variable)
-        Variable = char(inputs.Variable(v));
-        
-        % Run Step 2: Extremes analysis
-        if runanalysis == 1
-            HEAT_step2(inputs,Variable)
-        end
-    end
-end
-
-
-%         %% Extract only heatwave days if required
-%         % Extract days depending on threshold definition:
-%         % If an absolute threshold map has been provided
-%         if exist('Thresholds','dir')
-%             disp('Extracting heatwave days based on absolute threshold map')
-%             load('Thresholds/threshmap.mat')
-%             % Note: this currently assumes the threshold map will be
-%             % provided as a raster .mat file. Flexibility to provide this
-%             % in other ways will need to be added later.
-%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,threshmap-10,inputs.Duration,'absolute');
-%             data(HWdays==0) = nan;
-%             disp(' ')
-%
-%         % If using a percentile threshold across all of UK
-%         elseif isfield(inputs,'PctThresh')
-%             disp('Extracting heatwave days based on percentile threshold')
-%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,inputs.PctThresh,inputs.Duration,'percentile');
-%             disp(' ')
-%
-%         % If using a single absolute threshold across all of UK
-%         elseif isfield(inputs,'AbsThresh')
-%             disp('Extracting heatwave days based on absolute threshold')
-%             [HWdays,numdays,avelength,numevents] = extract_consecHWdays(data,inputs.AbsThresh,inputs.Duration,'absolute');
-%             disp(' ')
-%
-%         end
 
 
 %% Calculate acclimatisation as shift in regional percentile
