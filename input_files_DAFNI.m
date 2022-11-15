@@ -47,6 +47,7 @@ inputs.MMTpctile = 93;
 % inputs.AbsThresh = 25;
 % inputs.AveTime = 10; % Time series averaging length in years: default = 10
 % inputs.ExtremeMeanPctile = [95 99];
+% inputs.UHI_I = 2;
 
 
 %% Output types
@@ -114,7 +115,7 @@ end
 if ~isempty(env_uhii)
     inputs.UHI_I = env_uhii;
 else
-    inputs.UNI_I = 2;
+    inputs.UHI_I = 2;
 end
 
 disp(' ')
