@@ -53,6 +53,23 @@ spec:
             title: 3.0 °C warming above pre-industrial
         required: false
       -
+        name: OUTPUT
+        title: Output type
+        description: Select the kind of analysis you wish to carry out
+        type: string
+        options: 
+          - name: NetCDF
+            title: NetCDF output for heat mortality calculation
+          - name: Extreme mean
+            title: Extreme mean analysis
+          - name: DD66
+            title: Degree day analysis
+          - name: Absolute extremes
+            title: Absolute extremes analysis
+          - name: Percentile extremes
+            title: Percentile extremes analysis
+        required: false
+      -
         name: TIMEPERIOD_S
         title: Time period start
         description: The first year of the time period you want to analyse
@@ -64,6 +81,22 @@ spec:
         name: TIMEPERIOD_L
         title: Time period length
         description: The length of the time period you want to analyse
+        type: integer
+        min: 1
+        max: 99
+        required: false
+      -
+        name: UHI_I
+        title: Urban Heat Island intensity
+        description: How much temperatures are amplified by due to UHI, comparing fully urban to fully rural
+        type: number
+        min: 0
+        max: 10
+        required: false
+      -
+        name: ADAPT
+        title: Percentile for natural acclimatisation
+        description: The percentile of annual mean temperature corresponding to MMT
         type: integer
         min: 1
         max: 99
@@ -87,6 +120,6 @@ spec:
       -
         description: "An optional dataslot to include and urban % map"
         name: Urban
-        path: inputs/UrbanData/
+        path: inputs/Urban/
         required: false
 
