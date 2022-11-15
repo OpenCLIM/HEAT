@@ -182,11 +182,13 @@ if exist('Urbandirin','var')
         disp('-----')
         [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
         
+        disp('Urban data loaded')
         % Prepare a lat/lon grid
         [nrows,ncols,~]=size(baseline_urb);
         [row,col]=ndgrid(1:nrows,1:ncols);
         [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
         [lats_urb,lons_urb] = os2ll(lon_urb,lat_urb);
+        disp('Urban data regridded to lat-long')
         
         % Find existing development
         dev_old = baseline_urb == 1;
@@ -213,21 +215,24 @@ if exist('Urbandirin','var')
                 lon_urb_1km(i,j) = nanmean(nanmean(lons_urb(ii,jj)));
             end
         end
+        disp('Urban data aggregated to 2km')
         
         % Find change in urban area
         urb_change = dev_new_1km - dev_old_1km;
         
+        disp('Starting re-gridding')
         % Re-grid to RCM grid
         dev_old_interp = griddata(lon_urb_1km,lat_urb_1km,dev_old_1km,long_UK_RCM,lat_UK_RCM,'linear');
         urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
-
+        disp('Re-gridding complete')
+        
         % Adjust temperature based on increased UHI intensity
         UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
         
         UHI_adjustment = urb_change_interp * UHI_I;
         UHI_adjustment(isnan(UHI_adjustment)) = 0;
-        data = data + UHI_adjustment;
-        
+%         data = data + UHI_adjustment;
+        disp('UHI adjjustment complete')
         save([Climatedirout,'UHI_adjustment.mat'],'UHI_adjustment')
     end
 end
