@@ -461,7 +461,17 @@ end
 
 % Adjust for UHI, if available
 if exist('UHI_adjustment','var')
+    
+    % Produce some output to sanity check
+    UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
+    figure
+    UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    
+    
     data = data + UHI_adjustment;
+    UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
+    figure
+    UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM)
 end
 
 
@@ -490,6 +500,9 @@ if runexmean == 1
     
     % Save output
     save([Climatedirout,'exmean.mat'],'exmean')
+    figure
+    UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lat_UK_RCM,long_UK_RCM)
+
 end
 
 
@@ -519,6 +532,7 @@ if runDD == 1
     % Save output
 %     save([Climatedirout,'DDx.mat'],'DDx')
     dlmwrite([Climatedirout,'DDx.csv'],DDx, 'delimiter', ',', 'precision', '%i')
+    figure
     UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
     
 end
