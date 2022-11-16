@@ -25,7 +25,7 @@ inputs.BiasCorr = 0; % OR inputs.BiasCorr = 0;
 inputs.DataType = {'UKCP18'};
 inputs.Variable = {'Tmean'};
 inputs.Variable = {'tas'};
-inputs.Dataset = {'RCM-01','RCM-04','RCM-05','RCM-06','RCM-07','RCM-08','RCM-09','RCM-10','RCM-11','RCM-12','RCM-13','RCM-15'};
+% inputs.Dataset = {'RCM-01','RCM-04','RCM-05','RCM-06','RCM-07','RCM-08','RCM-09','RCM-10','RCM-11','RCM-12','RCM-13','RCM-15'};
 % inputs.Dataset = {'GCM-01','GCM-02','GCM-03','GCM-04','GCM-05','GCM-06','GCM-07','GCM-08','GCM-09','GCM-10','GCM-11','GCM-12','GCM-13','GCM-14','GCM-15'};
 % inputs.MMM = 1;
 
@@ -84,6 +84,10 @@ if ~isempty(env_expn)
     disp('Environment variable found for Experiment Name: updating inputs file')
     inputs.ExptName = {env_expn};
 %     inputs.ExptName
+end
+if ~isempty(env_runn)
+    disp('Simulation name specified (for selecting correct time period): updating inputs file')
+    inputs.Dataset = {env_runn};
 end
 if ~isempty(env_varn)
     disp('Environment variable found for Variable: updating inputs file')
