@@ -46,6 +46,7 @@ spec:
             title: RCM-13
           - name: RCM-15
             title: RCM-15
+        required: false
       - 
         name: VARNAME
         title: Variable Name
