@@ -17,6 +17,36 @@ spec:
         type: string
         required: false
       - 
+        name: RUNNAME
+        title: Simulation Name
+        description: The UKCP18 RCM simulation you wish to use (only required for selecting correct warming level)
+        type: string
+        options: 
+          - name: RCM-01
+            title: RCM-01
+          - name: RCM-04
+            title: RCM-04
+          - name: RCM-05
+            title: RCM-05
+          - name: RCM-06
+            title: RCM-06
+          - name: RCM-07
+            title: RCM-07
+          - name: RCM-08
+            title: RCM-08
+          - name: RCM-09
+            title: RCM-09
+          - name: RCM-10
+            title: RCM-10
+          - name: RCM-11
+            title: RCM-11
+          - name: RCM-12
+            title: RCM-12
+          - name: RCM-13
+            title: RCM-13
+          - name: RCM-15
+            title: RCM-15
+      - 
         name: VARNAME
         title: Variable Name
         description: The climate variable you want to analyse

@@ -64,6 +64,7 @@ disp('Updating inputs with environment variables')
 % Then overwrite defaults with environment variables if running on DAFNI:
 env_BC = getenv('BIASCORR');
 env_expn = getenv('EXPNAME');
+env_runn = getenv('RUNNAME');
 env_varn = getenv('VARNAME');
 env_scen = getenv('SCENARIO');
 env_tims = getenv('TIMEPERIOD_S');
