@@ -35,8 +35,9 @@ startt = now;
 if strcmp(pwd,'/code')
     disp('Running in Docker container with these files:')
     ls
-    disp(' ')
     disp('-----')
+    disp(' ')
+
 end
 
 %% Check inputs
@@ -234,6 +235,8 @@ if exist('Urbandirin','var')
 %         data = data + UHI_adjustment;
         disp('UHI adjjustment complete')
         save([Climatedirout,'UHI_adjustment.mat'],'UHI_adjustment')
+        disp('-----')
+        disp(' ')
     end
 end
 
@@ -260,6 +263,8 @@ if isfield(inputs,'Dataset')
     if strcmp(Dataset(1:2),'RC')
         runn = ['run',Dataset(5:6)];
     end
+else
+    Dataset = 'data';
 end
 
 
@@ -267,6 +272,8 @@ end
 file = ([files(1).folder,'/',files(1).name]);
 datatest = double(ncread(file,char(inputs.Variable)));
 s1 = size(datatest);
+ncstarts = [1 1 1];
+ncends = [Inf Inf Inf];
 
 if ndims(datatest) > 3
     disp('Input netCDF has too many dimensions (more than 3): CANCELLING')
@@ -611,7 +618,7 @@ end
 if runworkflow == 1
     
     % Save as netCDF for HARM to use
-    nc_name = [Climatedirout,'HEAT-',Dataset,'_',Variable];
+    nc_name = [Climatedirout,'HEAT-',inputs.ExptName,'-',Dataset,'_',Variable];
     
     xyz.dates = dates;
     xyz.times = times;
