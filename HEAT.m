@@ -118,9 +118,9 @@ runworkflow = 0;
 
 % Run steps if necessary
 if isfield(inputs,'OutputType')
-    if strcmp(string(inputs.OutputType),'Extreme mean') % NEEDS ADDED
+    if strcmp(string(inputs.OutputType),'Extreme mean') 
         runexmean = 1;
-    elseif strcmp(string(inputs.OutputType),'DD66') % NEEDS ADDED
+    elseif strcmp(string(inputs.OutputType),'DD66')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'Absolute extremes') % NEEDS ADDED
         runanalysis = 1;
@@ -238,66 +238,131 @@ if exist('Urbandirin','var')
 end
 
 
-%% Define parameters for input climate dataset
-Dataset = char(inputs.Dataset(1));
 
-% Find resolution
-if strcmp(Dataset(1:2),'RC')
-    runn = ['run',Dataset(5:6)];
+
+%% Find list of files to load and define parameters for input climate dataset
+files = dir([Climatedirin '*.nc']);
+
+% Assuming data files exist, continue with loading
+if isempty(files)
+    disp('No valid climate data to load: CANCELLING')
+    return
+else
+    disp('The following climate data netCDFs are being loaded:')
+    ls([Climatedirin '*.nc'])
+    disp('-----')    
+end
+
+
+% Find if using one of the UKCP18 RCM ensemble members
+if isfield(inputs,'Dataset')
+    Dataset = char(inputs.Dataset(1));
+    if strcmp(Dataset(1:2),'RC')
+        runn = ['run',Dataset(5:6)];
+    end
+end
+
+
+% Load one file as an example to check if data is in 3D
+file = ([files(1).folder,'/',files(1).name]);
+datatest = double(ncread(file,char(inputs.Variable)));
+s1 = size(datatest);
+
+if ndims(datatest) > 3
+    disp('Input netCDF has too many dimensions (more than 3): CANCELLING')
+    return
+end
+
+% Also find out orientation of date strings
+datestest = ncread(file,'yyyymmdd');
+s2 = size(datestest);
+if s2(1) > s2(2)
+    datedim = 1;
+else
+    datedim = 2;
+end
+    
+    % Find resolution
+if s1(1) == 82 && s1(2) == 112
+    disp('Input data is on UKCP18 RCM grid')
     lats = lat_UK_RCM;
     lons = long_UK_RCM;
     LSM = LSM12;
     UK_area = areas_12km_frac_UK;
     reg_area = areas_12km_frac_regions;
-end
-
-
-% Update file path and netCDF dims if using bias corr. data
-if inputs.BiasCorr == 1
-    % Find location of netCDF data for the required variable
-    % Set default domain to load as whole of dataset for T vars
-    ncstarts = [1 1 1];
-    ncends = [Inf Inf Inf];
-    % Dimension of yyyymmdd var for T vars
-    datedim = 1;
+    
+    subsetting = 1;
+    averaging = 1;
+    
+elseif s1(1) == 17 && s1(2) == 23
+    disp('Input data is on UKCP18 GCM grid')
+    lats = lat_UK_GCM;
+    lons = long_UK_GCM;
+    LSM = LSM60;
+    UK_area = areas_60km_frac_UK;
+    reg_area = areas_60km_frac_regions;
+    
+    subsetting = 1;
+    averaging = 1;
+    
 else
-    % Find location of netCDF data for the required variable
-    % Set default domain to load as whole of dataset for T vars
-    ncstarts = [1 1 1 1];
-    ncends = [Inf Inf Inf Inf];
-    % Dimension of yyyymmdd var for T vars
-    datedim = 2;
+    disp('Input data is on unknown grid: Area subsetting and regional percentile acclimatisation disabled.')
+    LSM = ones(s1(1),s1(2));
+    
+    subsetting = 0;
+    averaging = 0;
 end
+
+
+
+% % Update file path and netCDF dims if using bias corr. data
+% if inputs.BiasCorr == 1
+%     % Find location of netCDF data for the required variable
+%     % Set default domain to load as whole of dataset for T vars
+%     ncstarts = [1 1 1];
+%     ncends = [Inf Inf Inf];
+%     % Dimension of yyyymmdd var for T vars
+%     datedim = 1;
+% else
+%     % Find location of netCDF data for the required variable
+%     % Set default domain to load as whole of dataset for T vars
+%     ncstarts = [1 1 1 1];
+%     ncends = [Inf Inf Inf Inf];
+%     % Dimension of yyyymmdd var for T vars
+%     datedim = 2;
+% end
 
 
 %% Set up spatial subset if required
 % Find corners of requested domain
-if isfield(inputs,'SpatialRange')
-    if length(inputs.SpatialRange(1,:)) == 2 % lat-long box specified to load
-        [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
-        [lon_id2,lat_id2] = find_location(inputs.SpatialRange(2,2),inputs.SpatialRange(1,2),lons,lats);
+if subsetting == 1
+    if isfield(inputs,'SpatialRange')
+        if length(inputs.SpatialRange(1,:)) == 2 % lat-long box specified to load
+            [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+            [lon_id2,lat_id2] = find_location(inputs.SpatialRange(2,2),inputs.SpatialRange(1,2),lons,lats);
+            
+            ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+            ncends(1) = 1+lon_id2-lon_id1; ncends(2) = 1+lat_id2-lat_id1;
+            
+            % Create an ID field for subsetting e.g. lat-long, areas etc.
+            grid_idx = lon_id1:lon_id2;
+            grid_idy = lat_id1:lat_id2;
+            
+        elseif length(inputs.SpatialRange(1,:)) == 1 % specific grid cell specified
+            [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
+            
+            ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
+            ncends(1) = 1; ncends(2) = 1;
+            
+            % Create an ID field for subsetting e.g. lat-long, areas etc.
+            grid_idx = lon_id1;
+            grid_idy = lat_id1;
+            
+        end
         
-        ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
-        ncends(1) = 1+lon_id2-lon_id1; ncends(2) = 1+lat_id2-lat_id1;
-        
-        % Create an ID field for subsetting e.g. lat-long, areas etc.
-        grid_idx = lon_id1:lon_id2;
-        grid_idy = lat_id1:lat_id2;
-        
-    elseif length(inputs.SpatialRange(1,:)) == 1 % specific grid cell specified
-        [lon_id1,lat_id1] = find_location(inputs.SpatialRange(2,1),inputs.SpatialRange(1,1),lons,lats);
-        
-        ncstarts(1) = lon_id1; ncstarts(2) = lat_id1;
-        ncends(1) = 1; ncends(2) = 1;
-        
-        % Create an ID field for subsetting e.g. lat-long, areas etc.
-        grid_idx = lon_id1;
-        grid_idy = lat_id1;
-        
+    elseif isfield(inputs,'Region')
+        % TO DO: Insert code for selecting specific regions
     end
-    
-elseif isfield(inputs,'Region')
-    % TO DO: Insert code for selecting specific regions
 end
 
 
@@ -349,20 +414,6 @@ elseif isfield(inputs,'Scenario')
     % Convert years to correct format
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
-end
-
-
-%% Find list of files to load
-files = dir([Climatedirin '*.nc']);
-
-% Assuming data files exist, continue with loading
-if isempty(files)
-    disp('No valid climate data to load: CANCELLING')
-    return
-else
-    disp('The following climate data netCDFs are being loaded:')
-    ls([Climatedirin '*.nc'])
-    disp('-----')
 end
 
 
@@ -444,13 +495,15 @@ if ~exist('grid_idy','var')
 end
 
 % If required, calculate acclimatisation baseline
-if isfield(inputs,'MMTpctile')
-    baseline = prctile(data(:,:,1:7300),inputs.MMTpctile,3); % This takes 1981-2000 as the baseline
-    for reg = 1:13
-        if reg == 13
-            reg_acclim(reg,1) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
-        else
-            reg_acclim(reg,1) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+if averaging == 1
+    if isfield(inputs,'MMTpctile')
+        baseline = prctile(data(:,:,1:7300),inputs.MMTpctile,3); % This takes 1981-2000 as the baseline
+        for reg = 1:13
+            if reg == 13
+                reg_acclim(reg,1) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
+            else
+                reg_acclim(reg,1) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+            end
         end
     end
 end
@@ -540,13 +593,15 @@ end
 
 
 %% Calculate acclimatisation as shift in regional percentile
-if isfield(inputs,'MMTpctile')
-    baseline = prctile(data,inputs.MMTpctile,3);
-    for reg = 1:13
-        if reg == 13
-            reg_acclim(reg,2) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
-        else
-            reg_acclim(reg,2) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+if averaging == 1
+    if isfield(inputs,'MMTpctile')
+        baseline = prctile(data,inputs.MMTpctile,3);
+        for reg = 1:13
+            if reg == 13
+                reg_acclim(reg,2) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
+            else
+                reg_acclim(reg,2) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+            end
         end
     end
 end

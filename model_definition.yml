@@ -16,6 +16,24 @@ spec:
         description: Experiment name for easier future identification of results
         type: string
         required: false
+      -
+        name: OUTPUT
+        title: Output type
+        description: Select the kind of analysis you wish to carry out
+        type: string
+        options: 
+          - name: NetCDF
+            title: NetCDF output for heat mortality calculation
+          - name: Extreme mean
+            title: Extreme mean analysis
+          - name: DD66
+            title: Degree day analysis
+          - name: Absolute extremes
+            title: Absolute extremes analysis
+          - name: Percentile extremes
+            title: Percentile extremes analysis
+        default: NetCDF
+        required: true
       - 
         name: RUNNAME
         title: Simulation Name
@@ -53,21 +71,20 @@ spec:
         description: The climate variable you want to analyse
         type: string
         options: 
-          - name: Tmax
-            title: Daily max. temperature
-          - name: Tmean
-            title: Daily mean temperature
-        default: Tmean
+          - name: tasmax
+            title: Daily max. temperature (tasmax)
+          - name: tas
+            title: Daily mean temperature (tas)
+          - name: Other
+            title: Other (please specify below)
+        default: tas
         required: true
       - 
-        name: BIASCORR
-        title: Bias Correction
-        description: Use bias corrected climate data?
-        type: integer
-        min: 0
-        max: 1
-        default: 1
-        required: true
+        name: VARNAMEOTHER
+        title: Variable Name if not listed above
+        description: The climate variable you want to analyse
+        type: string
+        required: false
       -
         name: SCENARIO
         title: Warming scenario
@@ -82,23 +99,6 @@ spec:
             title: 2.0 °C warming above pre-industrial
           - name: 3.0
             title: 3.0 °C warming above pre-industrial
-        required: false
-      -
-        name: OUTPUT
-        title: Output type
-        description: Select the kind of analysis you wish to carry out
-        type: string
-        options: 
-          - name: NetCDF
-            title: NetCDF output for heat mortality calculation
-          - name: Extreme mean
-            title: Extreme mean analysis
-          - name: DD66
-            title: Degree day analysis
-          - name: Absolute extremes
-            title: Absolute extremes analysis
-          - name: Percentile extremes
-            title: Percentile extremes analysis
         required: false
       -
         name: TIMEPERIOD_S
@@ -136,8 +136,8 @@ spec:
     dataslots: 
       - 
         default: 
-          - 750e5aaa-d03c-49b2-a862-0d2446e0d9bd
-        description: "A dataslot that should contain netCDF climate data"
+          - 60cf23f9-b5b8-48c6-ae02-62facef23ec5
+        description: "A dataslot that should contain netCDF climate data (default = UKCP18 RCM ensemble member 01, raw non-bias corrected)"
         name: ClimateData
         path: inputs/ClimateData/
         required: true
