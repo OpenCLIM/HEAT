@@ -116,6 +116,8 @@ runexmean = 0;
 runDD = 0;
 runanalysis = 0;
 runworkflow = 0;
+runabsext = 0;
+
 
 % Run steps if necessary
 if isfield(inputs,'OutputType')
