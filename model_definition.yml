@@ -93,12 +93,14 @@ spec:
         options: 
           - name: past
             title: Recent past (1990-2019)
-          - name: 1.5
+          - name: s1.5
             title: 1.5 °C warming above pre-industrial
-          - name: 2.0
+          - name: s2.0
             title: 2.0 °C warming above pre-industrial
-          - name: 3.0
+          - name: s3.0
             title: 3.0 °C warming above pre-industrial
+          - name: s4.0
+            title: 4.0 °C warming above pre-industrial
         required: false
       -
         name: TIMEPERIOD_S

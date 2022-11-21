@@ -124,7 +124,7 @@ if isfield(inputs,'OutputType')
     elseif strcmp(string(inputs.OutputType),'DD66')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'Absolute extremes') % NEEDS ADDED
-        runanalysis = 1;
+        runabsext = 1;
     elseif strcmp(string(inputs.OutputType),'Percentile extremes') % NEEDS ADDED
         runanalysis = 1;
     elseif strcmp(string(inputs.OutputType),'Heatwave exposure (HE)') % NEEDS ADDED
@@ -400,13 +400,13 @@ elseif isfield(inputs,'Scenario')
     % Read the start year of period
     if strcmp(inputs.Scenario,'past')
         TemporalStart = 1990;
-    elseif strcmp(inputs.Scenario,'1.5')
+    elseif strcmp(inputs.Scenario,'s1.5')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell(1,modelid);
-    elseif strcmp(inputs.Scenario,'2.0')
+    elseif strcmp(inputs.Scenario,'s2.0')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell(2,modelid);
-    elseif strcmp(inputs.Scenario,'3.0')
+    elseif strcmp(inputs.Scenario,'s3.0')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell(4,modelid);
-    elseif strcmp(inputs.Scenario,'4.0')
+    elseif strcmp(inputs.Scenario,'s4.0')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell(6,modelid);
     end
     
@@ -598,6 +598,32 @@ if runDD == 1
 end
 
 
+%% Calculate number of days exceeding absolute extreme value
+if runabsext == 1
+    % Set default if necessary
+    if ~isfield(inputs,'AbsThresh')
+        inputs.AbsThresh = 25; 
+        disp('Calculating number of days exceeding 25 °ßC (default)')
+        disp('-----')
+    end
+    
+    % If it hasn't been defined already, assume the period length is 30
+    % years
+    if ~isfield(inputs,'PeriodLength')
+        inputs.PeriodLength = 30;
+    end
+    
+    % Calculate average number of days > x °C per year
+    AbsExt = nansum(data > inputs.AbsThresh,3) / inputs.PeriodLength;
+    
+    % Save output
+    dlmwrite([Climatedirout,'AbsExt.csv'],AbsExt, 'delimiter', ',', 'precision', '%i')
+    figure
+    UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' °C'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    
+end
+
+
 
 %% Calculate acclimatisation as shift in regional percentile
 if averaging == 1
@@ -624,6 +650,16 @@ if runworkflow == 1
     xyz.times = times;
     xyz.projection_x_coordinate = projection_x_coordinate;
     xyz.projection_y_coordinate = projection_y_coordinate;
+    
+    % Check dim sizes
+    disp('Data dimension sizes = ')
+    size(data)
+    disp('X dimension sizes = ')
+    size(xyz.projection_x_coordinate)
+    disp('Y dimension sizes = ')
+    size(xyz.projection_y_coordinate)
+    disp('Time dimension sizes = ')
+    length(data(1,1,:))
     
     save_HARM_nc(nc_name,data,xyz,'tas')
 end
