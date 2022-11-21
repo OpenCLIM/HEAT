@@ -104,7 +104,7 @@ if ~isempty(env_varn)
 end
 if ~isempty(env_scen)
     disp('Environment variable found for Scenario: updating inputs file')
-    inputs.Scenario = {string(env_scen)};
+    inputs.Scenario = string(env_scen);
     inputs.Scenario
 end
 
