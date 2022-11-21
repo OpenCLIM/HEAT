@@ -423,6 +423,9 @@ elseif isfield(inputs,'Scenario')
     % Convert years to correct format
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
+else
+    disp('No time period defined: STOPPING')
+    return
 end
 
 
