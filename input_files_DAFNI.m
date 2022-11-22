@@ -85,8 +85,8 @@ env_uhii = getenv('UHI_I');
 
 if ~isempty(env_expn)
     disp('Environment variable found for Experiment Name: updating inputs file')
-    inputs.ExptName = string(env_expn);
-%     inputs.ExptName
+    inputs.ExptName = char(string(env_expn));
+    inputs.ExptName
 end
 if ~isempty(env_runn)
     disp('Simulation name specified (for selecting correct time period): updating inputs file')

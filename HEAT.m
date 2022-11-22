@@ -121,6 +121,9 @@ runabsext = 0;
 
 % Run steps if necessary
 if isfield(inputs,'OutputType')
+    
+    inputs.OutputType
+    
     if strcmp(string(inputs.OutputType),'Extreme mean') 
         runexmean = 1;
     elseif strcmp(string(inputs.OutputType),'DD66')
@@ -179,6 +182,8 @@ if exist('Urbandirin','var')
     % Assuming data files exist, continue with loading
     if isempty(urbfiles)
         disp('No urban development data to load: no change made to UHI intensity')
+        disp('-----')
+        disp(' ')
     else
         disp('The following urban development data is available to be loaded:')
         ls([Urbandirin '*.asc'])
@@ -256,6 +261,7 @@ else
     disp('The following climate data netCDFs are being loaded:')
     ls([Climatedirin '*.nc'])
     disp('-----')    
+    disp(' ')
 end
 
 
@@ -321,6 +327,7 @@ else
     subsetting = 0;
     averaging = 0;
 end
+disp(' ')
 
 
 
