@@ -57,7 +57,7 @@ inputs.PlotAll = 1;
 % inputs.OutputRegion = 'all';
 % inputs.OutputType = 'NetCDF'; % {'map'};
 % inputs.OutputType = 'Extreme mean'; % {'map'};
-inputs.OutputType = 'DD66'; % {'map'};
+% inputs.OutputType = 'DD66'; % {'map'};
 
 
 %% Update fields if Environment variables are provided
@@ -86,11 +86,12 @@ env_uhii = getenv('UHI_I');
 if ~isempty(env_expn)
     disp('Environment variable found for Experiment Name: updating inputs file')
     inputs.ExptName = char(string(env_expn));
-    inputs.ExptName
+    class(inputs.ExptName)
 end
 if ~isempty(env_runn)
     disp('Simulation name specified (for selecting correct time period): updating inputs file')
     inputs.Dataset = {env_runn};
+    class(inputs.Dataset)
 end
 if ~isempty(env_varn)
     disp('Environment variable found for Variable: updating inputs file')
@@ -101,11 +102,13 @@ if ~isempty(env_varn)
         inputs.Variable = {env_varno};
     end
         
+    class(inputs.Variable)
+    
 end
 if ~isempty(env_scen)
     disp('Environment variable found for Scenario: updating inputs file')
     inputs.Scenario = string(env_scen);
-    inputs.Scenario
+    class(inputs.Scenario)
 end
 
 if ~isempty(env_tims)
@@ -119,6 +122,7 @@ end
 
 if ~isempty(env_outp)
     inputs.OutputType = env_outp;
+    class(inputs.OutputType)
 end
 
 if ~isempty(env_adap)
