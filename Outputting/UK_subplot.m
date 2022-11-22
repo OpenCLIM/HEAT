@@ -124,6 +124,7 @@ colorbar()
 % Save output figure
 % if inputs.SaveFigures == 1
     filename = [directory,figname,'.png'];
+    disp('Saving figure')
 %     warning('off','all')
 %     export_fig(sprintf('%s', filename),  '-png', '-nocrop', '-m5', '-zbuffer');
 %     export_fig(filename,  '-png', '-nocrop', '-m5', '-zbuffer');
