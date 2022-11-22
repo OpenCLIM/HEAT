@@ -124,13 +124,13 @@ if isfield(inputs,'OutputType')
     
     inputs.OutputType
     
-    if strcmp(string(inputs.OutputType),'Extreme mean') 
+    if strcmp(string(inputs.OutputType),'ExtremeMean') 
         runexmean = 1;
     elseif strcmp(string(inputs.OutputType),'DD66')
         runDD = 1;
-    elseif strcmp(string(inputs.OutputType),'Absolute extremes') % NEEDS ADDED
+    elseif strcmp(string(inputs.OutputType),'AbsoluteExtremes') % NEEDS ADDED
         runabsext = 1;
-    elseif strcmp(string(inputs.OutputType),'Percentile extremes') % NEEDS ADDED
+    elseif strcmp(string(inputs.OutputType),'PercentileExtremes') % NEEDS ADDED
         runanalysis = 1;
     elseif strcmp(string(inputs.OutputType),'Heatwave exposure (HE)') % NEEDS ADDED
         runanalysis = 1;
