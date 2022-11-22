@@ -617,7 +617,7 @@ if runabsext == 1
     % Set default if necessary
     if ~isfield(inputs,'AbsThresh')
         inputs.AbsThresh = 25; 
-        disp('Calculating number of days exceeding 25 °C (default)')
+        disp('Calculating number of days exceeding 25 degC (default)')
         disp('-----')
     end
     
@@ -633,7 +633,7 @@ if runabsext == 1
     % Save output
     dlmwrite([Climatedirout,'AbsExt.csv'],AbsExt, 'delimiter', ',', 'precision', '%i')
     figure
-    UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' °C'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lat_UK_RCM,long_UK_RCM)
     
 end
 
