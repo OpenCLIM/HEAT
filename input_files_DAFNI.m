@@ -85,7 +85,7 @@ env_uhii = getenv('UHI_I');
 
 if ~isempty(env_expn)
     disp('Environment variable found for Experiment Name: updating inputs file')
-    inputs.ExptName = string({env_expn});
+    inputs.ExptName = string(env_expn);
 %     inputs.ExptName
 end
 if ~isempty(env_runn)
