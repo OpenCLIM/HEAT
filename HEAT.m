@@ -129,7 +129,7 @@ if isfield(inputs,'OutputType')
     elseif strcmp(string(inputs.OutputType),'DD66')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'AbsoluteExtremes') % NEEDS ADDED
-        runabsext = 1;
+        runabsext = 1
     elseif strcmp(string(inputs.OutputType),'PercentileExtremes') % NEEDS ADDED
         runanalysis = 1;
     elseif strcmp(string(inputs.OutputType),'Heatwave exposure (HE)') % NEEDS ADDED
@@ -612,10 +612,12 @@ end
 
 %% Calculate number of days exceeding absolute extreme value
 if runabsext == 1
+    disp('Days above absolute threshold')
+    isfield(inputs,'AbsThresh')
     % Set default if necessary
     if ~isfield(inputs,'AbsThresh')
         inputs.AbsThresh = 25; 
-        disp('Calculating number of days exceeding 25 °ßC (default)')
+        disp('Calculating number of days exceeding 25 °C (default)')
         disp('-----')
     end
     
