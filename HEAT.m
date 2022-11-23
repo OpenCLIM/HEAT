@@ -710,5 +710,5 @@ disp(['HEAT run "',inputs.ExptName,'" complete',])
 endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))
 disp('-----')
-
+close all
 
