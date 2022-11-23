@@ -239,7 +239,12 @@ if exist('Urbandirin','var')
         dev_old_interp = griddata(lon_urb_1km,lat_urb_1km,dev_old_1km,long_UK_RCM,lat_UK_RCM,'linear');
         urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
         disp('Re-gridding complete')
-        
+                
+        urb_change_interp_raw = urb_change_interp;
+        save([Climatedirout,'urb_change_interp_raw.mat'],'urb_change_interp_raw')
+        urb_change_interp(urb_change_interp_raw > 1) = 1;
+        save([Climatedirout,'urb_change_interp.mat'],'urb_change_interp')
+
         % Adjust temperature based on increased UHI intensity
         UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
         
