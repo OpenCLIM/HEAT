@@ -21,6 +21,7 @@ function [] = HEAT(inputs,Climatedata,Urbandirin)
 %
 
 %% Initialise
+
 disp('Running HEAT v.2.0')
 disp('-----')
 
@@ -33,6 +34,8 @@ startt = now;
 % For testing purposes, to show the correct data has copied to the Docker
 % container (remove this later):
 if strcmp(pwd,'/code')
+    diary /data/outputs/Climate/output.txt
+    diary on
     disp('Running in Docker container with these files:')
     ls
     disp('-----')
@@ -129,7 +132,7 @@ if isfield(inputs,'OutputType')
     elseif strcmp(string(inputs.OutputType),'DD66')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'AbsoluteExtremes') % NEEDS ADDED
-        runabsext = 1
+        runabsext = 1;
     elseif strcmp(string(inputs.OutputType),'PercentileExtremes') % NEEDS ADDED
         runanalysis = 1;
     elseif strcmp(string(inputs.OutputType),'Heatwave exposure (HE)') % NEEDS ADDED
@@ -202,7 +205,9 @@ if exist('Urbandirin','var')
         dev_old = baseline_urb == 1;
         % Find new development
         dev_new = baseline_urb >= 1;
-        
+        save([Climatedirout,'dev_old.mat'],'dev_old')
+        save([Climatedirout,'dev_new.mat'],'dev_new')
+
         % Aggregate to 2km
         regrid_res = 20; % FOR TESTING
         
@@ -227,7 +232,8 @@ if exist('Urbandirin','var')
         
         % Find change in urban area
         urb_change = dev_new_1km - dev_old_1km;
-        
+        save([Climatedirout,'urb_change.mat'],'urb_change')
+
         disp('Starting re-gridding')
         % Re-grid to RCM grid
         dev_old_interp = griddata(lon_urb_1km,lat_urb_1km,dev_old_1km,long_UK_RCM,lat_UK_RCM,'linear');
@@ -298,6 +304,7 @@ else
 end
     
     % Find resolution
+    disp('Checking model resolution:')
 if s1(1) == 82 && s1(2) == 112
     disp('Input data is on UKCP18 RCM grid')
     lats = lat_UK_RCM;
@@ -327,6 +334,7 @@ else
     subsetting = 0;
     averaging = 0;
 end
+disp('-----')
 disp(' ')
 
 
@@ -717,4 +725,8 @@ endt = now;
 fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))
 disp('-----')
 close all
+
+if strcmp(pwd,'/code')
+    diary off
+end
 
