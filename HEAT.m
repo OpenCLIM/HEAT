@@ -542,16 +542,18 @@ end
 % Adjust for UHI, if available
 if exist('UHI_adjustment','var')
     
+    datarange = [nanmin(nanmin((mean(data,3).*LSM))) nanmax(nanmax((mean(data,3).*LSM)))];
+    
     % Produce some output to sanity check
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     figure
-    UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
     
     
     data = data + UHI_adjustment;
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     figure
-    UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
 end
 
 
