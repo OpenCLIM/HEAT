@@ -598,8 +598,14 @@ if runDD == 1
     exdays = data - DDthresh;
     exdays(nonexdays) = nan;
     
+    % If it hasn't been defined already, assume the period length is 30
+    % years
+    if ~isfield(inputs,'PeriodLength')
+        inputs.PeriodLength = 30;
+    end
+    
     % Calculate extreme mean
-    DDx = nansum(exdays,3);
+    DDx = nansum(exdays,3) / inputs.PeriodLength;
     
     % Save output
 %     save([Climatedirout,'DDx.mat'],'DDx')
