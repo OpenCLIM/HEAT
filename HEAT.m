@@ -34,8 +34,8 @@ startt = now;
 % For testing purposes, to show the correct data has copied to the Docker
 % container (remove this later):
 if strcmp(pwd,'/code')
-    diary /data/outputs/Climate/output.txt
-    diary on
+%     diary /data/outputs/Climate/output.txt
+%     diary on
     disp('Running in Docker container with these files:')
     ls
     disp('-----')
@@ -733,7 +733,7 @@ fprintf('Total time taken to run: %s\n', datestr(endt-startt,'HH:MM:SS'))
 disp('-----')
 close all
 
-if strcmp(pwd,'/code')
-    diary off
-end
+% if strcmp(pwd,'/code')
+%     diary off
+% end
 
