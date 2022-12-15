@@ -28,9 +28,9 @@ spec:
             title: Extreme mean analysis
           - name: DD66
             title: Degree day analysis
-          - name: Absolute extremes
+          - name: AbsoluteExtremes
             title: Absolute extremes analysis
-          - name: Percentile extremes
+          - name: PercentileExtremes
             title: Percentile extremes analysis
         default: NetCDF
         required: true
@@ -119,12 +119,60 @@ spec:
         max: 99
         required: false
       -
+        name: X1
+        title: Spatial subset (latitude, south)
+        description: Enter a value in degrees north (-90 to 90)
+        type: number
+        min: -90
+        max: 90
+        required: false
+      -
+        name: X2
+        title: Spatial subset (latitude, north)
+        description: Enter a value in degrees north (-90 to 90), leave blank to choose one location
+        type: number
+        min: -90
+        max: 90
+        required: false
+      -
+        name: Y1
+        title: Spatial subset (longitude, west)
+        description: Enter a value in degrees east (-180 to 180)
+        type: number
+        min: -180
+        max: 180
+        required: false
+      -
+        name: Y2
+        title: Spatial subset (longitude, east)
+        description: Enter a value in degrees east (-180 to 180), leave blank to choose one location
+        type: number
+        min: -180
+        max: 180
+        required: false
+      -
         name: UHI_I
         title: Urban Heat Island intensity
         description: How much temperatures are amplified by due to UHI, comparing fully urban to fully rural
         type: number
         min: 0
         max: 10
+        required: false
+      -
+        name: ABS_T
+        title: Absolute temperature threshold
+        description: HEAT will count the number of days exceeding this threshold 
+        type: number
+        min: 0
+        max: 50
+        required: false
+      -
+        name: PER_T
+        title: Percentile temperature threshold
+        description: HEAT will calculate this percentile and count the number of days exceeding this threshold
+        type: integer
+        min: 1
+        max: 99
         required: false
       -
         name: ADAPT

@@ -27,26 +27,23 @@ fname = [fname,'-',period_start','-',period_end','.nc'];
 fname_long = fname;
 
 % Set some basic meta data for key derived variables
-if strcmp(Variable,'Tmean')
-    units = '°C';
-    standard_name = 'Tmean';
-    long_name = 'Daily mean temperature';
-    description = 'Daily mean temperature derived from daily max. and min.';
-    label_units = '°C';
-    plot_label = 'Temperature at 1.5m (°C)';
-end
-
-% Set some basic meta data for key derived variables
-if strcmp(Variable,'tas')
+if strcmp(Variable,'Tmean') || strcmp(Variable,'tas')
     units = '°C';
     standard_name = 'tas';
     long_name = 'Daily mean temperature';
-    description = 'Daily mean temperature derived from daily max. and min.';
+    description = 'Daily mean temperature';
+    label_units = '°C';
+    plot_label = 'Temperature at 1.5m (°C)';
+elseif strcmp(Variable,'Tmax') || strcmp(Variable,'tasmax')
+    units = '°C';
+    standard_name = 'tasmax';
+    long_name = 'Daily maximum temperature';
+    description = 'Daily maximum temperature';
     label_units = '°C';
     plot_label = 'Temperature at 1.5m (°C)';
 end
 
-    disp(['Current variable name is: ',Variable])
+    disp(['Current variable name is: ',standard_name])
 
 
 %% Start to save
@@ -59,31 +56,31 @@ y = xyz.projection_y_coordinate;
 z = xyz.dates;
 
 % Create netCDF and derived variable
-nccreate(fname_long,Variable,'Dimensions',{'projection_x_coordinate',length(x),'projection_y_coordinate',length(y),'time',length(data(1,1,:))},'Datatype','double','Format','netcdf4_classic','DeflateLevel',2)
-ncwrite(fname_long,Variable,data);
-ncwriteatt(fname_long,Variable,'standard_name',standard_name);
-ncwriteatt(fname_long,Variable,'long_name',long_name);
-ncwriteatt(fname_long,Variable,'units',units);
-ncwriteatt(fname_long,Variable,'description',description);
-ncwriteatt(fname_long,Variable,'label_units',label_units);
-ncwriteatt(fname_long,Variable,'plot_label',plot_label);
-ncwriteatt(fname_long,Variable,'grid_mapping','transverse_mercator');
-ncwriteatt(fname_long,Variable,'coordinates','ensemble_member_id latitude longitude month_number year yyyymmdd');
-ncwriteatt(fname_long,Variable,'missing_value',-9999);
+nccreate(fname_long,standard_name,'Dimensions',{'projection_x_coordinate',length(x),'projection_y_coordinate',length(y),'time',length(data(1,1,:))},'Datatype','double','Format','netcdf4_classic','DeflateLevel',2)
+ncwrite(fname_long,standard_name,data);
+ncwriteatt(fname_long,standard_name,'standard_name',standard_name);
+ncwriteatt(fname_long,standard_name,'long_name',long_name);
+ncwriteatt(fname_long,standard_name,'units',units);
+ncwriteatt(fname_long,standard_name,'description',description);
+ncwriteatt(fname_long,standard_name,'label_units',label_units);
+ncwriteatt(fname_long,standard_name,'plot_label',plot_label);
+% ncwriteatt(fname_long,standard_name,'grid_mapping','transverse_mercator');
+ncwriteatt(fname_long,standard_name,'coordinates','ensemble_member_id latitude longitude month_number year yyyymmdd');
+ncwriteatt(fname_long,standard_name,'missing_value',-9999);
 
 % Add lat and long data
 nccreate(fname_long,'projection_x_coordinate','Dimensions',{'projection_x_coordinate',length(x)},'Datatype','single','Format','netcdf4_classic','DeflateLevel',2)
 ncwrite(fname_long,'projection_x_coordinate',x);
-ncwriteatt(fname_long,'projection_x_coordinate','standard_name','easting');
-ncwriteatt(fname_long,'projection_x_coordinate','long_name','easting');
-ncwriteatt(fname_long,'projection_x_coordinate','units','m');
+% ncwriteatt(fname_long,'projection_x_coordinate','standard_name','easting');
+% ncwriteatt(fname_long,'projection_x_coordinate','long_name','easting');
+% ncwriteatt(fname_long,'projection_x_coordinate','units','m');
 ncwriteatt(fname_long,'projection_x_coordinate','axis','X');
 
 nccreate(fname_long,'projection_y_coordinate','Dimensions',{'projection_y_coordinate',length(y)},'Datatype','single','Format','netcdf4_classic','DeflateLevel',2)
 ncwrite(fname_long,'projection_y_coordinate',y);
-ncwriteatt(fname_long,'projection_y_coordinate','standard_name','northing');
-ncwriteatt(fname_long,'projection_y_coordinate','long_name','northing');
-ncwriteatt(fname_long,'projection_y_coordinate','units','m');
+% ncwriteatt(fname_long,'projection_y_coordinate','standard_name','northing');
+% ncwriteatt(fname_long,'projection_y_coordinate','long_name','northing');
+% ncwriteatt(fname_long,'projection_y_coordinate','units','m');
 ncwriteatt(fname_long,'projection_y_coordinate','axis','Y');
 
 % Add time and date data
@@ -95,8 +92,8 @@ ncwriteatt(fname_long,'projection_y_coordinate','axis','Y');
 nccreate(fname_long,'time','Dimensions',{'time',length(data(1,1,:))},'Datatype','single','Format','netcdf4_classic','DeflateLevel',2)
 ncwrite(fname_long,'time',xyz.times);
 ncwriteatt(fname_long,'time','standard_name','time');
-ncwriteatt(fname_long,'time','units','hours since 1970-01-01 00:00:00');
-ncwriteatt(fname_long,'time','calendar','365_day');
+% ncwriteatt(fname_long,'time','units','hours since 1970-01-01 00:00:00');
+% ncwriteatt(fname_long,'time','calendar','365_day');
 ncwriteatt(fname_long,'time','axis','T');
 
 nccreate(fname_long,'yyyymmdd','Dimensions',{'time',length(data(1,1,:)),'string64',64},'Datatype','char')
@@ -109,8 +106,23 @@ ncwriteatt(fname_long,'/','collection','HEAT derived variable')
 ncwriteatt(fname_long,'/','creation_date',datestr(now))
 %     ncwriteatt(fname_long,'/','domain',fname(11:12))
 ncwriteatt(fname_long,'/','title','Variable extracted from UKCP18')
-ncwriteatt(fname_long,'/','version','HEAT v1.1')
+ncwriteatt(fname_long,'/','version','HEAT v2.0')
 
+% Add meta data if same format as UKCP18 data
+if length(data(:,1,1)) == 82 && length(data(1,:,1)) == 112
+    ncwriteatt(fname_long,Variable,'grid_mapping','transverse_mercator');
+    
+    ncwriteatt(fname_long,'projection_x_coordinate','standard_name','easting');
+    ncwriteatt(fname_long,'projection_x_coordinate','long_name','easting');
+    ncwriteatt(fname_long,'projection_x_coordinate','units','m');
+    
+    ncwriteatt(fname_long,'projection_y_coordinate','standard_name','northing');
+    ncwriteatt(fname_long,'projection_y_coordinate','long_name','northing');
+    ncwriteatt(fname_long,'projection_y_coordinate','units','m');
+    
+    ncwriteatt(fname_long,'time','units','hours since 1970-01-01 00:00:00');
+%     ncwriteatt(fname_long,'time','calendar','365_day');
+end
 
 
 
