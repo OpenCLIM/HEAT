@@ -1,5 +1,5 @@
 api_version: v1beta2
-kind: Model
+kind: M
 metadata: 
   description: "The Heat Extremes Analysis Toolbox (HEAT) has been created for the OpenCLIM project, for integration of heatwave and related temperature and heat stress extremes analysis with other climate risk modelling. \n"
   display_name: HEAT
