@@ -65,12 +65,12 @@ end
 % Alternatively, user can specify a time period based on its start year...
 if ~isempty(env_tims)
     disp('Environment variable found for defining time period: updating inputs file')
-    inputs.PeriodStart = env_tims;
+    inputs.PeriodStart = str2double(string(env_tims));
 end
 
 % ...and the length of the period
 if ~isempty(env_timl)
-    inputs.PeriodLength = env_timl;
+    inputs.PeriodLength = str2double(string(env_timl));
 else
     inputs.PeriodLength = 30; % Otherwise assume 30 year default
 end
@@ -83,27 +83,27 @@ end
 
 % If a spatial subset has been specified, setup array to store info
 if ~isempty(env_x1) && ~isempty(env_x2) % if range is given
-        inputs.PeriodStart = nan(2,2);
+        inputs.SpatialRange = nan(2,2);
 elseif ~isempty(env_x1) % if single value is given
-        inputs.PeriodStart = nan(2,1);
+        inputs.SpatialRange = nan(2,1);
 end
 
 % Set spatial limits
 if ~isempty(env_x1)
     disp('Environment variable found for defining x limit: updating inputs file')
-    inputs.PeriodStart(1,1) = env_x1;
+    inputs.SpatialRange(1,1) = str2double(string(env_x1));
 end
 if ~isempty(env_x2)
     disp('Environment variable found for defining second x limit: updating inputs file')
-    inputs.PeriodStart(1,2) = env_x2;
+    inputs.SpatialRange(1,2) = str2double(string(env_x2));
 end
 if ~isempty(env_y1)
     disp('Environment variable found for defining y limit: updating inputs file')
-    inputs.PeriodStart(2,1) = env_y1;
+    inputs.SpatialRange(2,1) = str2double(string(env_y1));
 end
 if ~isempty(env_y2)
     disp('Environment variable found for defining second y limit: updating inputs file')
-    inputs.PeriodStart(2,2) = env_y2;
+    inputs.SpatialRange(2,2) = str2double(string(env_y2));
 end
 
 % Choose the output type (e.g. a netCDF for use in HARM, some analysis etc.)
@@ -116,7 +116,7 @@ end
 % HARM MMT and RR will be adjusted in line with this warming
 if ~isempty(env_adap)
     disp('Environment variable found for setting acclimatisation percentile: updating inputs file')
-    inputs.MMTpctile = env_adap;
+    inputs.MMTpctile = str2double(string(env_adap));
 end
 
 
@@ -124,7 +124,7 @@ end
 % urbanisation will increase local temperatures)
 if ~isempty(env_green)
     disp('Environment variable found for parameterising cooling due to greening: updating inputs file')
-    inputs.Greening = env_green;
+    inputs.Greening = str2double(string(env_green));
 else
     inputs.Greening = 0;
 end
@@ -133,7 +133,7 @@ end
 % urbanisation will increase local temperatures)
 if ~isempty(env_uhii)
     disp('Environment variable found for defining Urban Heat Island intensity: updating inputs file')
-    inputs.UHI_I = env_uhii;
+    inputs.UHI_I = str2double(string(env_uhii));
 else
     inputs.UHI_I = 2;
 end
@@ -141,14 +141,14 @@ end
 % Set an absolute threshold for extremes analysis
 if ~isempty(env_abst)
     disp('Environment variable found for setting absolute threshold: updating inputs file')
-    inputs.AbsThresh = env_abst;
+    inputs.AbsThresh = str2double(string(env_abst));
 end
 
 % Choose a percentile for simulating best-case-scenario acclimatisation ?
 % HARM MMT and RR will be adjusted in line with this warming
 if ~isempty(env_pert)
     disp('Environment variable found for setting percentile threshold: updating inputs file')
-    inputs.AbsThresh = env_pert;
+    inputs.AbsThresh = str2double(string(env_pert));
 end
 
 
