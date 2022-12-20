@@ -159,6 +159,14 @@ spec:
         max: 10
         required: false
       -
+        name: GREENING
+        title: Urban greening cooling effect
+        description: How much temperatures are amplified by due to UHI, comparing fully urban to fully rural
+        type: number
+        min: 0
+        max: 10
+        required: false
+      -
         name: ABS_T
         title: Absolute temperature threshold
         description: HEAT will count the number of days exceeding this threshold 

@@ -182,7 +182,11 @@ if exist('Urbandirin','var')
         disp('The following urban development data is available to be loaded:')
         ls([Urbandirin '*.asc'])
         disp('-----')
-        [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
+        if exist([Urbandirin 'out_cell_dev-12km-sum.asc'],'file')
+            [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev-12km-sum.asc']);
+        else
+            [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
+        end
         
         disp('Urban data loaded')
         
@@ -271,7 +275,7 @@ end
 %% Urban greening parameterisation
 if isfield(inputs,'Greening')
     if exist('dev_all','var')
-        GreenEffect = dev_all *double(inputs.UHI_I);
+        GreenEffect = dev_all *double(inputs.Greening);
         GreenEffect(isnan(GreenEffect)) = 0;
     end
 end
