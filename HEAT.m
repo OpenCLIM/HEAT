@@ -324,7 +324,7 @@ if exist('Urbandirin','var')
         end
         
         % Adjust temperature based on increased UHI intensity
-        UHI_I = str2double(inputs.UHI_I); % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
+        UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
         
         UHI_adjustment = urb_change * UHI_I;
         UHI_adjustment(isnan(UHI_adjustment)) = 0;
