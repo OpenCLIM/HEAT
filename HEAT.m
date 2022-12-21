@@ -294,7 +294,7 @@ if exist('Urbandirin','var')
             idyy2 = 112-idyy;
             urb_change(idyy2:idyy2+52,idxx:idxx+45) = urb_change12;
             % Rotate to same orientation as raw data
-            urb_change = root90(urb_change,3);
+            urb_change = rot90(urb_change,3);
             urb_tot = urb_frac_RCM + urb_change;
             % Remove ocean points
             urb_change = urb_change .* LSM12;
