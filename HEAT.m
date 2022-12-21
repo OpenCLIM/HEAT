@@ -204,7 +204,7 @@ if exist('Urbandirin','var')
             % Find change in urban isation
             urb_change = dev_new - dev_old;
             save([Climatedirout,'urb_change.mat'],'urb_change')
-            dev_all = dev_new;
+            urb_tot = dev_new;
             
         % Regrid only if necessary    
         else
@@ -244,9 +244,9 @@ if exist('Urbandirin','var')
             % projection_y_cooridnate, and RCM urban fraction ancil
             % (produced by generate_urbfrac_12km.m)
             load('LSM12.mat')
-            load('x.mat')
-            load('y.mat')
-            load('urb_frac_RCM.mat')
+            load('PreProcessedData/x.mat')
+            load('PreProcessedData/y.mat')
+            load('PreProcessedData/urb_frac_RCM.mat')
 
             % Find where grids overlap
             for i = 1:120
