@@ -189,8 +189,9 @@ if exist('Urbandirin','var')
         end
         
         disp('Urban data loaded')
+   
         
-        % Find existing development
+        % Find existing development and save output for testing
         dev_old = baseline_urb == 1;
         % Find new development
         dev_new = baseline_urb >= 1;
@@ -211,49 +212,115 @@ if exist('Urbandirin','var')
             [nrows,ncols,~]=size(baseline_urb);
             [row,col]=ndgrid(1:nrows,1:ncols);
             [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
-            [lats_urb,lons_urb] = os2ll(lon_urb,lat_urb);
-            disp('Urban data regridded to lat-long')
+%             [lats_urb,lons_urb] = os2ll(lon_urb,lat_urb);
+%             disp('Urban data regridded to lat-long')
             
-            % Aggregate to 2km
-            regrid_res = 20; % FOR TESTING
+            % Aggregate to 12km
+%             regrid_res = 20; % FOR TESTING
+%             
+%             x = floor(length(baseline_urb(:,1))/regrid_res);
+%             y = floor(length(baseline_urb(1,:))/regrid_res);
+%             dev_old_1km = zeros(x,y);
+%             dev_new_1km = zeros(x,y);
+%             lat_urb_1km = nan(x,y);
+%             lon_urb_1km = nan(x,y);
+%             for i = 1:x
+%                 for j = 1:y
+%                     ii = 1+(i-1)*regrid_res:regrid_res+(i-1)*regrid_res;
+%                     jj = 1+(j-1)*regrid_res:regrid_res+(j-1)*regrid_res;
+%                     
+%                     dev_old_1km(i,j) = nanmean(nanmean(dev_old(ii,jj)));
+%                     dev_new_1km(i,j) = nanmean(nanmean(dev_new(ii,jj)));
+%                     lat_urb_1km(i,j) = nanmean(nanmean(lats_urb(ii,jj)));
+%                     lon_urb_1km(i,j) = nanmean(nanmean(lons_urb(ii,jj)));
+%                 end
+%             end
             
-            x = floor(length(baseline_urb(:,1))/regrid_res);
-            y = floor(length(baseline_urb(1,:))/regrid_res);
-            dev_old_1km = zeros(x,y);
-            dev_new_1km = zeros(x,y);
-            lat_urb_1km = nan(x,y);
-            lon_urb_1km = nan(x,y);
-            for i = 1:x
-                for j = 1:y
-                    ii = 1+(i-1)*regrid_res:regrid_res+(i-1)*regrid_res;
-                    jj = 1+(j-1)*regrid_res:regrid_res+(j-1)*regrid_res;
-                    
-                    dev_old_1km(i,j) = nanmean(nanmean(dev_old(ii,jj)));
-                    dev_new_1km(i,j) = nanmean(nanmean(dev_new(ii,jj)));
-                    lat_urb_1km(i,j) = nanmean(nanmean(lats_urb(ii,jj)));
-                    lon_urb_1km(i,j) = nanmean(nanmean(lons_urb(ii,jj)));
+            % % Load UKCP18 grid
+% y=ncread('/Users/ak0920/Downloads/Testing_sWBGTmean_19801201-20801130.nc','projection_y_coordinate');
+% x=ncread('/Users/ak0920/Downloads/Testing_sWBGTmean_19801201-20801130.nc','projection_x_coordinate');
+%
+            % Load pre-processed LSM, projection_x_cooridnate,
+            % projection_y_cooridnate, and RCM urban fraction ancil
+            % (produced by generate_urbfrac_12km.m)
+            load('LSM12.mat')
+            load('x.mat')
+            load('y.mat')
+            load('urb_frac_RCM.mat')
+
+            % Find where grids overlap
+            for i = 1:120
+                lat_mean = mean(lat_urb(1+i:120+i,1));
+                lon_mean = mean(lon_urb(1,1+i:120+i));
+
+                idxs = ismember(x,lon_mean);
+                idys = ismember(y,lat_mean);
+
+                if sum(idxs) == 1
+                    idx = i;
+                    vals = 1:82;
+                    idxx = vals(idxs);
+                end
+                if sum(idys) == 1
+                    idy = i;
+                    vals = 1:112;
+                    idyy = vals(idys);
+                end
+
+            end
+
+            lenx = floor(length(baseline_urb(1,:)) / 120)-1;
+            leny = floor(length(baseline_urb(:,1)) / 120)-1;
+
+            sums_orig = zeros(leny,lenx);
+            sums = zeros(leny,lenx);
+
+            % Aggregate to RCM grid
+            for i = 1:lenx
+                for j = 1:leny
+
+                    sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
+                    sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
+
                 end
             end
-            disp('Urban data aggregated to 2km')
+
+            % Find difference and normalise to 0-1
+            urb_change12 = (sums-sums_orig)/120/120;
+
+            % Create array on same grid as RCM
+            urb_change = zeros(112,82);
+            % Paste UDM data onto correct part of the grid
+            idyy2 = 112-idyy;
+            urb_change(idyy2:idyy2+52,idxx:idxx+45) = urb_change12;
+            % Rotate to same orientation as raw data
+            urb_change = root90(urb_change,3);
+            urb_tot = urb_frac_RCM + urb_change;
+            % Remove ocean points
+            urb_change = urb_change .* LSM12;
+            urb_tot = urb_tot .* LSM12;
+            
+            disp('Urban data aggregated to 12km')
             
             % Find change in urban area
-            urb_change = dev_new_1km - dev_old_1km;
+%             urb_change = dev_new_1km - dev_old_1km;
             save([Climatedirout,'urb_change.mat'],'urb_change')
+            save([Climatedirout,'urb_tot.mat'],'urb_tot')
             
-            % Re-grid to RCM grid
-            disp('Starting re-gridding')
-            dev_new_interp = griddata(lon_urb_1km,lat_urb_1km,dev_new_1km,long_UK_RCM,lat_UK_RCM,'linear');
-            urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
-            disp('Re-gridding complete')
+%             % Re-grid to RCM grid
+%             disp('Starting re-gridding')
+%             dev_new_interp = griddata(lon_urb_1km,lat_urb_1km,dev_new_1km,long_UK_RCM,lat_UK_RCM,'linear');
+%             urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
+%             disp('Re-gridding complete')
             
-            urb_change_interp_raw = urb_change_interp;
-            save([Climatedirout,'urb_change_interp_raw.mat'],'urb_change_interp_raw')
-            urb_change_interp(urb_change_interp_raw > 1) = 1;
-            save([Climatedirout,'urb_change_interp.mat'],'urb_change_interp')
-            
-            % Give standard name for use later
-            urb_change = urb_change_interp;
-            dev_all = dev_new_interp;
+%             urb_change_interp_raw = urb_change_interp;
+%             save([Climatedirout,'urb_change_interp_raw.mat'],'urb_change_interp_raw')
+%             urb_change_interp(urb_change_interp_raw > 1) = 1;
+%             save([Climatedirout,'urb_change_interp.mat'],'urb_change_interp')
+%             
+%             % Give standard name for use later
+%             urb_change = urb_change_interp;
+%             dev_all = dev_new_interp;
         end
         
         % Adjust temperature based on increased UHI intensity
@@ -274,8 +341,8 @@ end
 
 %% Urban greening parameterisation
 if isfield(inputs,'Greening')
-    if exist('dev_all','var')
-        GreenEffect = dev_all *double(inputs.Greening);
+    if exist('urb_tot','var')
+        GreenEffect = urb_tot *double(inputs.Greening);
         GreenEffect(isnan(GreenEffect)) = 0;
     end
 end

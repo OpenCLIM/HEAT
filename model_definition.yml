@@ -161,7 +161,7 @@ spec:
       -
         name: GREENING
         title: Urban greening cooling effect
-        description: How much temperatures are amplified by due to UHI, comparing fully urban to fully rural
+        description: How much temperatures are reduced by urban greening, comparing fully urban to fully rural
         type: number
         min: 0
         max: 10
