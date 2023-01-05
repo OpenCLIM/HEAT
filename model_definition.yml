@@ -201,7 +201,7 @@ spec:
         required: true
       -
         default:
-          - 160832c2-2ae5-42c3-b237-2762c70c357f
+          - 7d4d4468-e5e4-450e-bbc3-85e4e9885b03
         description: "A dataslot for the required pre-processed HEAT data"
         name: PreProcessedData
         path: inputs/PreProcessedData/

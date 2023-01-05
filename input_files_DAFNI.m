@@ -75,12 +75,6 @@ else
     inputs.PeriodLength = 30; % Otherwise assume 30 year default
 end
 
-% If user wants to select a warming level above pre-industrial
-if ~isempty(env_scen)
-    disp('Environment variable found for Scenario: updating inputs file')
-    inputs.Scenario = string(env_scen);
-end
-
 % If a spatial subset has been specified, setup array to store info
 if ~isempty(env_x1) && ~isempty(env_x2) % if range is given
         inputs.SpatialRange = nan(2,2);

@@ -375,15 +375,25 @@ end
 
 % Load one file as an example to check if data is in 3D
 file = ([files(1).folder,'/',files(1).name]);
-datatest = double(ncread(file,char(inputs.Variable)));
-s1 = size(datatest);
-ncstarts = [1 1 1];
-ncends = [Inf Inf Inf];
-
-if ndims(datatest) > 3
-    disp('Input netCDF has too many dimensions (more than 3): CANCELLING')
-    return
+try
+    datatest = double(ncread(file,char(inputs.Variable),[1 1 1],[Inf Inf Inf]));
+    ncstarts = [1 1 1];
+    ncends = [Inf Inf Inf];
+catch
+    datatest = double(ncread(file,char(inputs.Variable),[1 1 1 1],[Inf Inf Inf Inf]));
+    ncstarts = [1 1 1 1];
+    ncends = [Inf Inf Inf Inf];
+    
+    if ndims(datatest) > 3
+        disp('Input netCDF has too many dimensions (more than 3): CANCELLING')
+        return 
+        % This will only happen if it is a properly 4D dataset, e.g. with depth layers
+        % Normal UKCP18 data is 4D, but the final D is only 1 long, which
+        % is why the try/catch is necessary
+    end
 end
+
+s1 = size(datatest);
 
 % Also find out orientation of date strings (assuming there is a long timeseries)
 datestest = ncread(file,'yyyymmdd');
