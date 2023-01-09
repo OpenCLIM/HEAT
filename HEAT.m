@@ -186,8 +186,8 @@ if exist('Urbandirin','var')
     else
         
         % Find the correct file in the subdirectory to load
-        for i = 1:length(test)
-            if strcmp(test(i).name,'out_cell_dev.asc')
+        for i = 1:length(urbfiles)
+            if strcmp(urbfiles(i).name,'out_cell_dev.asc')
                 f = i;
             end
         end
