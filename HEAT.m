@@ -172,6 +172,11 @@ end
 if exist('Urbandirin','var')
     % Find list of files to load
     urbfiles = dir([Urbandirin '*.asc']);
+    % If there are no ascii files in directory, try going a sub-directory
+    % deeper
+    if isempty(urbfiles)
+        urbfiles = dir([Urbandirin '*/*.asc']);
+    end
     
     % Assuming data files exist, continue with loading
     if isempty(urbfiles)
@@ -179,14 +184,27 @@ if exist('Urbandirin','var')
         disp('-----')
         disp(' ')
     else
-        disp('The following urban development data is available to be loaded:')
-        ls([Urbandirin '*.asc'])
-        disp('-----')
+        
+        % Find the correct file in the subdirectory to load
+        for i = 1:length(test)
+            if strcmp(test(i).name,'out_cell_dev.asc')
+                f = i;
+            end
+        end
+        
+        %         ls([Urbandirin '*.asc'])
         if exist([Urbandirin 'out_cell_dev-12km-sum.asc'],'file')
             [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev-12km-sum.asc']);
         else
-            [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
+            % Load the correct file
+            file = [urbfiles(f).folder,'/',urbfiles(f).name];
+            disp('The following urban development data is available to be loaded:')
+            disp(file)
+            disp('-----')
+            %             [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
+            [baseline_urb,RefMat]= arcgridread(file);
         end
+        
         
         disp('Urban data loaded')
    

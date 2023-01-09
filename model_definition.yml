@@ -194,7 +194,7 @@ spec:
     dataslots: 
       - 
         default: 
-          - 60cf23f9-b5b8-48c6-ae02-62facef23ec5
+          - 2e84261b-014e-4324-a978-0ff66c8d9779
         description: "A dataslot that should contain netCDF climate data (default = UKCP18 RCM ensemble member 01, raw non-bias corrected)"
         name: ClimateData
         path: inputs/ClimateData/
