@@ -310,7 +310,8 @@ if exist('Urbandirin','var')
             urb_change = zeros(112,82);
             % Paste UDM data onto correct part of the grid
             idyy2 = 112-idyy;
-            urb_change(idyy2:idyy2+52,idxx:idxx+45) = urb_change12;
+%             urb_change(idyy2:idyy2+52,idxx:idxx+45) = urb_change12;
+            urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
             % Rotate to same orientation as raw data
             urb_change = rot90(urb_change,3);
             urb_tot = urb_frac_RCM + urb_change;
