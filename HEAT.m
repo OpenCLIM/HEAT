@@ -556,6 +556,7 @@ if isfield(inputs,'PeriodStart')
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
     
+    
 elseif isfield(inputs,'Scenario')
     % Load the years each scenario reaches a warming level
     load('PreProcessedData/tas_GCM_glob_thresh_arr_arnell.mat')
@@ -591,17 +592,19 @@ elseif isfield(inputs,'Scenario')
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
 
-    % If a baseline has been defined that is earlier, load from here
-    if inputs.BaselineStart < TemporalStart
-        TemporalStart2 = str2double([num2str(inputs.BaselineStart),'0101']);
-    else
-        TemporalStart2 = TemporalStart;
-    end
     
 else
     disp('No time period defined: STOPPING')
     return
 end
+
+% If a baseline has been defined that is earlier, load from here
+if inputs.BaselineStart < TemporalStart
+    TemporalStart2 = str2double([num2str(inputs.BaselineStart),'0101']);
+else
+    TemporalStart2 = TemporalStart;
+end
+
 
 
 %% Load only the files required for the temporal/spatial subset
