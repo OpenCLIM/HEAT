@@ -103,6 +103,14 @@ spec:
             title: 4.0 °C warming above pre-industrial
         required: false
       -
+        name: BASELINE_S
+        title: Start date of baseline period
+        description: The first year of the time period you want to as the baseline for calculating acclimatisation
+        type: integer
+        min: 1981
+        max: 2079
+        required: false
+      -
         name: TIMEPERIOD_S
         title: Time period start
         description: The first year of the time period you want to analyse

@@ -17,6 +17,7 @@ env_runn = getenv('RUNNAME');
 env_varn = getenv('VARNAME');
 env_varno = getenv('VARNAMEOTHER');
 env_scen = getenv('SCENARIO');
+env_bases = getenv('BASELINE_S');
 env_tims = getenv('TIMEPERIOD_S');
 env_timl = getenv('TIMEPERIOD_L');
 env_cal = getenv('CALENDAR');
@@ -65,6 +66,12 @@ disp(['Using variable name ', char(string(inputs.Variable))])
 if ~isempty(env_scen)
     disp(['Environment variable found for Scenario: updating inputs file to ', char(string(env_scen))])
     inputs.Scenario = string(env_scen);
+end
+
+% Define a baseline start for acclimatisation
+if ~isempty(env_bases)
+    disp(['Environment variable found for defining baseline period: updating start year to ', char(string(env_bases))])
+    inputs.BaselineStart = str2double(string(env_bases));
 end
 
 % Alternatively, user can specify a time period based on its start year...

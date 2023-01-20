@@ -590,6 +590,14 @@ elseif isfield(inputs,'Scenario')
     % Convert years to correct format
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
+
+    % If a baseline has been defined that is earlier, load from here
+    if inputs.BaselineStart < TemporalStart
+        TemporalStart2 = str2double([num2str(inputs.BaselineStart),'0101']);
+    else
+        TemporalStart2 = TemporalStart;
+    end
+    
 else
     disp('No time period defined: STOPPING')
     return
@@ -598,7 +606,7 @@ end
 
 %% Load only the files required for the temporal/spatial subset
 % If specific years are required
-if exist('PeriodStart','var')
+if exist('TemporalStart2','var')
     % Find which files cover the required start and end dates
     for i = 1:length(files)
         % Find when the netCDF files start and end
@@ -606,7 +614,7 @@ if exist('PeriodStart','var')
         fend = files(i).name(end-10:end-3);
         
         % Find netCDF file that contains required start
-        if str2double(fstart) <= TemporalStart && str2double(fend) >= TemporalStart
+        if str2double(fstart) <= TemporalStart2 && str2double(fend) >= TemporalStart2
             startload = i;
         end
         
