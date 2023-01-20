@@ -41,8 +41,6 @@ if strcmp(pwd,'/code')
 end
 
 %% Check inputs
-% If running HEAT as standalone app, inputs should be included in a
-% seperate inputs script, which can be adapted from input_files_TEMPLATE.m.
 % If running HEAT through the MATLAB GUI, then it is possible to have run
 % input_files_TEMPLATE.m first, in which case the structures this script
 % creates can be input.
@@ -51,7 +49,7 @@ end
 % Load the default DAFNI template:
 if ~exist('inputs','var')
     disp('No inputs file passed to Docker: running default for DAFNI')
-    input_files_DAFNI
+    input_files_DAFNI % This will also update from environment variables
     disp(' ')
     
     % Create output directory
@@ -103,15 +101,11 @@ else
     end
 end
 
-% Save input files for future reference
-save([Climatedirout,'inputs.mat'],'inputs')
-
 
 %% Find which steps of HEAT to run
 % Set default to not run steps
 runexmean = 0;
 runDD = 0;
-runanalysis = 0;
 runworkflow = 0;
 runabsext = 0;
 runperext = 0;
@@ -127,8 +121,6 @@ if isfield(inputs,'OutputType')
         runabsext = 1;
     elseif strcmp(string(inputs.OutputType),'PercentileExtremes')
         runperext = 1;
-    elseif strcmp(string(inputs.OutputType),'Heatwave exposure (HE)') % NEEDS ADDED
-        runanalysis = 1;
     elseif strcmp(string(inputs.OutputType),'NetCDF')
         runworkflow = 1;
     end
@@ -432,6 +424,7 @@ if s1(1) == 82 && s1(2) == 112
     LSM = LSM12;
     UK_area = areas_12km_frac_UK;
     reg_area = areas_12km_frac_regions;
+    reg_mask = UKregions12;
     
     subsetting = 1;
     averaging = 1;
@@ -443,6 +436,19 @@ elseif s1(1) == 17 && s1(2) == 23
     LSM = LSM60;
     UK_area = areas_60km_frac_UK;
     reg_area = areas_60km_frac_regions;
+    reg_mask = UKregions60;
+    
+    subsetting = 1;
+    averaging = 1;
+    
+elseif s1(1) == 484 && s1(2) == 606
+    disp('Input data is on UKCP18 CPM grid')
+    lats = lat_UK_CPM;
+    lons = long_UK_CPM;
+    LSM = LSM2;
+    UK_area = areas_2km_frac_UK;
+    reg_area = areas_2km_frac_regions;
+    reg_mask = UKregions2;
     
     subsetting = 1;
     averaging = 1;
@@ -505,7 +511,33 @@ if subsetting == 1
         end
         
     elseif isfield(inputs,'Region')
-        % TO DO: Insert code for selecting specific regions
+        % Select correct region ID for subsetting from pre-processed
+        % regions mask
+        if strcmp(inputs.Region,'Scot')
+            region_n = 1;
+        elseif strcmp(inputs.Region,'NE')
+            region_n = 2;
+        elseif strcmp(inputs.Region,'NW')
+            region_n = 3;
+        elseif strcmp(inputs.Region,'YH')
+            region_n = 4;
+        elseif strcmp(inputs.Region,'EM')
+            region_n = 5;
+        elseif strcmp(inputs.Region,'WM')
+            region_n = 6;
+        elseif strcmp(inputs.Region,'EE')
+            region_n = 7;
+        elseif strcmp(inputs.Region,'GL')
+            region_n = 8;
+        elseif strcmp(inputs.Region,'SE')
+            region_n = 9;
+        elseif strcmp(inputs.Region,'SW')
+            region_n = 10;
+        elseif strcmp(inputs.Region,'Wales')
+            region_n = 11;
+        elseif strcmp(inputs.Region,'NI')
+            region_n = 12;
+        end
     end
 end
 
@@ -612,6 +644,11 @@ if datedim == 1
     dates = dates';
 end
 
+% Regional subset if necessary
+if exist('region_n','var')
+    data = data .* reg_mask == region_n;
+end
+
 
 %% Tidy up temporally
 % Tidy up the calendar dates:
@@ -644,7 +681,20 @@ end
 % If required, calculate acclimatisation baseline
 if averaging == 1
     if isfield(inputs,'MMTpctile')
-        baseline = prctile(data(:,:,1:7300),inputs.MMTpctile,3); % This takes 1981-2000 as the baseline
+        % Set baseline ids
+        if isfield(inputs,'PeriodLength')
+            n_years = inputs.PeriodLength;
+        else
+            n_years = 30;
+        end
+        
+        if strcmp(inputs.Calendar,'d360')
+            base_len = 360 * n_years;
+        elseif strcmp(inputs.Calendar,'d365') || strcmp(inputs.Calendar,'noleap')
+            base_len = 365 * n_years;
+        end
+        
+        baseline = prctile(data(:,:,1:base_len),inputs.MMTpctile,3); % This takes 1981-2000 as the baseline % ATKA: THIS NEEDS UPDATED
         for reg = 1:13
             if reg == 13
                 reg_acclim(reg,1) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
@@ -695,10 +745,11 @@ if runexmean == 1
     % Set default if necessary
     if ~isfield(inputs,'ExtremeMeanPctile')
         inputs.ExtremeMeanPctile = 95; 
-        disp('Calculating extreme mean for default 95th percentile')
-        disp('For reproduction of Kennedy-Asser et al. 2022, use Tmax summer only data')
-        disp('-----')
     end
+    
+    disp(['Calculating extreme mean for default ',num2str(inputs.ExtremeMeanPctile),'th percentile'])
+    disp('Note: For reproduction of Kennedy-Asser et al. 2022, use 95th percentile of Tmax summer only data')
+    disp('-----')
     
     % Find xth percentile for each grid point
     exmeanthresh = prctile(data,inputs.ExtremeMeanPctile,3);
@@ -828,22 +879,6 @@ if runperext == 1
 end
 
 
-
-%% Calculate acclimatisation as shift in regional percentile
-if averaging == 1
-    if isfield(inputs,'MMTpctile')
-        baseline = prctile(data,inputs.MMTpctile,3);
-        for reg = 1:13
-            if reg == 13
-                reg_acclim(reg,2) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
-            else
-                reg_acclim(reg,2) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
-            end
-        end
-    end
-end
-
-
 %% Generate output for other models in workflows
 if runworkflow == 1
     
@@ -855,48 +890,50 @@ if runworkflow == 1
     xyz.projection_x_coordinate = projection_x_coordinate;
     xyz.projection_y_coordinate = projection_y_coordinate;
     
-    % Check dim sizes
-    disp('Data dimension sizes = ')
-    size(data)
-    disp('X dimension sizes = ')
-    size(xyz.projection_x_coordinate)
-    disp('Y dimension sizes = ')
-    size(xyz.projection_y_coordinate)
-    disp('Time dimension sizes = ')
-    length(data(1,1,:))
-    
     save_HARM_nc(nc_name,data,xyz,char(inputs.Variable))
-end
-
-
-
-%% Save other outputs that might be required later in workflow
-if isfield(inputs,'MMTpctile')
-    % Shift in percentiles for acclimatisation
-    reg_acclim = reg_acclim(:,2) - reg_acclim(:,1);
-    % First, convert to 2D:
-    reg_acclim_2D = zeros(length(grid_idx),length(grid_idy)); % lon x lat
-    for reg = 1:12
-        mask = UKregions12 == reg;
-        reg_acclim_sim = zeros(length(grid_idx),length(grid_idy));
-        reg_acclim_sim(mask) = reg_acclim(reg);
-        reg_acclim_2D(:,:) = reg_acclim_2D(:,:) + reg_acclim_sim;
-        
+    
+    % Calculate acclimatisation as shift in regional percentile
+    if averaging == 1
+        if isfield(inputs,'MMTpctile')
+            baseline = prctile(data,inputs.MMTpctile,3);
+            for reg = 1:13
+                if reg == 13
+                    reg_acclim(reg,2) = nansum(nansum(baseline .* UK_area(grid_idx,grid_idy)));
+                else
+                    reg_acclim(reg,2) = nansum(nansum(baseline .* reg_area(grid_idx,grid_idy,reg)));
+                end
+            end
+            
+            % Shift in percentiles for acclimatisation
+            reg_acclim = reg_acclim(:,2) - reg_acclim(:,1);
+            % First, convert to 2D:
+            reg_acclim_2D = zeros(length(grid_idx),length(grid_idy)); % lon x lat
+            for reg = 1:12
+                mask = UKregions12 == reg;
+                reg_acclim_sim = zeros(length(grid_idx),length(grid_idy));
+                reg_acclim_sim(mask) = reg_acclim(reg);
+                reg_acclim_2D(:,:) = reg_acclim_2D(:,:) + reg_acclim_sim;
+                
+            end
+            
+            save([Climatedirout,'reg_acclim_2D.mat'],'reg_acclim_2D')
+        end
     end
     
-    save([Climatedirout,'reg_acclim_2D.mat'],'reg_acclim_2D')
-end
-
-% Spatial subset ids
-if exist('grid_idx','var')
-    save([Climatedirout,'grid_idx.mat'],'grid_idx')
-end
-if exist('grid_idy','var')
-    save([Climatedirout,'grid_idy.mat'],'grid_idy')
+    % Spatial subset ids
+    if exist('grid_idx','var')
+        save([Climatedirout,'grid_idx.mat'],'grid_idx')
+    end
+    if exist('grid_idy','var')
+        save([Climatedirout,'grid_idy.mat'],'grid_idy')
+    end
 end
 
 
 %% Finish up
+% Save input files for future reference
+save([Climatedirout,'inputs.mat'],'inputs')
+
 disp(' ')
 disp(['HEAT run "',inputs.ExptName,'" complete',])
 endt = now;

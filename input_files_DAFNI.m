@@ -19,27 +19,31 @@ env_varno = getenv('VARNAMEOTHER');
 env_scen = getenv('SCENARIO');
 env_tims = getenv('TIMEPERIOD_S');
 env_timl = getenv('TIMEPERIOD_L');
+env_cal = getenv('CALENDAR');
+env_summer = getenv('SUMMER');
 env_outp = getenv('OUTPUT');
 env_adap = getenv('ADAPT');
 env_green = getenv('GREENING');
 env_uhii = getenv('UHI_I');
 env_abst = getenv('ABS_T');
 env_pert = getenv('PER_T');
+env_ddx = getenv('DDX');
 env_x1 = getenv('X1');
 env_x2 = getenv('X2');
 env_y1 = getenv('Y1');
 env_y2 = getenv('Y2');
+env_reg = getenv('REGION');
 
 % Experiment name for saving output
 if ~isempty(env_expn)
-    disp('Environment variable found for Experiment Name: updating inputs file')
+    disp(['Environment variable found for Experiment Name: updating inputs file to ', char(string(env_expn))])
     inputs.ExptName = char(string(env_expn));
 end
 
 % Specify which UKCP18 member is being used to ensure correct time period
 % is loaded corresponding to a warming level
 if ~isempty(env_runn)
-    disp('Simulation name specified (for selecting correct time period): updating inputs file')
+    disp(['Simulation name specified (for selecting correct time period): updating inputs file to ', char(string(env_runn))])
     inputs.Dataset = {env_runn};
 end
 
@@ -55,16 +59,17 @@ if ~isempty(env_varn)
 else % For offline testing
     inputs.Variable = {'tas'};
 end
+disp(['Using variable name ', char(string(inputs.Variable))])
 
 % If user wants to select a warming level above pre-industrial
 if ~isempty(env_scen)
-    disp('Environment variable found for Scenario: updating inputs file')
+    disp(['Environment variable found for Scenario: updating inputs file to ', char(string(env_scen))])
     inputs.Scenario = string(env_scen);
 end
 
 % Alternatively, user can specify a time period based on its start year...
 if ~isempty(env_tims)
-    disp('Environment variable found for defining time period: updating inputs file')
+    disp(['Environment variable found for defining time period: updating start year to ', char(string(env_tims))])
     inputs.PeriodStart = str2double(string(env_tims));
 end
 
@@ -73,6 +78,29 @@ if ~isempty(env_timl)
     inputs.PeriodLength = str2double(string(env_timl));
 else
     inputs.PeriodLength = 30; % Otherwise assume 30 year default
+end
+
+% If user wants to define which calendar to use (360 day, 365 day, no leap)
+if ~isempty(env_cal)
+    disp('Environment variable found for setting calendar length: updating')
+    inputs.Calendar = char(string(env_cal));
+else 
+    inputs.Calendar = 'd360'; % Default assumes 360 day calendar for UKCP18
+end
+
+% If user wants to use just summer period, not annual
+if ~isempty(env_summer)
+    disp('Environment variable found specifying analysis for summer/annual: updating')
+    inputs.AnnSummer = char(string(env_cal));
+else 
+    inputs.AnnSummer = 'Ann'; % Default assumes 360 day calendar for UKCP18
+end
+
+
+% If user wants to use just summer period, not annual
+if ~isempty(env_reg)
+    disp('Environment variable found specifying UK region : updating')
+    inputs.Region = char(string(env_reg));
 end
 
 % If a spatial subset has been specified, setup array to store info
@@ -102,7 +130,7 @@ end
 
 % Choose the output type (e.g. a netCDF for use in HARM, some analysis etc.)
 if ~isempty(env_outp)
-    disp('Environment variable found for output type: updating inputs file')
+    disp(['Environment variable found for output type: carrying out analysis for  to ', char(string(env_outp))])
     inputs.OutputType = env_outp;
 end
 
@@ -114,8 +142,8 @@ if ~isempty(env_adap)
 end
 
 
-% Set the Urban Heat Island Intensity (how many degrees celsius full
-% urbanisation will increase local temperatures)
+% Set the urban greening/cooling potential (how many degrees celsius fully
+% urbanised grid cells will have local temperatures reduced by)
 if ~isempty(env_green)
     disp('Environment variable found for parameterising cooling due to greening: updating inputs file')
     inputs.Greening = str2double(string(env_green));
@@ -138,11 +166,16 @@ if ~isempty(env_abst)
     inputs.AbsThresh = str2double(string(env_abst));
 end
 
-% Choose a percentile for simulating best-case-scenario acclimatisation ?
-% HARM MMT and RR will be adjusted in line with this warming
+% Choose a percentile threshold for extremes analysis
 if ~isempty(env_pert)
     disp('Environment variable found for setting percentile threshold: updating inputs file')
-    inputs.AbsThresh = str2double(string(env_pert));
+    inputs.PercentileThresh = str2double(string(env_pert));
+end
+
+% Choose a percentile above which to calculate degree day metric
+if ~isempty(env_ddx)
+    disp('Environment variable found for setting degree day percentile: updating inputs file')
+    inputs.DD = str2double(string(env_ddx));
 end
 
 

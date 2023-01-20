@@ -119,6 +119,64 @@ spec:
         max: 99
         required: false
       -
+        name: CALENDAR
+        title: Data calendar length
+        description: The length of a full calendar year in the input climate data
+        type: string
+        options: 
+          - name: d360
+            title: 360 day year (standard for raw UKCP18)
+          - name: d365
+            title: 365 day year (standard for bias corrected data)
+          - name: noleap
+            title: 365 day year, no leap years
+
+        required: false
+      -
+        name: SUMMER
+        title: Optionally subset summer period only
+        description: Select the time period within the year you want to analyse
+        type: string
+        options: 
+          - name: Ann
+            title: Full annual time period (1 Jan - 31 Dec)
+          - name: JJA
+            title: June, July and August (1 Jun - 31 Aug)
+          - name: MO
+            title: Met Office and UKHSA summer period (1 Jun - 15 Sep)
+       required: false
+      -
+        name: REGION
+        title: Select UK region
+        description: Carry out analysis for a specific UK region
+        type: string
+        options: 
+          - name: Scot
+            title: Scotland
+          - name: NE
+            title: North East
+          - name: NW
+            title: North West
+          - name: YH
+            title: Yorkshire and the Humber
+          - name: EM
+            title: East Midlands
+          - name: WM
+            title: West Midlands
+          - name: EE
+            title: East of England
+          - name: GL
+            title: Greater London
+          - name: SE
+            title: South East
+          - name: SW
+            title: South West
+          - name: Wales
+            title: Wales
+          - name: NI
+            title: Northern Ireland
+       required: false
+      -
         name: X1
         title: Spatial subset (latitude, south)
         description: Enter a value in degrees north (-90 to 90)
@@ -178,6 +236,14 @@ spec:
         name: PER_T
         title: Percentile temperature threshold
         description: HEAT will calculate this percentile and count the number of days exceeding this threshold
+        type: integer
+        min: 1
+        max: 99
+        required: false
+      -
+        name: DDX
+        title: Percentile to calculate degree days above
+        description: HEAT will calculate the number of degree days above this percentile threshold
         type: integer
         min: 1
         max: 99
