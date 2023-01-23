@@ -657,7 +657,7 @@ end
 
 % Regional subset if necessary
 if exist('region_n','var')
-    data = data .* reg_mask == region_n;
+    data = data .* (reg_mask == region_n);
 end
 
 
