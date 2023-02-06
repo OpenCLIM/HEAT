@@ -24,9 +24,9 @@ spec:
         options: 
           - name: NetCDF
             title: NetCDF output for heat mortality calculation
-          - name: Extreme mean
+          - name: ExtremeMean
             title: Extreme mean analysis
-          - name: DD66
+          - name: DD
             title: Degree day analysis
           - name: AbsoluteExtremes
             title: Absolute extremes analysis
@@ -34,37 +34,6 @@ spec:
             title: Percentile extremes analysis
         default: NetCDF
         required: true
-      - 
-        name: RUNNAME
-        title: Simulation Name
-        description: The UKCP18 RCM simulation you wish to use (only required for selecting correct warming level)
-        type: string
-        options: 
-          - name: RCM-01
-            title: RCM-01
-          - name: RCM-04
-            title: RCM-04
-          - name: RCM-05
-            title: RCM-05
-          - name: RCM-06
-            title: RCM-06
-          - name: RCM-07
-            title: RCM-07
-          - name: RCM-08
-            title: RCM-08
-          - name: RCM-09
-            title: RCM-09
-          - name: RCM-10
-            title: RCM-10
-          - name: RCM-11
-            title: RCM-11
-          - name: RCM-12
-            title: RCM-12
-          - name: RCM-13
-            title: RCM-13
-          - name: RCM-15
-            title: RCM-15
-        required: false
       - 
         name: VARNAME
         title: Variable Name
@@ -138,7 +107,6 @@ spec:
             title: 365 day year (standard for bias corrected data)
           - name: noleap
             title: 365 day year, no leap years
-
         required: false
       -
         name: SUMMER
@@ -183,6 +151,8 @@ spec:
             title: Wales
           - name: NI
             title: Northern Ireland
+          - name: UK
+            title: UK
        required: false
       -
         name: X1
@@ -244,25 +214,25 @@ spec:
         name: PER_T
         title: Percentile temperature threshold
         description: HEAT will calculate this percentile and count the number of days exceeding this threshold
-        type: integer
-        min: 1
-        max: 99
+        type: number
+        min: 0
+        max: 100
         required: false
       -
         name: DDX
         title: Percentile to calculate degree days above
         description: HEAT will calculate the number of degree days above this percentile threshold
-        type: integer
-        min: 1
-        max: 99
+        type: number
+        min: 0
+        max: 100
         required: false
       -
         name: ADAPT
         title: Percentile for natural acclimatisation
         description: The percentile of annual mean temperature corresponding to MMT
-        type: integer
-        min: 1
-        max: 99
+        type: number
+        min: 0
+        max: 100
         required: false
 
     dataslots: 

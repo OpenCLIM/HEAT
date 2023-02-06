@@ -30,15 +30,15 @@ init_HEAT
 % Record start time
 startt = now;
 
-% For testing purposes, to show the correct data has copied to the Docker
-% container (remove this later):
-if strcmp(pwd,'/code')
-    disp('Running in Docker container with these files:')
-    ls
-    disp('-----')
-    disp(' ')
-
-end
+% % For testing purposes, to show the correct data has copied to the Docker
+% % container (remove this later):
+% if strcmp(pwd,'/code')
+%     disp('Running in Docker container with these files:')
+%     ls
+%     disp('-----')
+%     disp(' ')
+% 
+% end
 
 %% Check inputs
 % If running HEAT through the MATLAB GUI, then it is possible to have run
@@ -115,7 +115,7 @@ runperext = 0;
 if isfield(inputs,'OutputType')    
     if strcmp(string(inputs.OutputType),'ExtremeMean') 
         runexmean = 1;
-    elseif strcmp(string(inputs.OutputType),'DD66')
+    elseif strcmp(string(inputs.OutputType),'DD')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'AbsoluteExtremes')
         runabsext = 1;
@@ -373,17 +373,6 @@ else
     disp(' ')
 end
 
-% Find if using one of the UKCP18 RCM ensemble members
-if isfield(inputs,'Dataset')
-    Dataset = char(inputs.Dataset(1));
-    if strcmp(Dataset(1:2),'RC')
-        runn = ['run',Dataset(5:6)];
-    end
-else
-    Dataset = 'data';
-end
-
-
 % Load one file as an example to check if data is in 3D
 file = ([files(1).folder,'/',files(1).name]);
 try
@@ -424,6 +413,7 @@ if s1(1) == 82 && s1(2) == 112
     LSM = LSM12;
     UK_area = areas_12km_frac_UK;
     reg_area = areas_12km_frac_regions;
+    reg_area = cat(3,reg_area,UK_area);
     reg_mask = UKregions12;
     
     subsetting = 1;
@@ -436,6 +426,7 @@ elseif s1(1) == 17 && s1(2) == 23
     LSM = LSM60;
     UK_area = areas_60km_frac_UK;
     reg_area = areas_60km_frac_regions;
+    reg_area = cat(3,reg_area,UK_area);
     reg_mask = UKregions60;
     
     subsetting = 1;
@@ -448,6 +439,7 @@ elseif s1(1) == 484 && s1(2) == 606
     LSM = LSM2;
     UK_area = areas_2km_frac_UK;
     reg_area = areas_2km_frac_regions;
+    reg_area = cat(3,reg_area,UK_area);
     reg_mask = UKregions2;
     
     subsetting = 1;
@@ -537,6 +529,8 @@ if subsetting == 1
             region_n = 11;
         elseif strcmp(inputs.Region,'NI')
             region_n = 12;
+        elseif strcmp(inputs.Region,'UK')
+            region_n = 13;
         end
     end
 end
@@ -563,9 +557,44 @@ elseif isfield(inputs,'Scenario')
     % TO DO: add option so users can upload their own time slice
     % info
     
-    % Look up the correct model run from the table
-    modelslist = {'run01','run04','run05','run06','run07','run08','run09','run10','run11','run12','run13','run15'};
-    modelid = find(contains(modelslist,runn));
+%     % Look up the correct model run from the table
+%     modelslist = {'run01','run04','run05','run06','run07','run08','run09','run10','run11','run12','run13','run15'};
+%     modelid = find(contains(modelslist,runn));
+    
+    
+    % Identify which model ensemble member is being used, so correct time
+    % period is selected
+    disp('Selecting correct time period for warming level:')
+    modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15'};
+    
+    % File name structure is slightly different for my derived data vs. Met
+    % Office's raw data ? first find which is being used
+    if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
+        disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
+        % Then find which ensemble member is being loaded from the filename
+        for m = 1:12
+            if regexp(file,regexptranslate('wildcard',['*_rcm85',modelslist(m),'*'])) == 1
+                modelid = m;
+                disp(['---> Identified that ensemble member ',modelslist(modelid),' is being used'])
+                Dataset = ['RCM-',modelslist(modelid)];
+            end
+        end
+    elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
+        disp('-> Using raw UKCP18 climate data')
+        for m = 1:12
+            if regexp(file,regexptranslate('wildcard',['*_',modelslist(m),'_*'])) == 1
+                modelid = m;
+                disp(['---> Identified that ensemble member ',modelslist(modelid),' is being used'])
+                Dataset = ['RCM-',modelslist(modelid)];
+            end
+        end
+    else
+        disp('-> Unrecognised filename for automatically selecting warming levels')
+        disp('   Warming levels must be manually defined using period start and period length parameters')
+        disp(' ')
+        disp('STOPPING')
+        return
+    end
     
     % Read the start year of period
     if strcmp(inputs.Scenario,'past')
@@ -657,7 +686,9 @@ end
 
 % Regional subset if necessary
 if exist('region_n','var')
-    data = data .* (reg_mask == region_n);
+    if region_n < 13 % Only subset if not doing whole UK
+        data = data .* (reg_mask == region_n);
+    end
 end
 
 
@@ -783,10 +814,16 @@ if runexmean == 1
     UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
 
+    % Regional mean if necessary
+    if exist('region_n','var')
+        exmean_reg = exmean .* reg_area(:,:,region_n);
+        dlmwrite([Climatedirout,'exmean_reg_ave.csv'],exmean_reg, 'delimiter', ',', 'precision', '%i')
+    end
+    
 end
 
 
-%% Calculate DD66 degree day metric if required
+%% Calculate DD degree day metric if required
 if runDD == 1
     % Set default if necessary
     if ~isfield(inputs,'DD')
@@ -823,6 +860,12 @@ if runDD == 1
     UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
     
+    % Regional mean if necessary
+    if exist('region_n','var')
+        DDx_reg = DDx .* reg_area(:,:,region_n);
+        dlmwrite([Climatedirout,'DDx_reg_ave.csv'],DDx_reg, 'delimiter', ',', 'precision', '%i')
+    end
+    
 end
 
 
@@ -851,6 +894,12 @@ if runabsext == 1
     if ~isfield(inputs,'SpatialRange')
     figure
     UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    end
+    
+    % Regional mean if necessary
+    if exist('region_n','var')
+        AbsExt_reg = AbsExt .* reg_area(:,:,region_n);
+        dlmwrite([Climatedirout,'AbsExt_reg_ave.csv'],AbsExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
 end
@@ -885,6 +934,12 @@ if runperext == 1
     if ~isfield(inputs,'SpatialRange')
     figure
     UK_subplot(PerExt.*LSM,['Number of days exceeding ',num2str(inputs.PercentileThresh),'th percentile'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+    end
+    
+    % Regional mean if necessary
+    if exist('region_n','var')
+        PerExt_reg = PerExt .* reg_area(:,:,region_n);
+        dlmwrite([Climatedirout,'PerExt_reg_ave.csv'],PerExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
 end
@@ -938,6 +993,13 @@ if runworkflow == 1
     if exist('grid_idy','var')
         save([Climatedirout,'grid_idy.mat'],'grid_idy')
     end
+    
+    % Regional mean if necessary
+    if exist('region_n','var')
+        data_reg = data .* reg_area(:,:,region_n);
+        dlmwrite([Climatedirout,'data_reg_ave.csv'],data_reg, 'delimiter', ',', 'precision', '%i')
+    end
+    
 end
 
 
