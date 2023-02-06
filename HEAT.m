@@ -573,19 +573,19 @@ elseif isfield(inputs,'Scenario')
         disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
         % Then find which ensemble member is being loaded from the filename
         for m = 1:12
-            if regexp(file,regexptranslate('wildcard',['*_rcm85',modelslist(m),'*'])) == 1
+            if regexp(file,regexptranslate('wildcard',['*_rcm85',char(modelslist(m)),'*'])) == 1
                 modelid = m;
-                disp(['---> Identified that ensemble member ',modelslist(modelid),' is being used'])
-                Dataset = ['RCM-',modelslist(modelid)];
+                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
+                Dataset = ['RCM-',char(modelslist(modelid))];
             end
         end
     elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
         disp('-> Using raw UKCP18 climate data')
         for m = 1:12
-            if regexp(file,regexptranslate('wildcard',['*_',modelslist(m),'_*'])) == 1
+            if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
                 modelid = m;
-                disp(['---> Identified that ensemble member ',modelslist(modelid),' is being used'])
-                Dataset = ['RCM-',modelslist(modelid)];
+                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
+                Dataset = ['RCM-',char(modelslist(modelid))];
             end
         end
     else
