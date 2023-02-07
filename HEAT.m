@@ -628,8 +628,12 @@ else
 end
 
 % If a baseline has been defined that is earlier, load from here
-if inputs.BaselineStart < TemporalStart
-    TemporalStart2 = str2double([num2str(inputs.BaselineStart),'0101']);
+if isfield(inputs,'BaselineStart')
+    if inputs.BaselineStart < TemporalStart
+        TemporalStart2 = str2double([num2str(inputs.BaselineStart),'0101']);
+    else
+        TemporalStart2 = TemporalStart;
+    end
 else
     TemporalStart2 = TemporalStart;
 end
@@ -816,7 +820,7 @@ if runexmean == 1
 
     % Regional mean if necessary
     if exist('region_n','var')
-        exmean_reg = exmean .* reg_area(:,:,region_n);
+        exmean_reg = nanmean(nanmean(exmean .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'exmean_reg_ave.csv'],exmean_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -862,7 +866,7 @@ if runDD == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        DDx_reg = DDx .* reg_area(:,:,region_n);
+        DDx_reg = nanmean(nanmean(DDx .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'DDx_reg_ave.csv'],DDx_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -898,7 +902,7 @@ if runabsext == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        AbsExt_reg = AbsExt .* reg_area(:,:,region_n);
+        AbsExt_reg = nanmean(nanmean(AbsExt .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'AbsExt_reg_ave.csv'],AbsExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -938,7 +942,7 @@ if runperext == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        PerExt_reg = PerExt .* reg_area(:,:,region_n);
+        PerExt_reg = nanmean(nanmean(PerExt .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'PerExt_reg_ave.csv'],PerExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -996,7 +1000,7 @@ if runworkflow == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        data_reg = data .* reg_area(:,:,region_n);
+        data_reg = nanmean(nanmean(data .* reg_area(:,:,region_n),1,2);
         dlmwrite([Climatedirout,'data_reg_ave.csv'],data_reg, 'delimiter', ',', 'precision', '%i')
     end
     
