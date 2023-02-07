@@ -30,15 +30,6 @@ init_HEAT
 % Record start time
 startt = now;
 
-% % For testing purposes, to show the correct data has copied to the Docker
-% % container (remove this later):
-% if strcmp(pwd,'/code')
-%     disp('Running in Docker container with these files:')
-%     ls
-%     disp('-----')
-%     disp(' ')
-% 
-% end
 
 %% Check inputs
 % If running HEAT through the MATLAB GUI, then it is possible to have run
@@ -55,7 +46,7 @@ if ~exist('inputs','var')
     % Create output directory
     mkdir(Climatedirout)
     
-% Otherwise, running locally for testing:
+    % Otherwise, running locally for testing:
 else
     % Find out if ClimateData has been passed as an argument and, if so, is it
     % a file or a directory of files
@@ -112,8 +103,8 @@ runperext = 0;
 
 
 % Run steps if necessary
-if isfield(inputs,'OutputType')    
-    if strcmp(string(inputs.OutputType),'ExtremeMean') 
+if isfield(inputs,'OutputType')
+    if strcmp(string(inputs.OutputType),'ExtremeMean')
         runexmean = 1;
     elseif strcmp(string(inputs.OutputType),'DD')
         runDD = 1;
@@ -199,7 +190,7 @@ if exist('Urbandirin','var')
         
         
         disp('Urban data loaded')
-   
+        
         
         % Find existing development and save output for testing
         dev_old = baseline_urb == 1;
@@ -216,40 +207,13 @@ if exist('Urbandirin','var')
             save([Climatedirout,'urb_change.mat'],'urb_change')
             urb_tot = dev_new;
             
-        % Regrid only if necessary    
+            % Regrid only if necessary
         else
             % Prepare a lat/lon grid
             [nrows,ncols,~]=size(baseline_urb);
             [row,col]=ndgrid(1:nrows,1:ncols);
             [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
-%             [lats_urb,lons_urb] = os2ll(lon_urb,lat_urb);
-%             disp('Urban data regridded to lat-long')
             
-            % Aggregate to 12km
-%             regrid_res = 20; % FOR TESTING
-%             
-%             x = floor(length(baseline_urb(:,1))/regrid_res);
-%             y = floor(length(baseline_urb(1,:))/regrid_res);
-%             dev_old_1km = zeros(x,y);
-%             dev_new_1km = zeros(x,y);
-%             lat_urb_1km = nan(x,y);
-%             lon_urb_1km = nan(x,y);
-%             for i = 1:x
-%                 for j = 1:y
-%                     ii = 1+(i-1)*regrid_res:regrid_res+(i-1)*regrid_res;
-%                     jj = 1+(j-1)*regrid_res:regrid_res+(j-1)*regrid_res;
-%                     
-%                     dev_old_1km(i,j) = nanmean(nanmean(dev_old(ii,jj)));
-%                     dev_new_1km(i,j) = nanmean(nanmean(dev_new(ii,jj)));
-%                     lat_urb_1km(i,j) = nanmean(nanmean(lats_urb(ii,jj)));
-%                     lon_urb_1km(i,j) = nanmean(nanmean(lons_urb(ii,jj)));
-%                 end
-%             end
-            
-            % % Load UKCP18 grid
-% y=ncread('/Users/ak0920/Downloads/Testing_sWBGTmean_19801201-20801130.nc','projection_y_coordinate');
-% x=ncread('/Users/ak0920/Downloads/Testing_sWBGTmean_19801201-20801130.nc','projection_x_coordinate');
-%
             % Load pre-processed LSM, projection_x_cooridnate,
             % projection_y_cooridnate, and RCM urban fraction ancil
             % (produced by generate_urbfrac_12km.m)
@@ -257,15 +221,15 @@ if exist('Urbandirin','var')
             load('PreProcessedData/x.mat')
             load('PreProcessedData/y.mat')
             load('PreProcessedData/urb_frac_RCM.mat')
-
+            
             % Find where grids overlap
             for i = 1:120
                 lat_mean = mean(lat_urb(1+i:120+i,1));
                 lon_mean = mean(lon_urb(1,1+i:120+i));
-
+                
                 idxs = ismember(x,lon_mean);
                 idys = ismember(y,lat_mean);
-
+                
                 if sum(idxs) == 1
                     idx = i;
                     vals = 1:82;
@@ -276,33 +240,32 @@ if exist('Urbandirin','var')
                     vals = 1:112;
                     idyy = vals(idys);
                 end
-
+                
             end
-
+            
             lenx = floor(length(baseline_urb(1,:)) / 120)-1;
             leny = floor(length(baseline_urb(:,1)) / 120)-1;
-
+            
             sums_orig = zeros(leny,lenx);
             sums = zeros(leny,lenx);
-
+            
             % Aggregate to RCM grid
             for i = 1:lenx
                 for j = 1:leny
-
+                    
                     sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
                     sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
-
+                    
                 end
             end
-
+            
             % Find difference and normalise to 0-1
             urb_change12 = (sums-sums_orig)/120/120;
-
+            
             % Create array on same grid as RCM
             urb_change = zeros(112,82);
             % Paste UDM data onto correct part of the grid
             idyy2 = 112-idyy;
-%             urb_change(idyy2:idyy2+52,idxx:idxx+45) = urb_change12;
             urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
             % Rotate to same orientation as raw data
             urb_change = rot90(urb_change,3);
@@ -314,24 +277,9 @@ if exist('Urbandirin','var')
             disp('Urban data aggregated to 12km')
             
             % Find change in urban area
-%             urb_change = dev_new_1km - dev_old_1km;
             save([Climatedirout,'urb_change.mat'],'urb_change')
             save([Climatedirout,'urb_tot.mat'],'urb_tot')
             
-%             % Re-grid to RCM grid
-%             disp('Starting re-gridding')
-%             dev_new_interp = griddata(lon_urb_1km,lat_urb_1km,dev_new_1km,long_UK_RCM,lat_UK_RCM,'linear');
-%             urb_change_interp = griddata(lon_urb_1km,lat_urb_1km,urb_change,long_UK_RCM,lat_UK_RCM,'linear');
-%             disp('Re-gridding complete')
-            
-%             urb_change_interp_raw = urb_change_interp;
-%             save([Climatedirout,'urb_change_interp_raw.mat'],'urb_change_interp_raw')
-%             urb_change_interp(urb_change_interp_raw > 1) = 1;
-%             save([Climatedirout,'urb_change_interp.mat'],'urb_change_interp')
-%             
-%             % Give standard name for use later
-%             urb_change = urb_change_interp;
-%             dev_all = dev_new_interp;
         end
         
         % Adjust temperature based on increased UHI intensity
@@ -345,7 +293,7 @@ if exist('Urbandirin','var')
         csvwrite([Climatedirout,'UHI_adjustment.csv'],UHI_adjustment)
         disp('-----')
         disp(' ')
-
+        
     end
 end
 
@@ -369,7 +317,7 @@ if isempty(files)
 else
     disp('The following climate data netCDFs are being loaded:')
     ls([Climatedirin '*.nc'])
-    disp('-----')    
+    disp('-----')
     disp(' ')
 end
 
@@ -386,7 +334,7 @@ catch
     
     if ndims(datatest) > 3
         disp('Input netCDF has too many dimensions (more than 3): CANCELLING')
-        return 
+        return
         % This will only happen if it is a properly 4D dataset, e.g. with depth layers
         % Normal UKCP18 data is 4D, but the final D is only 1 long, which
         % is why the try/catch is necessary
@@ -403,9 +351,9 @@ if s2(1) > s2(2)
 else
     datedim = 2;
 end
-    
-    % Find resolution
-    disp('Checking model resolution:')
+
+% Find resolution
+disp('Checking model resolution:')
 if s1(1) == 82 && s1(2) == 112
     disp('Input data is on UKCP18 RCM grid')
     lats = lat_UK_RCM;
@@ -454,25 +402,6 @@ else
 end
 disp('-----')
 disp(' ')
-
-
-
-% % Update file path and netCDF dims if using bias corr. data
-% if inputs.BiasCorr == 1
-%     % Find location of netCDF data for the required variable
-%     % Set default domain to load as whole of dataset for T vars
-%     ncstarts = [1 1 1];
-%     ncends = [Inf Inf Inf];
-%     % Dimension of yyyymmdd var for T vars
-%     datedim = 1;
-% else
-%     % Find location of netCDF data for the required variable
-%     % Set default domain to load as whole of dataset for T vars
-%     ncstarts = [1 1 1 1];
-%     ncends = [Inf Inf Inf Inf];
-%     % Dimension of yyyymmdd var for T vars
-%     datedim = 2;
-% end
 
 
 %% Set up spatial subset if required
@@ -557,11 +486,6 @@ elseif isfield(inputs,'Scenario')
     % TO DO: add option so users can upload their own time slice
     % info
     
-%     % Look up the correct model run from the table
-%     modelslist = {'run01','run04','run05','run06','run07','run08','run09','run10','run11','run12','run13','run15'};
-%     modelid = find(contains(modelslist,runn));
-    
-    
     % Identify which model ensemble member is being used, so correct time
     % period is selected
     disp('Selecting correct time period for warming level:')
@@ -620,7 +544,7 @@ elseif isfield(inputs,'Scenario')
     % Convert years to correct format
     TemporalStart = str2double([num2str(TemporalStart),'0101']);
     TemporalEnd = str2double([num2str(TemporalEnd),'1230']);
-
+    
     
 else
     disp('No time period defined: STOPPING')
@@ -763,15 +687,15 @@ if exist('UHI_adjustment','var')
     % Produce some output to sanity check
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        figure
+        UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
     end
     
     data = data + UHI_adjustment;
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        figure
+        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
     end
 end
 
@@ -780,8 +704,8 @@ if exist('GreenEffect','var')
     data = data + GreenEffect;
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        figure
+        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
     end
 end
 
@@ -790,7 +714,7 @@ end
 if runexmean == 1
     % Set default if necessary
     if ~isfield(inputs,'ExtremeMeanPctile')
-        inputs.ExtremeMeanPctile = 95; 
+        inputs.ExtremeMeanPctile = 95;
     end
     
     disp(['Calculating extreme mean for default ',num2str(inputs.ExtremeMeanPctile),'th percentile'])
@@ -811,16 +735,15 @@ if runexmean == 1
     exmean = nanmean(exdays,3);
     
     % Save output
-%     save([Climatedirout,'exmean.mat'],'exmean')
     dlmwrite([Climatedirout,'exmean.csv'],exmean, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lat_UK_RCM,long_UK_RCM)
+        figure
+        UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
-
+    
     % Regional mean if necessary
     if exist('region_n','var')
-        exmean_reg = nanmean(nanmean(exmean .* reg_area(:,:,region_n),1),2);
+        exmean_reg = nansum(nansum(exmean .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'exmean_reg_ave.csv'],exmean_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -831,7 +754,7 @@ end
 if runDD == 1
     % Set default if necessary
     if ~isfield(inputs,'DD')
-        inputs.DD = 66; 
+        inputs.DD = 66;
         disp('Calculating Degree Days for default 66th percentile')
         disp('For reproduction of Kennedy-Asser et al. 2022, use Tmean summer only data')
         disp('-----')
@@ -857,16 +780,15 @@ if runDD == 1
     DDx = nansum(exdays,3) / inputs.PeriodLength;
     
     % Save output
-%     save([Climatedirout,'DDx.mat'],'DDx')
     dlmwrite([Climatedirout,'DDx.csv'],DDx, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
+        figure
+        UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
     
     % Regional mean if necessary
     if exist('region_n','var')
-        DDx_reg = nanmean(nanmean(DDx .* reg_area(:,:,region_n),1),2);
+        DDx_reg = nansum(nansum(DDx .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'DDx_reg_ave.csv'],DDx_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -879,7 +801,7 @@ if runabsext == 1
     isfield(inputs,'AbsThresh')
     % Set default if necessary
     if ~isfield(inputs,'AbsThresh')
-        inputs.AbsThresh = 25; 
+        inputs.AbsThresh = 25;
         disp('Calculating number of days exceeding 25 degC (default)')
         disp('-----')
     end
@@ -896,13 +818,13 @@ if runabsext == 1
     % Save output
     dlmwrite([Climatedirout,'AbsExt.csv'],AbsExt, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+        figure
+        UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
     
     % Regional mean if necessary
     if exist('region_n','var')
-        AbsExt_reg = nanmean(nanmean(AbsExt .* reg_area(:,:,region_n),1),2);
+        AbsExt_reg = nansum(nansum(AbsExt .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'AbsExt_reg_ave.csv'],AbsExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -915,7 +837,7 @@ if runperext == 1
     isfield(inputs,'PercentileThresh')
     % Set default if necessary
     if ~isfield(inputs,'PercentileThresh')
-        inputs.PercentileThresh = 95; 
+        inputs.PercentileThresh = 95;
         disp('Calculating number of days exceeding 95th percentile (default)')
         disp('-----')
     end
@@ -936,13 +858,13 @@ if runperext == 1
     dlmwrite([Climatedirout,'Threshold.csv'],Thresh, 'delimiter', ',', 'precision', '%i')
     dlmwrite([Climatedirout,'NDays.csv'],PerExt, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
-    figure
-    UK_subplot(PerExt.*LSM,['Number of days exceeding ',num2str(inputs.PercentileThresh),'th percentile'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+        figure
+        UK_subplot(PerExt.*LSM,['Number of days exceeding ',num2str(inputs.PercentileThresh),'th percentile'],Climatedirout,lat_UK_RCM,long_UK_RCM)
     end
     
     % Regional mean if necessary
     if exist('region_n','var')
-        PerExt_reg = nanmean(nanmean(PerExt .* reg_area(:,:,region_n),1),2);
+        PerExt_reg = nansum(nansum(PerExt .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'PerExt_reg_ave.csv'],PerExt_reg, 'delimiter', ',', 'precision', '%i')
     end
     
@@ -1000,7 +922,7 @@ if runworkflow == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        data_reg = nanmean(nanmean(data .* reg_area(:,:,region_n),1),2);
+        data_reg = nansum(nansum(data .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'data_reg_ave.csv'],data_reg, 'delimiter', ',', 'precision', '%i')
     end
     
