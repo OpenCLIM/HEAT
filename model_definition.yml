@@ -1,27 +1,29 @@
+---
 api_version: v1beta2
 kind: M
-metadata: 
-  description: "The Heat Extremes Analysis Toolbox (HEAT) has been created for the OpenCLIM project, for integration of heatwave and related temperature and heat stress extremes analysis with other climate risk modelling. \n"
+metadata:
+  description: >
+    The Heat Extremes Analysis Toolbox (HEAT) has been created for the
+    OpenCLIM project, for integration of heatwave and related temperature and
+    heat stress extremes analysis with other climate risk modelling. 
   display_name: HEAT
   name: heat
-  publisher: "University of Bristol"
-  source_code: "https://github.com/OpenCLIM/HEAT"
-  summary: "OpenCLIM Heat Extremes Analysis Toolbox (HEAT)"
-spec: 
-  inputs: 
+  publisher: University of Bristol
+  source_code: https://github.com/OpenCLIM/HEAT
+  summary: OpenCLIM Heat Extremes Analysis Toolbox (HEAT)
+spec:
+  inputs:
     parameters:
-      - 
-        name: EXPNAME
+      - name: EXPNAME
         title: Experiment Name
         description: Experiment name for easier future identification of results
         type: string
         required: false
-      -
-        name: OUTPUT
+      - name: OUTPUT
         title: Output type
         description: Select the kind of analysis you wish to carry out
         type: string
-        options: 
+        options:
           - name: NetCDF
             title: NetCDF output for heat mortality calculation
           - name: ExtremeMean
@@ -34,12 +36,11 @@ spec:
             title: Percentile extremes analysis
         default: NetCDF
         required: true
-      - 
-        name: VARNAME
+      - name: VARNAME
         title: Variable Name
         description: The climate variable you want to analyse
         type: string
-        options: 
+        options:
           - name: tasmax
             title: Daily max. temperature (tasmax)
           - name: tas
@@ -48,18 +49,16 @@ spec:
             title: Other (please specify below)
         default: tas
         required: true
-      - 
-        name: VARNAMEOTHER
+      - name: VARNAMEOTHER
         title: Variable Name if not listed above
         description: The climate variable you want to analyse
         type: string
         required: false
-      -
-        name: SCENARIO
+      - name: SCENARIO
         title: Warming scenario
         description: The warming level above pre-industrial you want to analyse
         type: string
-        options: 
+        options:
           - name: past
             title: Recent past (1990-2019)
           - name: s1.5
@@ -71,36 +70,33 @@ spec:
           - name: s4.0
             title: 4.0 °C warming above pre-industrial
         required: false
-      -
-        name: BASELINE_S
+      - name: BASELINE_S
         title: Start date of baseline period
-        description: The first year of the time period you want to as the baseline for calculating acclimatisation
+        description: The first year of the time period you want to as the baseline for
+          calculating acclimatisation
         type: integer
         min: 1981
         max: 2079
         required: false
-      -
-        name: TIMEPERIOD_S
+      - name: TIMEPERIOD_S
         title: Time period start
         description: The first year of the time period you want to analyse
         type: integer
         min: 1981
         max: 2079
         required: false
-      -
-        name: TIMEPERIOD_L
+      - name: TIMEPERIOD_L
         title: Time period length
         description: The length of the time period you want to analyse
         type: integer
         min: 1
         max: 99
         required: false
-      -
-        name: CALENDAR
+      - name: CALENDAR
         title: Data calendar length
         description: The length of a full calendar year in the input climate data
         type: string
-        options: 
+        options:
           - name: d360
             title: 360 day year (standard for raw UKCP18)
           - name: d365
@@ -108,25 +104,23 @@ spec:
           - name: noleap
             title: 365 day year, no leap years
         required: false
-      -
-        name: SUMMER
+      - name: SUMMER
         title: Optionally subset summer period only
         description: Select the time period within the year you want to analyse
         type: string
-        options: 
+        options:
           - name: Ann
             title: Full annual time period (1 Jan - 31 Dec)
           - name: JJA
             title: June, July and August (1 Jun - 31 Aug)
           - name: MO
             title: Met Office and UKHSA summer period (1 Jun - 15 Sep)
-       required: false
-      -
-        name: REGION
+        required: false
+      - name: REGION
         title: Select UK region
         description: Carry out analysis for a specific UK region
         type: string
-        options: 
+        options:
           - name: Scot
             title: Scotland
           - name: NE
@@ -153,106 +147,98 @@ spec:
             title: Northern Ireland
           - name: UK
             title: UK
-       required: false
-      -
-        name: X1
+        required: false
+      - name: X1
         title: Spatial subset (latitude, south)
         description: Enter a value in degrees north (-90 to 90)
         type: number
         min: -90
         max: 90
         required: false
-      -
-        name: X2
+      - name: X2
         title: Spatial subset (latitude, north)
-        description: Enter a value in degrees north (-90 to 90), leave blank to choose one location
+        description: Enter a value in degrees north (-90 to 90), leave blank to choose
+          one location
         type: number
         min: -90
         max: 90
         required: false
-      -
-        name: Y1
+      - name: Y1
         title: Spatial subset (longitude, west)
         description: Enter a value in degrees east (-180 to 180)
         type: number
         min: -180
         max: 180
         required: false
-      -
-        name: Y2
+      - name: Y2
         title: Spatial subset (longitude, east)
-        description: Enter a value in degrees east (-180 to 180), leave blank to choose one location
+        description: Enter a value in degrees east (-180 to 180), leave blank to choose
+          one location
         type: number
         min: -180
         max: 180
         required: false
-      -
-        name: UHI_I
+      - name: UHI_I
         title: Urban Heat Island intensity
-        description: How much temperatures are amplified by due to UHI, comparing fully urban to fully rural
+        description: How much temperatures are amplified by due to UHI, comparing fully
+          urban to fully rural
         type: number
         min: 0
         max: 10
         required: false
-      -
-        name: GREENING
+      - name: GREENING
         title: Urban greening cooling effect
-        description: How much temperatures are reduced by urban greening, comparing fully urban to fully rural
+        description: How much temperatures are reduced by urban greening, comparing
+          fully urban to fully rural
         type: number
         min: 0
         max: 10
         required: false
-      -
-        name: ABS_T
+      - name: ABS_T
         title: Absolute temperature threshold
-        description: HEAT will count the number of days exceeding this threshold 
+        description: HEAT will count the number of days exceeding this threshold
         type: number
         min: 0
         max: 50
         required: false
-      -
-        name: PER_T
+      - name: PER_T
         title: Percentile temperature threshold
-        description: HEAT will calculate this percentile and count the number of days exceeding this threshold
+        description: HEAT will calculate this percentile and count the number of days
+          exceeding this threshold
         type: number
         min: 0
         max: 100
         required: false
-      -
-        name: DDX
+      - name: DDX
         title: Percentile to calculate degree days above
-        description: HEAT will calculate the number of degree days above this percentile threshold
+        description: HEAT will calculate the number of degree days above this percentile
+          threshold
         type: number
         min: 0
         max: 100
         required: false
-      -
-        name: ADAPT
+      - name: ADAPT
         title: Percentile for natural acclimatisation
         description: The percentile of annual mean temperature corresponding to MMT
         type: number
         min: 0
         max: 100
         required: false
-
-    dataslots: 
-      - 
-        default: 
+    dataslots:
+      - default:
           - 2e84261b-014e-4324-a978-0ff66c8d9779
-        description: "A dataslot that should contain netCDF climate data (default = UKCP18 RCM ensemble member 01, raw non-bias corrected)"
+        description: A dataslot that should contain netCDF climate data (default =
+          UKCP18 RCM ensemble member 01, raw non-bias corrected)
         name: ClimateData
         path: inputs/ClimateData/
         required: true
-      -
-        default:
+      - default:
           - 7d4d4468-e5e4-450e-bbc3-85e4e9885b03
-        description: "A dataslot for the required pre-processed HEAT data"
+        description: A dataslot for the required pre-processed HEAT data
         name: PreProcessedData
         path: inputs/PreProcessedData/
         required: true
-      -
-        description: "An optional dataslot to include and urban % map"
+      - description: An optional dataslot to include and urban % map
         name: Urban
         path: inputs/Urban/
         required: false
-
