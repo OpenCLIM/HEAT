@@ -1000,7 +1000,7 @@ if runworkflow == 1
     
     % Regional mean if necessary
     if exist('region_n','var')
-        data_reg = nanmean(nanmean(data .* reg_area(:,:,region_n),1,2);
+        data_reg = nanmean(nanmean(data .* reg_area(:,:,region_n),1),2);
         dlmwrite([Climatedirout,'data_reg_ave.csv'],data_reg, 'delimiter', ',', 'precision', '%i')
     end
     
