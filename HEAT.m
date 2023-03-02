@@ -482,34 +482,58 @@ if isfield(inputs,'PeriodStart')
     
 elseif isfield(inputs,'Scenario')
     % Load the years each scenario reaches a warming level
-    load('PreProcessedData/tas_GCM_glob_thresh_arr_arnell.mat')
+    load('PreProcessedData/tas_GCM_glob_thresh_arr_arnell_all.mat')
     % TO DO: add option so users can upload their own time slice
     % info
     
     % Identify which model ensemble member is being used, so correct time
     % period is selected
     disp('Selecting correct time period for warming level:')
-    modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15'};
+    modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15','16','19','21','24','25','27','28'};
     
     % File name structure is slightly different for my derived data vs. Met
     % Office's raw data ? first find which is being used
     if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
         disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
         % Then find which ensemble member is being loaded from the filename
-        for m = 1:12
+        for m = 1:20
             if regexp(file,regexptranslate('wildcard',['*_rcm85',char(modelslist(m)),'*'])) == 1
                 modelid = m;
+                scenid = 1;
                 disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
                 Dataset = ['RCM-',char(modelslist(modelid))];
             end
         end
     elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
         disp('-> Using raw UKCP18 climate data')
-        for m = 1:12
+        for m = 1:20
             if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
                 modelid = m;
+                scenid = 1;
                 disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
-                Dataset = ['RCM-',char(modelslist(modelid))];
+                if m >=13
+                    Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
+                else
+                    if regexp(file,regexptranslate('wildcard','*_rcp85_land-r*')) == 1
+                        Dataset = ['RCM-',char(modelslist(modelid))];
+                    else
+                        Dataset = ['GCM-',char(modelslist(modelid))];
+                    end
+                end
+            end
+        end
+    elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
+        disp('-> Using raw UKCP18 climate data')
+        for m = 1:20
+            if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
+                modelid = m;
+                scenid = 2;
+                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
+                if m >=13
+                    Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
+                else
+                    Dataset = ['GCM-',char(modelslist(modelid))];
+                end
             end
         end
     else
@@ -526,13 +550,13 @@ elseif isfield(inputs,'Scenario')
     if strcmp(inputs.Scenario,'past')
         TemporalStart = 1990;
     elseif strcmp(inputs.Scenario,'s1.5')
-        TemporalStart = tas_GCM_glob_thresh_arr_arnell(1,modelid);
+        TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(1,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s2.0')
-        TemporalStart = tas_GCM_glob_thresh_arr_arnell(2,modelid);
+        TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(2,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s3.0')
-        TemporalStart = tas_GCM_glob_thresh_arr_arnell(4,modelid);
+        TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(4,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s4.0')
-        TemporalStart = tas_GCM_glob_thresh_arr_arnell(6,modelid);
+        TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(6,modelid,scenid);
     end
     
     % Set max time period to 2050-2079 (end of RCM simulations)
