@@ -233,7 +233,7 @@ spec:
         path: inputs/ClimateData/
         required: true
       - default:
-          - 7d4d4468-e5e4-450e-bbc3-85e4e9885b03
+          - bc9d26c4-2546-4c69-bc36-78bd0c87dd64
         description: A dataslot for the required pre-processed HEAT data
         name: PreProcessedData
         path: inputs/PreProcessedData/
