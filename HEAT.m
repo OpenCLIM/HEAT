@@ -513,11 +513,13 @@ elseif isfield(inputs,'Scenario')
             end
         end
     else
-        disp('-> Unrecognised filename for automatically selecting warming levels')
-        disp('   Warming levels must be manually defined using period start and period length parameters')
-        disp(' ')
-        disp('STOPPING')
-        return
+        if ~strcmp(inputs.Scenario,'past')
+            disp('-> Unrecognised filename for automatically selecting warming levels')
+            disp('   Warming levels must be manually defined using period start and period length parameters')
+            disp(' ')
+            disp('STOPPING')
+            return
+        end
     end
     
     % Read the start year of period
@@ -599,8 +601,13 @@ for i = startload:endload
         data = double(ncread(file,char(inputs.Variable),ncstarts,ncends));
         dates = ncread(file,'yyyymmdd');
         times = ncread(file,'time');
-        projection_x_coordinate = ncread(file,'projection_x_coordinate',ncstarts(1),ncends(1));
-        projection_y_coordinate = ncread(file,'projection_y_coordinate',ncstarts(2),ncends(2));
+        try
+            projection_x_coordinate = ncread(file,'projection_x_coordinate',ncstarts(1),ncends(1));
+            projection_y_coordinate = ncread(file,'projection_y_coordinate',ncstarts(2),ncends(2));
+        catch
+            projection_x_coordinate = ncread(file,'grid_longitude',ncstarts(1),ncends(1));
+            projection_y_coordinate = ncread(file,'grid_latitude',ncstarts(2),ncends(2));
+        end
     else
         data = cat(3,data,double(ncread(file,char(inputs.Variable),ncstarts,ncends)));
         dates = cat(datedim,dates,ncread(file,'yyyymmdd'));
