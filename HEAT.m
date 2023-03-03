@@ -151,6 +151,77 @@ if isfield(inputs,'MMTpctile')
 end
 
 
+%% Find out which UKCP18 model is being used
+files = dir([Climatedirin '*.nc']);
+
+% Assuming data files exist, continue with loading
+if isempty(files)
+    disp('No valid climate data to load: CANCELLING')
+    return
+end
+
+% Load one file as an example to check if data is in 3D
+file = ([files(1).folder,'/',files(1).name]);
+    
+% Identify which model ensemble member is being used, so correct time
+% period is selected and the correct file name assigned
+modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15','16','19','21','24','25','27','28'};
+
+% File name structure is slightly different for my derived data vs. Met
+% Office's raw data ? first find which is being used
+if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
+    disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
+    % Then find which ensemble member is being loaded from the filename
+    for m = 1:length(modelslist)
+        if regexp(file,regexptranslate('wildcard',['*_rcm85',char(modelslist(m)),'*'])) == 1
+            modelid = m;
+            scenid = 1;
+            Dataset = ['RCM-',char(modelslist(modelid))];
+        end
+    end
+% Options of dataset for RCP8.5    
+elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
+    disp('-> Using raw UKCP18 climate data')
+    for m = 1:length(modelslist)
+        if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
+            modelid = m;
+            scenid = 1;
+            if m >=13
+                Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
+            else
+                if regexp(file,regexptranslate('wildcard','*_rcp85_land-r*')) == 1
+                    Dataset = ['RCM-',char(modelslist(modelid))];
+                elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-g*')) == 1
+                    Dataset = ['GCM-',char(modelslist(modelid))];
+                elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-c*')) == 1
+                    Dataset = ['CPM-',char(modelslist(modelid))];
+                end
+            end
+        end
+    end
+% Options of dataset for RCP2.6    
+elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
+    disp('-> Using raw UKCP18 climate data')
+    for m = 1:length(modelslist)
+        if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
+            modelid = m;
+            scenid = 2;
+            if m >=13
+                Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
+            else
+                Dataset = ['GCM-',char(modelslist(modelid))];
+            end
+        end
+    end
+else
+    disp('-> Using climate data not from UKCP18')
+    Dataset = 'non-UKCP18-data';
+end
+
+disp(['---> Identified that ',Dataset,' is being used'])
+
+
+
 %% Adjust temperature for urban greening
 if exist('Urbandirin','var')
     % Find list of files to load
@@ -199,7 +270,7 @@ if exist('Urbandirin','var')
         save([Climatedirout,'dev_old.mat'],'dev_old')
         save([Climatedirout,'dev_new.mat'],'dev_new')
         
-        % If on the correct grid for the RCM, don't change res
+        % If on the correct grid for the RCM, don't change res        
         if length(baseline_urb(:,1)) == 82 && length(baseline_urb(1,:)) == 112
             
             % Find change in urban isation
@@ -209,73 +280,94 @@ if exist('Urbandirin','var')
             
             % Regrid only if necessary
         else
-            % Prepare a lat/lon grid
-            [nrows,ncols,~]=size(baseline_urb);
-            [row,col]=ndgrid(1:nrows,1:ncols);
-            [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
-            
-            % Load pre-processed LSM, projection_x_cooridnate,
-            % projection_y_cooridnate, and RCM urban fraction ancil
-            % (produced by generate_urbfrac_12km.m)
-            load('LSM12.mat')
-            load('PreProcessedData/x.mat')
-            load('PreProcessedData/y.mat')
-            load('PreProcessedData/urb_frac_RCM.mat')
-            
-            % Find where grids overlap
-            for i = 1:120
-                lat_mean = mean(lat_urb(1+i:120+i,1));
-                lon_mean = mean(lon_urb(1,1+i:120+i));
+            % If working with CPM data, need to re-grid to highresolution
+            if strcmp(Dataset(1:3),'CPM')
+                load('LSM2.mat')
+                load('PreProcessedData/E2.mat')
+                load('PreProcessedData/N2.mat')
                 
-                idxs = ismember(x,lon_mean);
-                idys = ismember(y,lat_mean);
+                % Prepare a lat/lon grid
+                [nrows,ncols,~]=size(baseline_urb);
+                [row,col]=ndgrid(1:nrows,1:ncols);
+                [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
                 
-                if sum(idxs) == 1
-                    idx = i;
-                    vals = 1:82;
-                    idxx = vals(idxs);
+                urb_change = griddata(lon_urb,lat_urb,(dev_new - dev_old)*1,N2,E2,'nearest');
+                urb_tot = griddata(lon_urb,lat_urb,(dev_new)*1,N2,E2,'nearest');
+
+                urb_change = urb_change .* LSM2;
+                urb_tot = urb_tot .* LSM2;
+
+                disp('Urban data aggregated to 2km')
+            else
+                
+                % Prepare a lat/lon grid
+                [nrows,ncols,~]=size(baseline_urb);
+                [row,col]=ndgrid(1:nrows,1:ncols);
+                [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
+                
+                % Load pre-processed LSM, projection_x_cooridnate,
+                % projection_y_cooridnate, and RCM urban fraction ancil
+                % (produced by generate_urbfrac_12km.m)
+                load('LSM12.mat')
+                load('PreProcessedData/x.mat')
+                load('PreProcessedData/y.mat')
+                load('PreProcessedData/urb_frac_RCM.mat')
+                
+                % Find where grids overlap
+                for i = 1:120
+                    lat_mean = mean(lat_urb(1+i:120+i,1));
+                    lon_mean = mean(lon_urb(1,1+i:120+i));
+                    
+                    idxs = ismember(x,lon_mean);
+                    idys = ismember(y,lat_mean);
+                    
+                    if sum(idxs) == 1
+                        idx = i;
+                        vals = 1:82;
+                        idxx = vals(idxs);
+                    end
+                    if sum(idys) == 1
+                        idy = i;
+                        vals = 1:112;
+                        idyy = vals(idys);
+                    end
+                    
                 end
-                if sum(idys) == 1
-                    idy = i;
-                    vals = 1:112;
-                    idyy = vals(idys);
+                
+                lenx = floor(length(baseline_urb(1,:)) / 120)-1;
+                leny = floor(length(baseline_urb(:,1)) / 120)-1;
+                
+                sums_orig = zeros(leny,lenx);
+                sums = zeros(leny,lenx);
+                
+                % Aggregate to RCM grid
+                for i = 1:lenx
+                    for j = 1:leny
+                        
+                        sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
+                        sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
+                        
+                    end
                 end
+                
+                % Find difference and normalise to 0-1
+                urb_change12 = (sums-sums_orig)/120/120;
+                
+                % Create array on same grid as RCM
+                urb_change = zeros(112,82);
+                % Paste UDM data onto correct part of the grid
+                idyy2 = 112-idyy;
+                urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
+                % Rotate to same orientation as raw data
+                urb_change = rot90(urb_change,3);
+                urb_tot = urb_frac_RCM + urb_change;
+                % Remove ocean points
+                urb_change = urb_change .* LSM12;
+                urb_tot = urb_tot .* LSM12;
+                
+                disp('Urban data aggregated to 12km')
                 
             end
-            
-            lenx = floor(length(baseline_urb(1,:)) / 120)-1;
-            leny = floor(length(baseline_urb(:,1)) / 120)-1;
-            
-            sums_orig = zeros(leny,lenx);
-            sums = zeros(leny,lenx);
-            
-            % Aggregate to RCM grid
-            for i = 1:lenx
-                for j = 1:leny
-                    
-                    sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
-                    sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
-                    
-                end
-            end
-            
-            % Find difference and normalise to 0-1
-            urb_change12 = (sums-sums_orig)/120/120;
-            
-            % Create array on same grid as RCM
-            urb_change = zeros(112,82);
-            % Paste UDM data onto correct part of the grid
-            idyy2 = 112-idyy;
-            urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
-            % Rotate to same orientation as raw data
-            urb_change = rot90(urb_change,3);
-            urb_tot = urb_frac_RCM + urb_change;
-            % Remove ocean points
-            urb_change = urb_change .* LSM12;
-            urb_tot = urb_tot .* LSM12;
-            
-            disp('Urban data aggregated to 12km')
-            
             % Find change in urban area
             save([Climatedirout,'urb_change.mat'],'urb_change')
             save([Climatedirout,'urb_tot.mat'],'urb_tot')
@@ -309,17 +401,10 @@ end
 
 %% Find list of files to load and define parameters for input climate dataset
 files = dir([Climatedirin '*.nc']);
-
-% Assuming data files exist, continue with loading
-if isempty(files)
-    disp('No valid climate data to load: CANCELLING')
-    return
-else
-    disp('The following climate data netCDFs are being loaded:')
-    ls([Climatedirin '*.nc'])
-    disp('-----')
-    disp(' ')
-end
+disp('The following climate data netCDFs are being loaded:')
+ls([Climatedirin '*.nc'])
+disp('-----')
+disp(' ')
 
 % Load one file as an example to check if data is in 3D
 file = ([files(1).folder,'/',files(1).name]);
@@ -485,59 +570,11 @@ elseif isfield(inputs,'Scenario')
     load('PreProcessedData/tas_GCM_glob_thresh_arr_arnell_all.mat')
     % TO DO: add option so users can upload their own time slice
     % info
-    
-    % Identify which model ensemble member is being used, so correct time
-    % period is selected
     disp('Selecting correct time period for warming level:')
-    modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15','16','19','21','24','25','27','28'};
     
-    % File name structure is slightly different for my derived data vs. Met
-    % Office's raw data ? first find which is being used
-    if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
-        disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
-        % Then find which ensemble member is being loaded from the filename
-        for m = 1:length(modelslist)
-            if regexp(file,regexptranslate('wildcard',['*_rcm85',char(modelslist(m)),'*'])) == 1
-                modelid = m;
-                scenid = 1;
-                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
-                Dataset = ['RCM-',char(modelslist(modelid))];
-            end
-        end
-    elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
-        disp('-> Using raw UKCP18 climate data')
-        for m = 1:length(modelslist)
-            if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
-                modelid = m;
-                scenid = 1;
-                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
-                if m >=13
-                    Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
-                else
-                    if regexp(file,regexptranslate('wildcard','*_rcp85_land-r*')) == 1
-                        Dataset = ['RCM-',char(modelslist(modelid))];
-                    else
-                        Dataset = ['GCM-',char(modelslist(modelid))];
-                    end
-                end
-            end
-        end
-    elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
-        disp('-> Using raw UKCP18 climate data')
-        for m = 1:length(modelslist)
-            if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
-                modelid = m;
-                scenid = 2;
-                disp(['---> Identified that ensemble member ',char(modelslist(modelid)),' is being used'])
-                if m >=13
-                    Dataset = ['CMIP5-GCM-',char(modelslist(modelid))];
-                else
-                    Dataset = ['GCM-',char(modelslist(modelid))];
-                end
-            end
-        end
-    else
-        if ~strcmp(inputs.Scenario,'past')
+    
+    if ~strcmp(inputs.Scenario,'past')
+        if ~exist('modelid','var')
             disp('-> Unrecognised filename for automatically selecting warming levels')
             disp('   Warming levels must be manually defined using period start and period length parameters')
             disp(' ')
@@ -719,14 +756,14 @@ if exist('UHI_adjustment','var')
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        UK_subplot(mean(data,3).*LSM,['Data, no UHI (mean = ',num2str(UKave),')'],Climatedirout,lats,lons,datarange)
     end
     
     data = data + UHI_adjustment;
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lats,lons,datarange)
     end
 end
 
@@ -736,7 +773,7 @@ if exist('GreenEffect','var')
     UKave = nansum(nansum(mean(data,3) .* UK_area(grid_idx,grid_idy)));
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lat_UK_RCM,long_UK_RCM,datarange)
+        UK_subplot(mean(data,3).*LSM,['Data + UHI (mean = ',num2str(UKave),')'],Climatedirout,lats,lons,datarange)
     end
 end
 
@@ -769,7 +806,7 @@ if runexmean == 1
     dlmwrite([Climatedirout,'exmean.csv'],exmean, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lat_UK_RCM,long_UK_RCM)
+        UK_subplot(exmean.*LSM,'Extreme mean',Climatedirout,lats,lons)
     end
     
     % Regional mean if necessary
@@ -814,7 +851,7 @@ if runDD == 1
     dlmwrite([Climatedirout,'DDx.csv'],DDx, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lat_UK_RCM,long_UK_RCM)
+        UK_subplot(DDx.*LSM,'Degree Days',Climatedirout,lats,lons)
     end
     
     % Regional mean if necessary
@@ -850,7 +887,7 @@ if runabsext == 1
     dlmwrite([Climatedirout,'AbsExt.csv'],AbsExt, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+        UK_subplot(AbsExt.*LSM,['Number of days exceeding ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lats,lons)
     end
     
     % Regional mean if necessary
@@ -890,7 +927,7 @@ if runperext == 1
     dlmwrite([Climatedirout,'NDays.csv'],PerExt, 'delimiter', ',', 'precision', '%i')
     if ~isfield(inputs,'SpatialRange')
         figure
-        UK_subplot(PerExt.*LSM,['Number of days exceeding ',num2str(inputs.PercentileThresh),'th percentile'],Climatedirout,lat_UK_RCM,long_UK_RCM)
+        UK_subplot(PerExt.*LSM,['Number of days exceeding ',num2str(inputs.PercentileThresh),'th percentile'],Climatedirout,lats,lons)
     end
     
     % Regional mean if necessary
