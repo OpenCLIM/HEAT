@@ -16,12 +16,12 @@ function [] = HEAT(inputs,Climatedata,Urbandirin)
 % variables, dataset to use, temporal and spatial domain, experiment name
 % and whether to save derived variables.
 %
-% Coded by A.T. Kennedy-Asser, University of Bristol, 2022.
+% Coded by A.T. Kennedy-Asser, University of Bristol, 2023.
 % Contact: alan.kennedy@bristol.ac.uk
 %
 
 %% Initialise
-disp('Running HEAT v.2.0')
+disp('Running HEAT v.2.1')
 disp('-----')
 
 % Set directory paths: essential for running in non-Docker environments
@@ -162,7 +162,7 @@ end
 
 % Load one file as an example to check if data is in 3D
 file = ([files(1).folder,'/',files(1).name]);
-    
+
 % Identify which model ensemble member is being used, so correct time
 % period is selected and the correct file name assigned
 modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15','16','19','21','24','25','27','28'};
@@ -179,7 +179,7 @@ if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
             Dataset = ['RCM-',char(modelslist(modelid))];
         end
     end
-% Options of dataset for RCP8.5    
+    % Options of dataset for RCP8.5
 elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
     disp('-> Using raw UKCP18 climate data')
     for m = 1:length(modelslist)
@@ -199,7 +199,7 @@ elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
             end
         end
     end
-% Options of dataset for RCP2.6    
+    % Options of dataset for RCP2.6
 elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
     disp('-> Using raw UKCP18 climate data')
     for m = 1:length(modelslist)
@@ -224,168 +224,178 @@ disp(['---> Identified that ',Dataset,' is being used'])
 
 %% Adjust temperature for urban greening
 if exist('Urbandirin','var')
-    % Find list of files to load
-    urbfiles = dir([Urbandirin '*.asc']);
-    % If there are no ascii files in directory, try going a sub-directory
-    % deeper
-    if isempty(urbfiles)
-        urbfiles = dir([Urbandirin '*/*.asc']);
-    end
-    
-    % Assuming data files exist, continue with loading
-    if isempty(urbfiles)
-        disp('No urban development data to load: no change made to UHI intensity')
+    if strcmp(Dataset(1:3),'CMI') || strcmp(Dataset(1:3),'GCM')
+        disp('Modelling Urban Heat Island not recommended with GCM/CMIP5 data')
+        disp('SKIPPING')
         disp('-----')
-        disp(' ')
     else
-        
-        % Find the correct file in the subdirectory to load
-        for i = 1:length(urbfiles)
-            if strcmp(urbfiles(i).name,'out_cell_dev.asc')
-                f = i;
-            end
+        % Find list of files to load
+        urbfiles = dir([Urbandirin '*.asc']);
+        % If there are no ascii files in directory, try going a sub-directory
+        % deeper
+        if isempty(urbfiles)
+            urbfiles = dir([Urbandirin '*/*.asc']);
         end
         
-        %         ls([Urbandirin '*.asc'])
-        if exist([Urbandirin 'out_cell_dev-12km-sum.asc'],'file')
-            [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev-12km-sum.asc']);
-        else
-            % Load the correct file
-            file = [urbfiles(f).folder,'/',urbfiles(f).name];
-            disp('The following urban development data is available to be loaded:')
-            disp(file)
+        % Assuming data files exist, continue with loading
+        if isempty(urbfiles)
+            disp('No urban development data to load: no change made to UHI intensity')
             disp('-----')
-            %             [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
-            [baseline_urb,RefMat]= arcgridread(file);
-        end
-        
-        
-        disp('Urban data loaded')
-        
-        
-        % Find existing development and save output for testing
-        dev_old = baseline_urb == 1;
-        % Find new development
-        dev_new = baseline_urb >= 1;
-        save([Climatedirout,'dev_old.mat'],'dev_old')
-        save([Climatedirout,'dev_new.mat'],'dev_new')
-        
-        % If on the correct grid for the RCM, don't change res        
-        if length(baseline_urb(:,1)) == 82 && length(baseline_urb(1,:)) == 112
-            
-            % Find change in urban isation
-            urb_change = dev_new - dev_old;
-            save([Climatedirout,'urb_change.mat'],'urb_change')
-            urb_tot = dev_new;
-            
-            % Regrid only if necessary
+            disp(' ')
         else
-            % If working with CPM data, need to re-grid to highresolution
-            if strcmp(Dataset(1:3),'CPM')
-                load('LSM2.mat')
-                load('PreProcessedData/E2.mat')
-                load('PreProcessedData/N2.mat')
-                
-                % Prepare a lat/lon grid
-                [nrows,ncols,~]=size(baseline_urb);
-                [row,col]=ndgrid(1:nrows,1:ncols);
-                [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
-                
-                urb_change = griddata(lon_urb,lat_urb,(dev_new - dev_old)*1,N2,E2,'nearest');
-                urb_tot = griddata(lon_urb,lat_urb,(dev_new)*1,N2,E2,'nearest');
-
-                urb_change = urb_change .* LSM2;
-                urb_tot = urb_tot .* LSM2;
-
-                disp('Urban data aggregated to 2km')
+            
+            % Find the correct file in the subdirectory to load
+            for i = 1:length(urbfiles)
+                if strcmp(urbfiles(i).name,'out_cell_dev.asc')
+                    f = i;
+                end
+            end
+            
+            %         ls([Urbandirin '*.asc'])
+            if exist([Urbandirin 'out_cell_dev-12km-sum.asc'],'file')
+                [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev-12km-sum.asc']);
             else
+                % Load the correct file
+                file = [urbfiles(f).folder,'/',urbfiles(f).name];
+                disp('The following urban development data is available to be loaded:')
+                disp(file)
+                disp('-----')
+                %             [baseline_urb,RefMat]= arcgridread([Urbandirin,'out_cell_dev.asc']);
+                [baseline_urb,RefMat]= arcgridread(file);
+            end
+            
+            disp('Urban data loaded')
+            
+            
+            % Find existing development and save output for testing
+            dev_old = baseline_urb == 1;
+            % Find new development
+            dev_new = baseline_urb >= 1;
+            save([Climatedirout,'dev_old.mat'],'dev_old')
+            save([Climatedirout,'dev_new.mat'],'dev_new')
+            
+            % If on the correct grid for the RCM, don't change res
+            if length(baseline_urb(:,1)) == 82 && length(baseline_urb(1,:)) == 112
                 
-                % Prepare a lat/lon grid
-                [nrows,ncols,~]=size(baseline_urb);
-                [row,col]=ndgrid(1:nrows,1:ncols);
-                [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
+                % Find change in urban isation
+                urb_change = dev_new - dev_old;
+                save([Climatedirout,'urb_change.mat'],'urb_change')
+                urb_tot = dev_new;
                 
-                % Load pre-processed LSM, projection_x_cooridnate,
-                % projection_y_cooridnate, and RCM urban fraction ancil
-                % (produced by generate_urbfrac_12km.m)
-                load('LSM12.mat')
-                load('PreProcessedData/x.mat')
-                load('PreProcessedData/y.mat')
-                load('PreProcessedData/urb_frac_RCM.mat')
-                
-                % Find where grids overlap
-                for i = 1:120
-                    lat_mean = mean(lat_urb(1+i:120+i,1));
-                    lon_mean = mean(lon_urb(1,1+i:120+i));
+                % Regrid only if necessary
+            else
+                % If working with CPM data, need to re-grid to high resolution
+                if strcmp(Dataset(1:3),'CPM')
+                    load('LSM2.mat')
+                    load('PreProcessedData/E2.mat')
+                    load('PreProcessedData/N2.mat')
+                    load('PreProcessedData/urb_frac_CPM.mat')
                     
-                    idxs = ismember(x,lon_mean);
-                    idys = ismember(y,lat_mean);
+                    % Prepare a lat/lon grid
+                    [nrows,ncols,~]=size(baseline_urb);
+                    [row,col]=ndgrid(1:nrows,1:ncols);
+                    [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
                     
-                    if sum(idxs) == 1
-                        idx = i;
-                        vals = 1:82;
-                        idxx = vals(idxs);
+                    urb_change = griddata(lon_urb,lat_urb,(dev_new - dev_old)*1,E2,N2,'linear');
+                    urb_tot = griddata(lon_urb,lat_urb,(dev_new)*1,E2,N2,'linear');
+                    
+                    urb_change = urb_change .* LSM2;
+                    urb_tot = urb_tot .* LSM2;
+                    
+                    % Add in urban areas that might not be covered by UDM
+                    % by taking default UKCP18 value where
+                    urb_tot(urb_tot < urb_frac_CPM) = urb_frac_CPM(urb_tot < urb_frac_CPM);
+                    
+                    disp('Urban data aggregated to 2km')
+                     
+                else
+                    
+                    % Prepare a lat/lon grid
+                    [nrows,ncols,~]=size(baseline_urb);
+                    [row,col]=ndgrid(1:nrows,1:ncols);
+                    [lat_urb,lon_urb]=pix2latlon(RefMat,row,col);
+                    
+                    % Load pre-processed LSM, projection_x_cooridnate,
+                    % projection_y_cooridnate, and RCM urban fraction ancil
+                    % (produced by generate_urbfrac_12km.m)
+                    load('LSM12.mat')
+                    load('PreProcessedData/x.mat')
+                    load('PreProcessedData/y.mat')
+                    load('PreProcessedData/urb_frac_RCM.mat')
+                    
+                    % Find where grids overlap
+                    for i = 1:120
+                        lat_mean = mean(lat_urb(1+i:120+i,1));
+                        lon_mean = mean(lon_urb(1,1+i:120+i));
+                        
+                        idxs = ismember(x,lon_mean);
+                        idys = ismember(y,lat_mean);
+                        
+                        if sum(idxs) == 1
+                            idx = i;
+                            vals = 1:82;
+                            idxx = vals(idxs);
+                        end
+                        if sum(idys) == 1
+                            idy = i;
+                            vals = 1:112;
+                            idyy = vals(idys);
+                        end
+                        
                     end
-                    if sum(idys) == 1
-                        idy = i;
-                        vals = 1:112;
-                        idyy = vals(idys);
+                    
+                    lenx = floor(length(baseline_urb(1,:)) / 120)-1;
+                    leny = floor(length(baseline_urb(:,1)) / 120)-1;
+                    
+                    sums_orig = zeros(leny,lenx);
+                    sums = zeros(leny,lenx);
+                    
+                    % Aggregate to RCM grid
+                    for i = 1:lenx
+                        for j = 1:leny
+                            
+                            sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
+                            sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
+                            
+                        end
                     end
+                    
+                    % Find difference and normalise to 0-1
+                    urb_change12 = (sums-sums_orig)/120/120;
+                    
+                    % Create array on same grid as RCM
+                    urb_change = zeros(112,82);
+                    % Paste UDM data onto correct part of the grid
+                    idyy2 = 112-idyy;
+                    urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
+                    % Rotate to same orientation as raw data
+                    urb_change = rot90(urb_change,3);
+                    urb_tot = urb_frac_RCM + urb_change;
+                    % Remove ocean points
+                    urb_change = urb_change .* LSM12;
+                    urb_tot = urb_tot .* LSM12;
+                    
+                    disp('Urban data aggregated to 12km')
                     
                 end
-                
-                lenx = floor(length(baseline_urb(1,:)) / 120)-1;
-                leny = floor(length(baseline_urb(:,1)) / 120)-1;
-                
-                sums_orig = zeros(leny,lenx);
-                sums = zeros(leny,lenx);
-                
-                % Aggregate to RCM grid
-                for i = 1:lenx
-                    for j = 1:leny
-                        
-                        sums_orig(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)==1));
-                        sums(j,i) = nansum(nansum(baseline_urb((1+idy:120+idy) + (j-1)*120 , (1+idx:120+idx) + (i-1)*120)>=1));
-                        
-                    end
-                end
-                
-                % Find difference and normalise to 0-1
-                urb_change12 = (sums-sums_orig)/120/120;
-                
-                % Create array on same grid as RCM
-                urb_change = zeros(112,82);
-                % Paste UDM data onto correct part of the grid
-                idyy2 = 112-idyy;
-                urb_change(idyy2:idyy2+length(sums(:,1))-1,idxx:idxx+length(sums(1,:))-1) = urb_change12;
-                % Rotate to same orientation as raw data
-                urb_change = rot90(urb_change,3);
-                urb_tot = urb_frac_RCM + urb_change;
-                % Remove ocean points
-                urb_change = urb_change .* LSM12;
-                urb_tot = urb_tot .* LSM12;
-                
-                disp('Urban data aggregated to 12km')
+                % Find change in urban area
+                save([Climatedirout,'urb_change.mat'],'urb_change')
+                save([Climatedirout,'urb_tot.mat'],'urb_tot')
                 
             end
-            % Find change in urban area
-            save([Climatedirout,'urb_change.mat'],'urb_change')
-            save([Climatedirout,'urb_tot.mat'],'urb_tot')
             
+            % Adjust temperature based on increased UHI intensity
+            UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
+            
+            UHI_adjustment = urb_change * UHI_I;
+            UHI_adjustment(isnan(UHI_adjustment)) = 0;
+            %         data = data + UHI_adjustment;
+            disp('UHI adjjustment complete')
+            save([Climatedirout,'UHI_adjustment.mat'],'UHI_adjustment')
+            csvwrite([Climatedirout,'UHI_adjustment.csv'],UHI_adjustment)
+            disp('-----')
+            disp(' ')
         end
-        
-        % Adjust temperature based on increased UHI intensity
-        UHI_I = inputs.UHI_I; % Value based upon offline analysis (load_urban_fraction.m), default = 2, plausible range ~ 1.5 - 3. Possibly include option to change this in future.
-        
-        UHI_adjustment = urb_change * UHI_I;
-        UHI_adjustment(isnan(UHI_adjustment)) = 0;
-        %         data = data + UHI_adjustment;
-        disp('UHI adjjustment complete')
-        save([Climatedirout,'UHI_adjustment.mat'],'UHI_adjustment')
-        csvwrite([Climatedirout,'UHI_adjustment.csv'],UHI_adjustment)
-        disp('-----')
-        disp(' ')
-        
     end
 end
 
@@ -571,7 +581,6 @@ elseif isfield(inputs,'Scenario')
     % TO DO: add option so users can upload their own time slice
     % info
     disp('Selecting correct time period for warming level:')
-    
     
     if ~strcmp(inputs.Scenario,'past')
         if ~exist('modelid','var')

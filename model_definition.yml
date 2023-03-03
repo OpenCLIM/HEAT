@@ -70,14 +70,6 @@ spec:
           - name: s4.0
             title: 4.0 °C warming above pre-industrial
         required: false
-      - name: BASELINE_S
-        title: Start date of baseline period
-        description: The first year of the time period you want to as the baseline for
-          calculating acclimatisation
-        type: integer
-        min: 1981
-        max: 2079
-        required: false
       - name: TIMEPERIOD_S
         title: Time period start
         description: The first year of the time period you want to analyse
@@ -217,6 +209,14 @@ spec:
         min: 0
         max: 100
         required: false
+      - name: BASELINE_S
+        title: Start date of baseline period
+        description: The first year of the time period you want to as the baseline for
+          calculating acclimatisation
+        type: integer
+        min: 1981
+        max: 2079
+        required: false
       - name: ADAPT
         title: Percentile for natural acclimatisation
         description: The percentile of annual mean temperature corresponding to MMT
@@ -233,7 +233,7 @@ spec:
         path: inputs/ClimateData/
         required: true
       - default:
-          - 725c9cd6-f89f-4be2-9b6c-0fb485aef3cf
+          - 96f67823-cb35-4e51-a9fc-22a8c777378b
         description: A dataslot for the required pre-processed HEAT data
         name: PreProcessedData
         path: inputs/PreProcessedData/
