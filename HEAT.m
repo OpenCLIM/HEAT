@@ -707,10 +707,13 @@ end
 
 % Remove leap year days
 dates_no_ly = string(dates(5:8,:)');
-keep_dates = ~strcmp(dates_no_ly,'0229');
-times = times(keep_dates);
-dates = dates(:,keep_dates);
-data = data(:,:,keep_dates);
+% Only do this for full Gregorian calendar, not for 360 day year
+if sum(strcmp(dates_no_ly,'0230')) == 0
+    keep_dates = ~strcmp(dates_no_ly,'0229');
+    times = times(keep_dates);
+    dates = dates(:,keep_dates);
+    data = data(:,:,keep_dates);
+end
 
 
 % Temporally subset to the specific required dates and summer type
