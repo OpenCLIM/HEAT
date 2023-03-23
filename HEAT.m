@@ -170,10 +170,10 @@ modelslist = {'01','04','05','06','07','08','09','10','11','12','13','15','16','
 % File name structure is slightly different for my derived data vs. Met
 % Office's raw data ? first find which is being used
 if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
-    disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
     % Then find which ensemble member is being loaded from the filename
     for m = 1:length(modelslist)
         if regexp(file,regexptranslate('wildcard',['*_rcm85',char(modelslist(m)),'*'])) == 1
+            disp('-> Using derived UKCP18 climate data (e.g. bias corrected or HEAT-stress output)')
             modelid = m;
             scenid = 1;
             Dataset = ['RCM-',char(modelslist(modelid))];
@@ -181,9 +181,9 @@ if regexp(file,regexptranslate('wildcard','*_rcm85*')) == 1
     end
     % Options of dataset for RCP8.5
 elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
-    disp('-> Using raw UKCP18 climate data')
     for m = 1:length(modelslist)
         if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
+            disp('-> Using raw UKCP18 climate data')
             modelid = m;
             scenid = 1;
             if m >=13
@@ -201,9 +201,9 @@ elseif regexp(file,regexptranslate('wildcard','*_rcp85_land-*')) == 1
     end
     % Options of dataset for RCP2.6
 elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
-    disp('-> Using raw UKCP18 climate data')
     for m = 1:length(modelslist)
         if regexp(file,regexptranslate('wildcard',['*_',char(modelslist(m)),'_*'])) == 1
+            disp('-> Using raw UKCP18 climate data')
             modelid = m;
             scenid = 2;
             if m >=13
@@ -213,13 +213,14 @@ elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
             end
         end
     end
-else
+end
+
+if ~exist('Dataset','var')
     disp('-> Using climate data not from UKCP18')
     Dataset = 'non-UKCP18-data';
 end
 
 disp(['---> Identified that ',Dataset,' is being used'])
-
 
 
 %% Adjust temperature for urban greening
