@@ -216,8 +216,13 @@ elseif regexp(file,regexptranslate('wildcard','*_rcp26_land-*')) == 1
 end
 
 if ~exist('Dataset','var')
-    disp('-> Using climate data not from UKCP18')
-    Dataset = 'non-UKCP18-data';
+    if regexp(file,regexptranslate('wildcard','*-eurocordex_uk_*')) == 1
+        disp('-> Using climate data from EuroCordex')
+        Dataset = 'EuroCordex';
+    else
+        disp('-> Using climate data not from UKCP18')
+        Dataset = 'non-UKCP18-data';
+    end
 end
 
 disp(['---> Identified that ',Dataset,' is being used'])
