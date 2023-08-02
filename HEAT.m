@@ -1,5 +1,5 @@
 function [] = HEAT(inputs,Climatedata,Urbandirin)
-% HEAT v.2.0
+% HEAT v.2.3
 %
 % Run the OpenCLIM Heat Extremes Analysis Toolbox (HEAT). This function
 % does an inital setup and check of file directories, then goes through
@@ -21,7 +21,7 @@ function [] = HEAT(inputs,Climatedata,Urbandirin)
 %
 
 %% Initialise
-disp('Running HEAT v.2.1')
+disp('Running HEAT v.2.3')
 disp('-----')
 
 % Set directory paths: essential for running in non-Docker environments
@@ -99,6 +99,7 @@ runexmean = 0;
 runDD = 0;
 runworkflow = 0;
 runabsext = 0;
+runabsextless = 0;
 runperext = 0;
 
 
@@ -110,6 +111,8 @@ if isfield(inputs,'OutputType')
         runDD = 1;
     elseif strcmp(string(inputs.OutputType),'AbsoluteExtremes')
         runabsext = 1;
+    elseif strcmp(string(inputs.OutputType),'AbsoluteExtremesLess')
+        runabsextless = 1;
     elseif strcmp(string(inputs.OutputType),'PercentileExtremes')
         runperext = 1;
     elseif strcmp(string(inputs.OutputType),'NetCDF')
@@ -600,14 +603,19 @@ elseif isfield(inputs,'Scenario')
     
     % Read the start year of period
     if strcmp(inputs.Scenario,'past')
+        disp('Recent past 1990-2019')
         TemporalStart = 1990;
     elseif strcmp(inputs.Scenario,'s1.5')
+        disp('+1.5 C global warming')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(1,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s2.0')
+        disp('+2.0 C global warming')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(2,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s3.0')
+        disp('+3.0 C global warming')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(4,modelid,scenid);
     elseif strcmp(inputs.Scenario,'s4.0')
+        disp('+4.0 C global warming')
         TemporalStart = tas_GCM_glob_thresh_arr_arnell_all(6,modelid,scenid);
     end
     
@@ -917,6 +925,42 @@ if runabsext == 1
 end
 
 
+%% Calculate number of days exceeding absolute extreme value
+if runabsextless == 1
+    disp('Days below absolute threshold')
+    isfield(inputs,'AbsThresh')
+    % Set default if necessary
+    if ~isfield(inputs,'AbsThresh')
+        inputs.AbsThresh = 25;
+        disp('Calculating number of days below 25 degC (default)')
+        disp('-----')
+    end
+    
+    % If it hasn't been defined already, assume the period length is 30
+    % years
+    if ~isfield(inputs,'PeriodLength')
+        inputs.PeriodLength = 30;
+    end
+    
+    % Calculate average number of days < x °C per year
+    AbsExt = nansum(data < inputs.AbsThresh,3) / inputs.PeriodLength;
+    
+    % Save output
+    dlmwrite([Climatedirout,'AbsExt.csv'],AbsExt, 'delimiter', ',', 'precision', '%i')
+    if ~isfield(inputs,'SpatialRange')
+        figure
+        UK_subplot(AbsExt.*LSM,['Number of days below ',num2str(inputs.AbsThresh),' degC'],Climatedirout,lats,lons)
+    end
+    
+    % Regional mean if necessary
+    if exist('region_n','var')
+        AbsExt_reg = nansum(nansum(AbsExt .* reg_area(:,:,region_n),1),2);
+        dlmwrite([Climatedirout,'AbsExt_reg_ave.csv'],AbsExt_reg, 'delimiter', ',', 'precision', '%i')
+    end
+    
+end
+
+
 %% Calculate number of days exceeding percentile extreme value
 if runperext == 1
     disp('Days above absolute threshold')
@@ -964,7 +1008,20 @@ if runworkflow == 1
     nc_name = [Climatedirout,'HEAT-',inputs.ExptName,'-',Dataset,'_',Variable];
     
     xyz.dates = dates;
-    xyz.times = times;
+    dates2 = dates';
+    %size(dates)
+    %class(dates)
+    y1 = str2double(string(dates2(:,1:4)));
+    m1 = str2double(string(dates2(:,5:6)));
+    d1 = str2double(string(dates2(:,7:8)));
+    %size(y1)
+    %class(y1)
+    %size(m1)
+    %size(d1)
+    ts1 = datetime(y1,m1,d1);
+    ts2 = datetime(1970,01,01);
+    times2 = hours(ts1 - ts2);
+    xyz.times = times2;
     xyz.projection_x_coordinate = projection_x_coordinate;
     xyz.projection_y_coordinate = projection_y_coordinate;
     

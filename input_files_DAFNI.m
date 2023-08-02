@@ -26,6 +26,7 @@ env_outp = getenv('OUTPUT');
 env_adap = getenv('ADAPT');
 env_green = getenv('GREENING');
 env_uhii = getenv('UHI_I');
+env_exmt = getenv('EXMEAN');
 env_abst = getenv('ABS_T');
 env_pert = getenv('PER_T');
 env_ddx = getenv('DDX');
@@ -98,7 +99,7 @@ end
 % If user wants to use just summer period, not annual
 if ~isempty(env_summer)
     disp('Environment variable found specifying analysis for summer/annual: updating')
-    inputs.AnnSummer = char(string(env_cal));
+    inputs.AnnSummer = char(string(env_summer));
 else 
     inputs.AnnSummer = 'Ann'; % Default assumes 360 day calendar for UKCP18
 end
@@ -165,6 +166,12 @@ if ~isempty(env_uhii)
     inputs.UHI_I = str2double(string(env_uhii));
 else
     inputs.UHI_I = 2;
+end
+
+% Set extreme mean threshold
+if ~isempty(env_exmt)
+    disp('Environment variable found for setting extreme mean percentile threshold: updating inputs file')
+    inputs.ExtremeMeanPctile = str2double(string(env_exmt));
 end
 
 % Set an absolute threshold for extremes analysis
